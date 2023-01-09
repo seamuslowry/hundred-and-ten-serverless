@@ -1,6 +1,6 @@
 '''Init the models module'''
 
-from hundredandten.actions import (Bid, DetailedDiscard, Discard, Play,
+from hundredandten.actions import (Action, Bid, DetailedDiscard, Discard, Play,
                                    SelectTrump, Unpass)
 from hundredandten.constants import (Accessibility, BidAmount, CardNumber,
                                      GameRole, GameStatus, RoundRole,

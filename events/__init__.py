@@ -6,8 +6,8 @@ import json
 import azure.functions as func
 
 from app.decorators import catcher
+from app.mappers.client import serialize
 from app.parsers import parse_request
-from app.services import EventService
 
 
 @catcher
@@ -18,4 +18,4 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     user, game = parse_request(req)
 
     return func.HttpResponse(
-        json.dumps(EventService.json(game.events, user.identifier)))
+        json.dumps(serialize.events(game.events, user.identifier)))

@@ -6,9 +6,10 @@ import json
 import azure.functions as func
 
 from app.decorators import catcher
+from app.mappers.client import deserialize, serialize
 from app.models import Play
 from app.parsers import parse_request
-from app.services import CardService, GameService
+from app.services import GameService
 
 
 @catcher
@@ -21,9 +22,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     body = req.get_json()
 
-    game.act(Play(user.identifier, CardService.from_client(body.get('card'))))
+    game.act(Play(user.identifier, deserialize.card(body.get('card'))))
 
     game = GameService.save(game)
 
     return func.HttpResponse(
-        json.dumps(GameService.json(game, user.identifier, initial_event_knowledge)))
+        json.dumps(serialize.game(game, user.identifier, initial_event_knowledge)))

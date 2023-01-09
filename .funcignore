@@ -9,3 +9,4 @@ references
 .coveragerc
 requirements-*.txt
 .isort.cfg
+docker-compose.yml

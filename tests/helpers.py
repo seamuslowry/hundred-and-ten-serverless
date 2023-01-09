@@ -6,28 +6,24 @@ import azure.functions as func
 
 from app.models import (Bid, BidAmount, DetailedDiscard, GameRole, GameStatus,
                         Group, Person, RoundStatus, SelectableSuit,
-                        SelectTrump, Trick, User)
+                        SelectTrump, Trick)
 from app.models.game import Game
 
 DEFAULT_ID = 'id'
-DEFAULT_NAME = 'name'
-
-DEFAULT_USER = User(DEFAULT_ID, DEFAULT_NAME)
-USER_ONE = User('1', DEFAULT_NAME)
 
 
-def build_request(method='GET', body=b'', route_params=None,
+def build_request(method='GET', body=None, route_params=None,
                   headers: Optional[dict[str, str]] = None, params=None):
     '''Build a request defaulting common values for the arguments'''
     return func.HttpRequest(
-        method=method, body=body, route_params=route_params, url='',
+        method=method, body=json.dumps(body).encode('utf-8') if body else b'',
+        route_params=route_params, url='',
         headers={'x-ms-client-principal-idp': 'unknown', 'x-ms-client-principal-id': DEFAULT_ID,
-                 'x-ms-client-principal-name': 'name',
-                 **(headers or {})},
+                 'x-ms-client-principal-name': 'name', **(headers or {})},
         params=params)
 
 
-def read_response_body(body: bytes) -> dict:
+def read_response_body(body: bytes):
     '''Read the response body and return it as a dict'''
     return json.loads(body.decode('utf-8'))
 

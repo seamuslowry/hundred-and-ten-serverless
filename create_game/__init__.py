@@ -7,6 +7,7 @@ import logging
 import azure.functions as func
 
 from app.decorators import catcher
+from app.mappers.client import serialize
 from app.models import Accessibility, Game, GameRole
 from app.parsers import parse_request
 from app.services import GameService
@@ -35,4 +36,4 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     logging.debug('Game %s created successfully', game.seed)
 
-    return func.HttpResponse(json.dumps(GameService.json(game, user.identifier)))
+    return func.HttpResponse(json.dumps(serialize.game(game, user.identifier)))
