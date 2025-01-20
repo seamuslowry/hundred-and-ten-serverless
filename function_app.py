@@ -20,6 +20,8 @@ from functions.self import bp as self_bp
 from functions.start_game import bp as start_game_bp
 from functions.suggestion import bp as suggestion_bp
 
+# test
+
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
 app.register_functions(bid_bp)
