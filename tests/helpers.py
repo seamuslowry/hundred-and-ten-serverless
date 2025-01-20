@@ -4,11 +4,11 @@ from typing import Optional
 
 import azure.functions as func
 
-from functions.create_game import create_game as wrapped_create_game
-from functions.leave_game import leave_game as wrapped_leave_game
-from functions.self import update_self as wrapped_self
-from functions.start_game import start_game as wrapped_start_game
-from functions.suggestion import suggestion as wrapped_suggestion
+from function_app import (create_game as wrapped_create_game,
+                          leave_game as wrapped_leave_game,
+                          update_self as wrapped_self,
+                          start_game as wrapped_start_game,
+                          suggestion as wrapped_suggestion)
 from utils import models
 from utils.dtos.client import (CompletedGame, StartedGame, Suggestion, User,
                                WaitingGame)

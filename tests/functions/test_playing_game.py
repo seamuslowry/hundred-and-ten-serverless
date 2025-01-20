@@ -1,12 +1,12 @@
 '''Playing Game unit tests'''
 from unittest import TestCase
 
-from functions.bid import bid as wrapped_bid
-from functions.discard import discard as wrapped_discard
-from functions.leave_game import leave_game as wrapped_leave_game
-from functions.play import play as wrapped_play
-from functions.rescind_prepass import rescind_prepass as wrapped_rescind_prepass
-from functions.select_trump import select_trump as wrapped_select_trump
+from function_app import (bid as wrapped_bid,
+                          discard as wrapped_discard,
+                          leave_game as wrapped_leave_game,
+                          play as wrapped_play,
+                          rescind_prepass as wrapped_rescind_prepass,
+                          select_trump as wrapped_select_trump)
 from utils.dtos.client import CompletedGame, StartedGame
 from utils.models import BidAmount, RoundStatus, SelectableSuit
 from tests.helpers import (build_request, get_suggestion, read_response_body,

@@ -39,10 +39,5 @@ omit = [
 [tool.pyright]
 useLibraryCodeForTypes = true
 
-[tool.setuptools]
-py-modules = [
-    "functions"
-]
-
 [tool.isort]
 sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
