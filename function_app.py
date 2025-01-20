@@ -39,3 +39,10 @@ app.register_functions(select_trump_bp)
 app.register_functions(self_bp)
 app.register_functions(start_game_bp)
 app.register_functions(suggestion_bp)
+
+
+@app.function_name(name="HttpTrigger1")
+@app.route(route="req")
+def main(req: func.HttpRequest) -> str:
+    user = req.params.get("user")
+    return f"Hello, {user}!"
