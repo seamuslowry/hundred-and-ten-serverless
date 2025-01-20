@@ -1,8 +1,15 @@
 '''
 The entrypoint for azure functions
 '''
+import json
 import azure.functions as func
-from functions.bid import bp as bid_bp
+
+from utils.decorators import catcher
+from utils.mappers.client import serialize
+from utils.models import Bid, BidAmount
+from utils.parsers import parse_request
+from utils.services import GameService
+
 from functions.create_game import bp as create_game_bp
 from functions.discard import bp as discard_bp
 from functions.events import bp as events_bp
@@ -20,11 +27,32 @@ from functions.self import bp as self_bp
 from functions.start_game import bp as start_game_bp
 from functions.suggestion import bp as suggestion_bp
 
-# test
-
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
-app.register_functions(bid_bp)
+
+@app.function_name("bid")
+@app.route(route="bid/{game_id}", methods=["POST"])
+@catcher
+def bid(req: func.HttpRequest) -> func.HttpResponse:
+    '''
+    Bid in a 110 game
+    '''
+    identifier, game = parse_request(req)
+    initial_event_knowledge = len(game.events)
+
+    body = req.get_json()
+
+    game.act(Bid(identifier, BidAmount(body['amount'])))
+
+    game = GameService.save(game)
+
+    return func.HttpResponse(json.dumps(
+        serialize.game(
+            game,
+            identifier,
+            initial_event_knowledge)))
+
+
 app.register_functions(create_game_bp)
 app.register_functions(discard_bp)
 app.register_functions(events_bp)
