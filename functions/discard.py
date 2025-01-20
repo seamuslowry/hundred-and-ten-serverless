@@ -14,9 +14,10 @@ from utils.services import GameService
 bp = func.Blueprint()
 
 
+@bp.function_name("discard")
 @bp.route(route="discard/{game_id}", methods=["POST"])
 @catcher
-def main(req: func.HttpRequest) -> func.HttpResponse:
+def discard(req: func.HttpRequest) -> func.HttpResponse:
     '''
     Discard in a 110 game
     '''

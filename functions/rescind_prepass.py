@@ -14,9 +14,10 @@ from utils.services import GameService
 bp = func.Blueprint()
 
 
+@bp.function_name("rescind_prepass")
 @bp.route(route="unpass/{game_id}", methods=["POST"])
 @catcher
-def main(req: func.HttpRequest) -> func.HttpResponse:
+def rescind_prepass(req: func.HttpRequest) -> func.HttpResponse:
     '''
     Unpass in a 110 game
     '''

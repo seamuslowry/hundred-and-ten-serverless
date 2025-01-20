@@ -12,9 +12,10 @@ from utils.services import UserService
 bp = func.Blueprint()
 
 
+@bp.function_name("search_users")
 @bp.route(route="users", methods=["GET"])
 @catcher
-def main(req: func.HttpRequest) -> func.HttpResponse:
+def search_users(req: func.HttpRequest) -> func.HttpResponse:
     '''
     Get users
     '''

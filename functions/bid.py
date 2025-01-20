@@ -5,7 +5,7 @@ import json
 
 import azure.functions as func
 
-# from utils.decorators import catcher
+from utils.decorators import catcher
 from utils.mappers.client import serialize
 from utils.models import Bid, BidAmount
 from utils.parsers import parse_request
@@ -14,9 +14,10 @@ from utils.services import GameService
 bp = func.Blueprint()
 
 
+@bp.function_name("bid")
 @bp.route(route="bid/{game_id}", methods=["POST"])
-# @catcher
-def main(req: func.HttpRequest) -> func.HttpResponse:
+@catcher
+def bid(req: func.HttpRequest) -> func.HttpResponse:
     '''
     Bid in a 110 game
     '''

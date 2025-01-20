@@ -13,9 +13,10 @@ from utils.services import GameService
 bp = func.Blueprint()
 
 
+@bp.function_name("invite_to_game")
 @bp.route(route="invite/{game_id}", methods=["POST"])
 @catcher
-def main(req: func.HttpRequest) -> func.HttpResponse:
+def invite_to_game(req: func.HttpRequest) -> func.HttpResponse:
     '''
     Invite to join a 110 game
     '''

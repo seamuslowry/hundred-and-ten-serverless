@@ -13,9 +13,10 @@ from utils.services import UserService
 bp = func.Blueprint()
 
 
+@bp.function_name("players")
 @bp.route(route="players/{game_id}", methods=["GET"])
 @catcher
-def main(req: func.HttpRequest) -> func.HttpResponse:
+def players(req: func.HttpRequest) -> func.HttpResponse:
     '''
     Retrieve players on a 110 game.
     '''

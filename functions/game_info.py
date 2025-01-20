@@ -12,9 +12,10 @@ from utils.parsers import parse_request
 bp = func.Blueprint()
 
 
+@bp.function_name("game_info")
 @bp.route(route="info/{game_id}", methods=["POST"])
 @catcher
-def main(req: func.HttpRequest) -> func.HttpResponse:
+def game_info(req: func.HttpRequest) -> func.HttpResponse:
     '''
     Retrieve 110 game.
     '''

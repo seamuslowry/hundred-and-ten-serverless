@@ -14,9 +14,10 @@ from utils.services import GameService
 bp = func.Blueprint()
 
 
+@bp.function_name("leave_game")
 @bp.route(route="leave/{game_id}", methods=["POST"])
 @catcher
-def main(req: func.HttpRequest) -> func.HttpResponse:
+def leave_game(req: func.HttpRequest) -> func.HttpResponse:
     '''
     Leave a 110 game
     '''

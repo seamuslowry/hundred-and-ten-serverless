@@ -14,9 +14,10 @@ from utils.services import GameService
 bp = func.Blueprint()
 
 
+@bp.function_name("play")
 @bp.route(route="play/{game_id}", methods=["POST"])
 @catcher
-def main(req: func.HttpRequest) -> func.HttpResponse:
+def play(req: func.HttpRequest) -> func.HttpResponse:
     '''
     Play a card in a 110 game
     '''

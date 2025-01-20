@@ -1,11 +1,11 @@
 '''Lobby Game unit tests'''
 from unittest import TestCase
 
-from functions.create_game import main as wrapped_create_game
-from functions.invite_to_game import main as wrapped_invite_to_game
-from functions.join_game import main as wrapped_join_game
-from functions.leave_game import main as wrapped_leave_game
-from functions.start_game import main as wrapped_start_game
+from functions.create_game import create_game as wrapped_create_game
+from functions.invite_to_game import invite_to_game as wrapped_invite_to_game
+from functions.join_game import join_game as wrapped_join_game
+from functions.leave_game import leave_game as wrapped_leave_game
+from functions.start_game import start_game as wrapped_start_game
 from utils.dtos.client import StartedGame, WaitingGame
 from utils.models import GameStatus, RoundStatus
 from tests.helpers import build_request, lobby_game, read_response_body

@@ -13,9 +13,10 @@ from utils.services import UserService
 bp = func.Blueprint()
 
 
+@bp.function_name("self")
 @bp.route(route="self", methods=["PUT", "POST"])
 @catcher
-def main(req: func.HttpRequest) -> func.HttpResponse:
+def update_self(req: func.HttpRequest) -> func.HttpResponse:
     '''
     Create or update the user
     '''

@@ -2,12 +2,12 @@
 from time import time
 from unittest import TestCase
 
-from functions.events import main as wrapped_events
-from functions.game_info import main as wrapped_game_info
-from functions.join_game import main as wrapped_join_game
-from functions.players import main as wrapped_players
-from functions.search_games import main as wrapped_search_games
-from functions.search_users import main as wrapped_search_users
+from functions.events import events as wrapped_events
+from functions.game_info import game_info as wrapped_game_info
+from functions.join_game import join_game as wrapped_join_game
+from functions.players import players as wrapped_players
+from functions.search_games import search_games as wrapped_search_games
+from functions.search_users import search_users as wrapped_search_users
 from utils.dtos.client import CompletedGame, Event, User, WaitingGame
 from utils.mappers.constants import EventType
 from tests.helpers import (build_request, completed_game, create_user,

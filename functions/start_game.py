@@ -16,9 +16,10 @@ MIN_PLAYERS = 4
 bp = func.Blueprint()
 
 
+@bp.function_name("start_game")
 @bp.route(route="start/{game_id}", methods=["POST"])
 @catcher
-def main(req: func.HttpRequest) -> func.HttpResponse:
+def start_game(req: func.HttpRequest) -> func.HttpResponse:
     '''
     Start a 110 game
     '''
