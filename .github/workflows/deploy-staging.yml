@@ -1,52 +1,19 @@
 name: Deploy to Staging
 on:
   push:
-    # branches:
-    #   - main
+    branches:
+      - main
 
 jobs:
-  # tag-new-version:
-  #   uses: seamuslowry/workflows/.github/workflows/tag.yml@main
-  #   secrets:
-  #     gh_token: ${{ secrets.GITHUB_TOKEN }}
+  tag-new-version:
+    uses: seamuslowry/workflows/.github/workflows/tag.yml@main
+    secrets:
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
 
   deploy:
-    # needs: tag-new-version # does not currently use output, but should run after tagging
+    needs: tag-new-version # does not currently use output, but should run after tagging
     uses: seamuslowry/workflows/.github/workflows/deploy_python_functions.yml@main
     with:
       name: hundredandten
     secrets:
       azure_publish_profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
-
-# jobs:
-#   deploy:
-#     name: Deploy Function App
-#     runs-on: ubuntu-latest
-#     env:
-#       APP_NAME: hundredandten
-#       APP_PACKAGE_PATH: '.'
-#       PYTHON_VERSION: '3.11'
-#     steps:
-#       - name: "Checkout GitHub Action"
-#         uses: actions/checkout@v4
-
-#       - name: Setup Python ${{ env.PYTHON_VERSION }} Environment
-#         uses: actions/setup-python@v5
-#         with:
-#           python-version: ${{ env.PYTHON_VERSION }}
-
-#       - name: "Resolve Project Dependencies Using Pip"
-#         shell: bash
-#         run: |
-#           pushd './${{ env.APP_PACKAGE_PATH }}'
-#           python -m pip install --upgrade pip
-#           pip install .
-
-#       - name: "Run Azure Functions Action"
-#         uses: Azure/functions-action@v1
-#         id: fa
-#         with:
-#           app-name: ${{ env.APP_NAME }}
-#           package: ${{ env.APP_PACKAGE_PATH }}
-#           publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
-#           respect-funcignore: true
