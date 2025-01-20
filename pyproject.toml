@@ -38,27 +38,5 @@ omit = [
 [tool.pyright]
 useLibraryCodeForTypes = true
 
-[tool.setuptools]
-py-modules = [
-    "bid",
-    "app",
-    "play",
-    "self",
-    "events",
-    "discard",
-    "players",
-    "join_game",
-    "game_info",
-    "suggestion",
-    "start_game",
-    "leave_game",
-    "create_game",
-    "search_users",
-    "select_trump",
-    "search_games",
-    "invite_to_game",
-    "rescind_prepass",
-]
-
 [tool.isort]
 sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]

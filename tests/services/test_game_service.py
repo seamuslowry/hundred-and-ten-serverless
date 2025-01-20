@@ -2,9 +2,9 @@
 from time import time
 from unittest import TestCase
 
-from app.dtos.db import SearchGame
-from app.models import Game
-from app.services import GameService
+from utils.dtos.db import SearchGame
+from utils.models import Game
+from utils.services import GameService
 
 
 class TestGameService(TestCase):

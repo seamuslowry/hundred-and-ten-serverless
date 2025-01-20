@@ -1,14 +1,20 @@
 '''Lobby Game unit tests'''
 from unittest import TestCase
 
-import create_game
-import invite_to_game
-import join_game
-import leave_game
-import start_game
-from app.dtos.client import StartedGame, WaitingGame
-from app.models import GameStatus, RoundStatus
+from function_app import (create_game as wrapped_create_game,
+                          invite_to_game as wrapped_invite_to_game,
+                          join_game as wrapped_join_game,
+                          leave_game as wrapped_leave_game,
+                          start_game as wrapped_start_game)
+from utils.dtos.client import StartedGame, WaitingGame
+from utils.models import GameStatus, RoundStatus
 from tests.helpers import build_request, lobby_game, read_response_body
+
+create_game = wrapped_create_game.build().get_user_function()
+invite_to_game = wrapped_invite_to_game.build().get_user_function()
+join_game = wrapped_join_game.build().get_user_function()
+leave_game = wrapped_leave_game.build().get_user_function()
+start_game = wrapped_start_game.build().get_user_function()
 
 
 class TestLobbyGame(TestCase):
@@ -17,7 +23,7 @@ class TestLobbyGame(TestCase):
     def test_create_game(self):
         '''New game can be created'''
         organizer = 'organizer'
-        resp = create_game.main(
+        resp = create_game(
             build_request(
                 headers={'x-ms-client-principal-id': organizer},
                 body={'name': 'create test'}))
@@ -34,7 +40,7 @@ class TestLobbyGame(TestCase):
 
         created_game: WaitingGame = lobby_game()
 
-        resp = invite_to_game.main(
+        resp = invite_to_game(
             build_request(
                 route_params={'game_id': created_game['id']},
                 headers={'x-ms-client-principal-id': created_game['organizer']['identifier']},
@@ -55,14 +61,14 @@ class TestLobbyGame(TestCase):
         created_game: WaitingGame = lobby_game()
 
         # invite the original
-        invite_to_game.main(
+        invite_to_game(
             build_request(
                 route_params={'game_id': created_game['id']},
                 headers={'x-ms-client-principal-id': created_game['organizer']['identifier']},
                 body={'invitees': [invitee]}))
 
         # new invitee cannot invite
-        failed_invite = invite_to_game.main(
+        failed_invite = invite_to_game(
             build_request(
                 route_params={'game_id': created_game['id']},
                 headers={'x-ms-client-principal-id': invitee},
@@ -77,13 +83,13 @@ class TestLobbyGame(TestCase):
         created_game: WaitingGame = lobby_game()
 
         # join as player
-        join_game.main(
+        join_game(
             build_request(
                 route_params={'game_id': created_game['id']},
                 headers={'x-ms-client-principal-id': player}))
 
         # new player can invite
-        invite = invite_to_game.main(
+        invite = invite_to_game(
             build_request(
                 route_params={'game_id': created_game['id']},
                 headers={'x-ms-client-principal-id': player},
@@ -103,7 +109,7 @@ class TestLobbyGame(TestCase):
 
         created_game: WaitingGame = lobby_game()
 
-        resp = join_game.main(
+        resp = join_game(
             build_request(
                 route_params={'game_id': created_game['id']},
                 headers={'x-ms-client-principal-id': player}))
@@ -119,12 +125,12 @@ class TestLobbyGame(TestCase):
         '''Uninvited players cannot join a private game'''
         player = 'player'
 
-        resp = create_game.main(
+        resp = create_game(
             build_request(
                 body={'name': 'private uninvited join test', 'accessibility': 'PRIVATE'}))
         created_game: WaitingGame = read_response_body(resp.get_body())
 
-        resp = join_game.main(
+        resp = join_game(
             build_request(
                 route_params={'game_id': created_game['id']},
                 headers={'x-ms-client-principal-id': player}))
@@ -134,18 +140,18 @@ class TestLobbyGame(TestCase):
         '''Invited players can join a private game'''
         player = 'player'
 
-        resp = create_game.main(
+        resp = create_game(
             build_request(
                 body={'name': 'private invite join test', 'accessibility': 'PRIVATE'}))
         created_game: WaitingGame = read_response_body(resp.get_body())
 
-        resp = invite_to_game.main(
+        resp = invite_to_game(
             build_request(
                 route_params={'game_id': created_game['id']},
                 headers={'x-ms-client-principal-id': created_game['organizer']['identifier']},
                 body={'invitees': [player]}))
 
-        resp = join_game.main(
+        resp = join_game(
             build_request(
                 route_params={'game_id': created_game['id']},
                 headers={'x-ms-client-principal-id': player}))
@@ -162,7 +168,7 @@ class TestLobbyGame(TestCase):
         '''Players can leave a game before it has started'''
         created_game: WaitingGame = lobby_game()
 
-        resp = leave_game.main(
+        resp = leave_game(
             build_request(
                 route_params={'game_id': created_game['id']},
                 headers={'x-ms-client-principal-id': created_game['organizer']['identifier']}))
@@ -184,12 +190,12 @@ class TestLobbyGame(TestCase):
 
         created_game: WaitingGame = lobby_game()
 
-        resp = join_game.main(
+        resp = join_game(
             build_request(
                 route_params={'game_id': created_game['id']},
                 headers={'x-ms-client-principal-id': player}))
 
-        resp = start_game.main(
+        resp = start_game(
             build_request(
                 route_params={'game_id': created_game['id']},
                 headers={'x-ms-client-principal-id': player}))
@@ -199,7 +205,7 @@ class TestLobbyGame(TestCase):
         '''The organizer can start the game'''
         created_game: WaitingGame = lobby_game()
 
-        resp = start_game.main(
+        resp = start_game(
             build_request(
                 headers={'x-ms-client-principal-id': created_game['organizer']['identifier']},
                 route_params={'game_id': created_game['id']}

@@ -2,17 +2,25 @@
 from time import time
 from unittest import TestCase
 
-import events
-import game_info
-import join_game
-import players
-import search_games
-import search_users
-from app.dtos.client import CompletedGame, Event, User, WaitingGame
-from app.mappers.constants import EventType
+from function_app import (events as wrapped_events,
+                          game_info as wrapped_game_info,
+                          join_game as wrapped_join_game,
+                          players as wrapped_players,
+                          search_games as wrapped_search_games,
+                          search_users as wrapped_search_users)
+from utils.dtos.client import CompletedGame, Event, User, WaitingGame
+from utils.mappers.constants import EventType
 from tests.helpers import (build_request, completed_game, create_user,
                            lobby_game, read_response_body, request_suggestion,
                            started_game)
+
+
+events = wrapped_events.build().get_user_function()
+game_info = wrapped_game_info.build().get_user_function()
+join_game = wrapped_join_game.build().get_user_function()
+players = wrapped_players.build().get_user_function()
+search_games = wrapped_search_games.build().get_user_function()
+search_users = wrapped_search_users.build().get_user_function()
 
 
 class TestRetrieveInfo(TestCase):
@@ -23,7 +31,7 @@ class TestRetrieveInfo(TestCase):
         game: CompletedGame = completed_game()
 
         # search games
-        resp = search_games.main(
+        resp = search_games(
             build_request(
                 body={
                     'winner': game['winner']['identifier']
@@ -37,7 +45,7 @@ class TestRetrieveInfo(TestCase):
         original_game: CompletedGame = completed_game()
 
         # get that game's info
-        resp = game_info.main(
+        resp = game_info(
             build_request(
                 route_params={'game_id': original_game['id']})
         )
@@ -49,7 +57,7 @@ class TestRetrieveInfo(TestCase):
         original_game: CompletedGame = completed_game()
 
         # get that game's events
-        resp = events.main(
+        resp = events(
             build_request(
                 route_params={'game_id': original_game['id']})
         )
@@ -72,13 +80,13 @@ class TestRetrieveInfo(TestCase):
         other_players: list[User] = list(map(create_user, other_player_ids))
 
         for player in other_players:
-            join_game.main(
+            join_game(
                 build_request(
                     route_params={'game_id': original_game['id']},
                     headers={'x-ms-client-principal-id': player['identifier']}))
 
         # get that game's players
-        resp = players.main(
+        resp = players(
             build_request(
                 route_params={'game_id': original_game['id']})
         )
@@ -102,7 +110,7 @@ class TestRetrieveInfo(TestCase):
         create_user(user_three[0], user_three[1])
 
         # get users
-        resp = search_users.main(
+        resp = search_users(
             build_request(
                 params={
                     'searchText': 'aaa'

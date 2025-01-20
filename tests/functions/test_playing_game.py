@@ -1,16 +1,24 @@
 '''Playing Game unit tests'''
 from unittest import TestCase
 
-import bid
-import discard
-import leave_game
-import play
-import rescind_prepass
-import select_trump
-from app.dtos.client import CompletedGame, StartedGame
-from app.models import BidAmount, RoundStatus, SelectableSuit
+from function_app import (bid as wrapped_bid,
+                          discard as wrapped_discard,
+                          leave_game as wrapped_leave_game,
+                          play as wrapped_play,
+                          rescind_prepass as wrapped_rescind_prepass,
+                          select_trump as wrapped_select_trump)
+from utils.dtos.client import CompletedGame, StartedGame
+from utils.models import BidAmount, RoundStatus, SelectableSuit
 from tests.helpers import (build_request, get_suggestion, read_response_body,
                            started_game)
+
+
+bid = wrapped_bid.build().get_user_function()
+discard = wrapped_discard.build().get_user_function()
+leave_game = wrapped_leave_game.build().get_user_function()
+play = wrapped_play.build().get_user_function()
+rescind_prepass = wrapped_rescind_prepass.build().get_user_function()
+select_trump = wrapped_select_trump.build().get_user_function()
 
 
 class TestPlayingGame(TestCase):
@@ -26,7 +34,7 @@ class TestPlayingGame(TestCase):
         assert 'amount' in suggested_bid
 
         # bid
-        resp = bid.main(
+        resp = bid(
             build_request(
                 route_params={'game_id': created_game['id']},
                 body={
@@ -42,7 +50,7 @@ class TestPlayingGame(TestCase):
         assert 'suit' in suggested_trump
 
         # select trump
-        resp = select_trump.main(
+        resp = select_trump(
             build_request(
                 route_params={'game_id': created_game['id']},
                 body={
@@ -58,7 +66,7 @@ class TestPlayingGame(TestCase):
         assert 'cards' in suggested_discard
 
         # discard
-        resp = discard.main(
+        resp = discard(
             build_request(
                 route_params={'game_id': created_game['id']},
                 body={
@@ -74,7 +82,7 @@ class TestPlayingGame(TestCase):
         assert 'card' in suggested_play
 
         # play
-        resp = play.main(
+        resp = play(
             build_request(
                 route_params={'game_id': created_game['id']},
                 body={
@@ -96,7 +104,7 @@ class TestPlayingGame(TestCase):
             game['round']['active_player']['identifier'])
 
         # prepass
-        resp = bid.main(
+        resp = bid(
             build_request(
                 route_params={'game_id': game['id']},
                 headers={'x-ms-client-principal-id': non_active_player['identifier']},
@@ -110,7 +118,7 @@ class TestPlayingGame(TestCase):
         self.assertTrue(non_active_player['prepassed'])
 
         # rescind prepass
-        resp = rescind_prepass.main(
+        resp = rescind_prepass(
             build_request(
                 route_params={'game_id': game['id']},
                 headers={'x-ms-client-principal-id': non_active_player['identifier']},
@@ -129,7 +137,7 @@ class TestPlayingGame(TestCase):
         self.assertFalse(active_player['automate'])
 
         # leave
-        resp = leave_game.main(
+        resp = leave_game(
             build_request(
                 route_params={'game_id': original_game['id']}
             )

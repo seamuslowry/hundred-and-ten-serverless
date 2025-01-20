@@ -3,8 +3,8 @@ from unittest import TestCase
 
 import azure.functions as func
 
-from app.decorators.error_aggregation import handle_error
-from app.models import HundredAndTenError
+from utils.decorators.error_aggregation import handle_error
+from utils.models import HundredAndTenError
 from tests.helpers import build_request
 
 

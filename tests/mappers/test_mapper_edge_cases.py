@@ -3,8 +3,8 @@ from unittest import TestCase
 
 import azure.functions as func
 
-from app.mappers.client import deserialize, serialize
-from app.models import Action
+from utils.mappers.client import deserialize, serialize
+from utils.models import Action
 
 
 class TestMapperEdgeCases(TestCase):

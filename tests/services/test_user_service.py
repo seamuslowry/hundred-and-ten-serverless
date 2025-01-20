@@ -2,8 +2,8 @@
 from time import time
 from unittest import TestCase
 
-from app.models import User
-from app.services import UserService
+from utils.models import User
+from utils.services import UserService
 
 
 class TestUserService(TestCase):
