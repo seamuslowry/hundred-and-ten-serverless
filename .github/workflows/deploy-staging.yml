@@ -12,7 +12,7 @@ jobs:
 
   deploy:
     # needs: tag-new-version # does not currently use output, but should run after tagging
-    uses: seamuslowry/workflows/.github/workflows/deploy_python_functions.yml@feat/no_target
+    uses: seamuslowry/workflows/.github/workflows/deploy_python_functions.yml@main
     with:
       name: hundredandten
     secrets:
