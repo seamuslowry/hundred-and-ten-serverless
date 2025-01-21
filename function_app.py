@@ -21,7 +21,7 @@ app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
 
 @app.function_name("bid")
-@app.route(route="bid/{game_id}", methods=["POST"])
+@app.route(route="bid/{game_id}", methods=[func.HttpMethod.POST])
 @catcher
 def bid(req: func.HttpRequest) -> func.HttpResponse:
     '''
