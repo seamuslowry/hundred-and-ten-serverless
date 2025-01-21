@@ -44,7 +44,7 @@ def bid(req: func.HttpRequest) -> func.HttpResponse:
 
 
 @app.function_name("create_game")
-@app.route(route="create", methods=["POST"])
+@app.route(route="create", methods=[func.HttpMethod.POST])
 @catcher
 def create_game(req: func.HttpRequest) -> func.HttpResponse:
     '''
@@ -72,7 +72,7 @@ def create_game(req: func.HttpRequest) -> func.HttpResponse:
 
 
 @app.function_name("discard")
-@app.route(route="discard/{game_id}", methods=["POST"])
+@app.route(route="discard/{game_id}", methods=[func.HttpMethod.POST])
 @catcher
 def discard(req: func.HttpRequest) -> func.HttpResponse:
     '''
@@ -92,7 +92,7 @@ def discard(req: func.HttpRequest) -> func.HttpResponse:
 
 
 @app.function_name("events")
-@app.route(route="events/{game_id}", methods=["POST"])
+@app.route(route="events/{game_id}", methods=[func.HttpMethod.POST])
 @catcher
 def events(req: func.HttpRequest) -> func.HttpResponse:
     '''
@@ -105,7 +105,7 @@ def events(req: func.HttpRequest) -> func.HttpResponse:
 
 
 @app.function_name("game_info")
-@app.route(route="info/{game_id}", methods=["POST"])
+@app.route(route="info/{game_id}", methods=[func.HttpMethod.POST])
 @catcher
 def game_info(req: func.HttpRequest) -> func.HttpResponse:
     '''
@@ -117,7 +117,7 @@ def game_info(req: func.HttpRequest) -> func.HttpResponse:
 
 
 @app.function_name("invite_to_game")
-@app.route(route="invite/{game_id}", methods=["POST"])
+@app.route(route="invite/{game_id}", methods=[func.HttpMethod.POST])
 @catcher
 def invite_to_game(req: func.HttpRequest) -> func.HttpResponse:
     '''
@@ -136,7 +136,7 @@ def invite_to_game(req: func.HttpRequest) -> func.HttpResponse:
 
 
 @app.function_name("join_game")
-@app.route(route="join/{game_id}", methods=["POST"])
+@app.route(route="join/{game_id}", methods=[func.HttpMethod.POST])
 @catcher
 def join_game(req: func.HttpRequest) -> func.HttpResponse:
     '''
@@ -150,7 +150,7 @@ def join_game(req: func.HttpRequest) -> func.HttpResponse:
 
 
 @app.function_name("leave_game")
-@app.route(route="leave/{game_id}", methods=["POST"])
+@app.route(route="leave/{game_id}", methods=[func.HttpMethod.POST])
 @catcher
 def leave_game(req: func.HttpRequest) -> func.HttpResponse:
     '''
@@ -169,7 +169,7 @@ def leave_game(req: func.HttpRequest) -> func.HttpResponse:
 
 
 @app.function_name("play")
-@app.route(route="play/{game_id}", methods=["POST"])
+@app.route(route="play/{game_id}", methods=[func.HttpMethod.POST])
 @catcher
 def play(req: func.HttpRequest) -> func.HttpResponse:
     '''
@@ -189,7 +189,7 @@ def play(req: func.HttpRequest) -> func.HttpResponse:
 
 
 @app.function_name("players")
-@app.route(route="players/{game_id}", methods=["GET"])
+@app.route(route="players/{game_id}", methods=[func.HttpMethod.GET])
 @catcher
 def players(req: func.HttpRequest) -> func.HttpResponse:
     '''
@@ -204,7 +204,7 @@ def players(req: func.HttpRequest) -> func.HttpResponse:
 
 
 @app.function_name("rescind_prepass")
-@app.route(route="unpass/{game_id}", methods=["POST"])
+@app.route(route="unpass/{game_id}", methods=[func.HttpMethod.POST])
 @catcher
 def rescind_prepass(req: func.HttpRequest) -> func.HttpResponse:
     '''
@@ -222,7 +222,7 @@ def rescind_prepass(req: func.HttpRequest) -> func.HttpResponse:
 
 
 @app.function_name("search_games")
-@app.route(route="games", methods=["GET"])
+@app.route(route="games", methods=[func.HttpMethod.GET])
 @catcher
 def search_games(req: func.HttpRequest) -> func.HttpResponse:
     '''
@@ -246,7 +246,7 @@ def search_games(req: func.HttpRequest) -> func.HttpResponse:
 
 
 @app.function_name("search_users")
-@app.route(route="users", methods=["GET"])
+@app.route(route="users", methods=[func.HttpMethod.GET])
 @catcher
 def search_users(req: func.HttpRequest) -> func.HttpResponse:
     '''
@@ -258,7 +258,7 @@ def search_users(req: func.HttpRequest) -> func.HttpResponse:
 
 
 @app.function_name("select_trump")
-@app.route(route="select/{game_id}", methods=["POST"])
+@app.route(route="select/{game_id}", methods=[func.HttpMethod.POST])
 @catcher
 def select_trump(req: func.HttpRequest) -> func.HttpResponse:
     '''
@@ -278,7 +278,7 @@ def select_trump(req: func.HttpRequest) -> func.HttpResponse:
 
 
 @app.function_name("self")
-@app.route(route="self", methods=["PUT", "POST"])
+@app.route(route="self", methods=[func.HttpMethod.PUT, func.HttpMethod.POST])
 @catcher
 def update_self(req: func.HttpRequest) -> func.HttpResponse:
     '''
@@ -299,7 +299,7 @@ def update_self(req: func.HttpRequest) -> func.HttpResponse:
 
 
 @app.function_name("start_game")
-@app.route(route="start/{game_id}", methods=["POST"])
+@app.route(route="start/{game_id}", methods=[func.HttpMethod.POST])
 @catcher
 def start_game(req: func.HttpRequest) -> func.HttpResponse:
     '''
@@ -324,7 +324,7 @@ def start_game(req: func.HttpRequest) -> func.HttpResponse:
 
 
 @app.function_name("suggestion")
-@app.route(route="suggestion/{game_id}", methods=["POST"])
+@app.route(route="suggestion/{game_id}", methods=[func.HttpMethod.POST])
 @catcher
 def suggestion(req: func.HttpRequest) -> func.HttpResponse:
     '''
