@@ -16,7 +16,7 @@ classifiers = [
 ]
 dependencies = [
     "azure-functions==1.21.3",
-    "hundredandten==1.11.7",
+    "hundredandten==1.11.9",
     "pymongo==4.11.2",
 ]
 
