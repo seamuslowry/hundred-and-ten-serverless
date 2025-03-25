@@ -16,18 +16,18 @@ classifiers = [
 ]
 dependencies = [
     "azure-functions==1.21.3",
-    "hundredandten==1.11.0",
-    "pymongo==4.10.1",
+    "hundredandten==1.11.12",
+    "pymongo==4.11.3",
 ]
 
 [project.optional-dependencies]
 lint = [
-    "pylint==3.3.3",
-    "pyright==1.1.392.post0",
+    "pylint==3.3.6",
+    "pyright==1.1.397",
 ]
 test = [
-    "coverage==7.6.10",
-    "pytest==8.3.4",
+    "coverage==7.7.1",
+    "pytest==8.3.5",
 ]
 
 [tool.coverage.run]
