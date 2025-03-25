@@ -129,7 +129,7 @@ resource "azurerm_linux_function_app" "app" {
   }
 
   site_config {
-    application_insights_key = azurerm_application_insights.insights.instrumentation_key
+    application_insights_connection_string = azurerm_application_insights.insights.connection_string
     ftps_state = "AllAllowed"
     application_stack {
       python_version = "3.11"
@@ -202,7 +202,7 @@ resource "azurerm_linux_function_app_slot" "staging" {
   }
 
   site_config {
-    application_insights_key = azurerm_application_insights.insights.instrumentation_key
+    application_insights_connection_string = azurerm_application_insights.insights.connection_string
     ftps_state = "AllAllowed"
     application_stack {
       python_version = "3.11"
