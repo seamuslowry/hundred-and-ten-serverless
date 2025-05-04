@@ -17,7 +17,7 @@ classifiers = [
 dependencies = [
     "azure-functions==1.22.1",
     "hundredandten==1.11.15",
-    "pymongo==4.12.0",
+    "pymongo==4.12.1",
 ]
 
 [project.optional-dependencies]
