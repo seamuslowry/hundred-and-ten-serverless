@@ -132,7 +132,7 @@ resource "azurerm_linux_function_app" "app" {
     application_insights_connection_string = azurerm_application_insights.insights.connection_string
     ftps_state = "AllAllowed"
     application_stack {
-      python_version = "3.11"
+      python_version = "3.12"
     }
   }
 
@@ -205,7 +205,7 @@ resource "azurerm_linux_function_app_slot" "staging" {
     application_insights_connection_string = azurerm_application_insights.insights.connection_string
     ftps_state = "AllAllowed"
     application_stack {
-      python_version = "3.11"
+      python_version = "3.12"
     }
   }
 }
