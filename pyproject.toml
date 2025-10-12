@@ -15,7 +15,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
 ]
 dependencies = [
-    "azure-functions==1.23.0",
+    "azure-functions==1.24.0",
     "hundredandten==1.11.40",
     "pymongo==4.15.2",
 ]
