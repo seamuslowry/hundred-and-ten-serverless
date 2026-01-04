@@ -26,7 +26,7 @@ lint = [
     "pyright==1.1.407",
 ]
 test = [
-    "coverage==7.13.0",
+    "coverage==7.13.1",
     "pytest==9.0.2",
 ]
 
