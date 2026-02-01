@@ -16,7 +16,6 @@ class Person(TypedDict):
 
     identifier: str
     automate: bool
-    prepassed: bool
 
 
 class OtherPlayer(Person):
@@ -36,6 +35,7 @@ class Self(Person):
     """A class to model the client format of the logged in Hundred and Ten player"""
 
     hand: list[Card]
+    prepassed: bool
 
 
 Player = Union[Self, OtherPlayer]
