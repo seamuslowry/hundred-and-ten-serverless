@@ -122,10 +122,9 @@ def __round(m_round: models.Round, client_identifier: str) -> client.Round:
 
 
 def __person(person: models.Person) -> client.Person:
+    # Person is lobby phase only - no RoundRole, so prepassed is always False
     return client.Person(
-        identifier=person.identifier,
-        automate=person.automate,
-        prepassed=models.RoundRole.PRE_PASSED in person.roles,
+        identifier=person.identifier, automate=person.automate, prepassed=False
     )
 
 
@@ -141,7 +140,7 @@ def __player(player: models.Player, client_identifier: str) -> client.Player:
     return client.OtherPlayer(
         identifier=player.identifier,
         automate=player.automate,
-        prepassed=models.RoundRole in player.roles,
+        prepassed=models.RoundRole.PRE_PASSED in player.roles,
         hand_size=len(player.hand),
     )
 
