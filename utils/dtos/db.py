@@ -18,71 +18,53 @@ class Card(TypedDict):
     number: str
 
 
-class Player(Person):
-    """A class to model the DB format of a player"""
+class Move(TypedDict):
+    """Base class for all game moves"""
 
-    hand: list[Card]
-
-
-class Bid(TypedDict):
-    """A class to model the DB format of a Hundred and Ten bid"""
-
+    type: str
     identifier: str
+
+
+class BidMove(Move):
+    """A bid move"""
+
     amount: int
 
 
-class Play(TypedDict):
-    """A class to model the DB format of a Hundred and Ten play"""
+class SelectTrumpMove(Move):
+    """A select trump move"""
 
-    identifier: str
+    suit: str
+
+
+class DiscardMove(Move):
+    """A discard move"""
+
+    cards: list[Card]
+
+
+class PlayMove(Move):
+    """A play card move"""
+
     card: Card
 
 
-class Trick(TypedDict):
-    """A class to model the DB format of a Hundred and Ten trick"""
+class UnpassMove(Move):
+    """An unpass move"""
 
-    plays: list[Play]
-    round_trump: str
-
-
-class Deck(TypedDict):
-    """A class to model the DB format of a Hundred and Ten deck"""
-
-    seed: str
-    pulled: int
-
-
-class Discard(TypedDict):
-    """A class to model the DB format of a Hundred and Ten discard"""
-
-    identifier: str
-    cards: list[Card]
-    kept: list[Card]
-
-
-class Round(TypedDict):
-    """A class to model the DB format of a Hundred and Ten round"""
-
-    players: list[Player]
-    bids: list[Bid]
-    deck: Deck
-    trump: Optional[str]
-    discards: list[Discard]
-    tricks: list[Trick]
+    pass
 
 
 class Game(TypedDict):
     """A class to model the DB format of a Hundred and Ten game"""
 
     id: str
-    status: str
     name: str
     seed: str
     accessibility: str
     people: list[Person]
-    rounds: list[Round]
-    active_player: Optional[str]
-    winner: Optional[str]
+    moves: list[Move]
+    started: bool
 
 
 class User(TypedDict):

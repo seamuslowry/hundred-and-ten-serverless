@@ -50,8 +50,18 @@ class Game:
 
     # The underlying game engine (None until game starts)
     _game: Optional[HundredAndTen] = field(default=None, repr=False)
-    # Store rounds for persistence when game is active
-    _rounds: list[Round] = field(default_factory=list, repr=False)
+    # Track all moves made for persistence
+    _moves: list[Action] = field(default_factory=list, repr=False)
+
+    @property
+    def started(self) -> bool:
+        """Check if the game has started"""
+        return self._game is not None
+
+    @property
+    def moves(self) -> list[Action]:
+        """Get all moves made in the game"""
+        return self._moves
 
     @property
     def organizer(self) -> Person:
@@ -95,7 +105,7 @@ class Game:
         """Get all rounds played"""
         if self._game:
             return list(self._game.rounds)
-        return self._rounds
+        return []
 
     @property
     def active_round(self) -> Round:
@@ -199,6 +209,8 @@ class Game:
         if not self._game:
             raise ValueError("Game has not started")
         self._game.act(action)
+        # Track the move for persistence
+        self._moves.append(action)
 
     def suggestion(self) -> Action:
         """Get a suggested action"""

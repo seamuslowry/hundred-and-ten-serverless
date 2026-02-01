@@ -30,30 +30,45 @@ def search(search_game: SearchGame, max_count: int) -> list[Game]:
     winner = search_game.get("winner", None)
     statuses = search_game.get("statuses", None)
 
-    return list(
-        map(
-            deserialize.game,
-            game_client.find(
+    # Fetch games matching basic criteria from DB
+    db_games = game_client.find(
+        {
+            "name": {"$regex": search_game["name"], "$options": "i"},
+            "$or": [
+                {"accessibility": Accessibility.PUBLIC.name},
                 {
-                    "name": {"$regex": search_game["name"], "$options": "i"},
-                    "$or": [
-                        {"accessibility": Accessibility.PUBLIC.name},
-                        {
-                            "people": {
-                                "$elemMatch": {
-                                    "identifier": {"$eq": search_game["client"]}
-                                }
-                            }
-                        },
-                    ],
-                    **(
-                        {"active_player": active_player}
-                        if active_player is not None
-                        else {}
-                    ),
-                    **({"winner": winner} if winner is not None else {}),
-                    **({"status": {"$in": statuses}} if statuses is not None else {}),
-                }
-            ).limit(max_count),
-        )
+                    "people": {
+                        "$elemMatch": {"identifier": {"$eq": search_game["client"]}}
+                    }
+                },
+            ],
+        }
     )
+
+    # Deserialize and filter by computed properties in memory
+    results: list[Game] = []
+    for db_game in db_games:
+        game = deserialize.game(db_game)
+
+        # Filter by status
+        if statuses is not None and game.status.name not in statuses:
+            continue
+
+        # Filter by active player
+        if active_player is not None:
+            if not game.started:
+                continue
+            game_active_player = game.active_round.active_player
+            if game_active_player is None or game_active_player.identifier != active_player:
+                continue
+
+        # Filter by winner
+        if winner is not None:
+            if game.winner is None or game.winner.identifier != winner:
+                continue
+
+        results.append(game)
+        if len(results) >= max_count:
+            break
+
+    return results

@@ -19,14 +19,24 @@ def game(db_game: db.Game) -> models.Game:
     """Convert a Game DB DTO to its model"""
 
     # Create the game with lobby data
-    return models.Game(
+    m_game = models.Game(
         id=db_game["id"],
         name=db_game["name"],
         seed=db_game["seed"],
         accessibility=models.Accessibility[db_game["accessibility"]],
         people=PersonGroup(map(__person, db_game["people"])),
-        # TODO: update to take a list of moves to build the internal engine
     )
+
+    # If the game has started, reconstruct the game engine by replaying moves
+    if db_game["started"]:
+        m_game.start_game()
+
+        # Replay all moves
+        for move in db_game["moves"]:
+            action = __move(move)
+            m_game.act(action)
+
+    return m_game
 
 
 def __person(person: db.Person) -> models.Person:
@@ -37,62 +47,32 @@ def __person(person: db.Person) -> models.Person:
     )
 
 
-def __player(player: db.Player) -> models.Player:
-    return models.Player(
-        identifier=player["identifier"],
-        automate=player["automate"],
-        roles=set(map(lambda r: models.RoundRole[r], player["roles"])),
-        hand=list(map(__card, player["hand"])),
-    )
+def __move(db_move: db.Move) -> models.Action:
+    """Convert a DB move to a game action"""
+    move_type = db_move["type"]
+    identifier = db_move["identifier"]
 
+    if move_type == "bid":
+        return models.Bid(
+            identifier=identifier,
+            amount=models.BidAmount(db_move["amount"]),  # type: ignore
+        )
+    if move_type == "select_trump":
+        return models.SelectTrump(
+            identifier=identifier,
+            suit=models.SelectableSuit[db_move["suit"]],  # type: ignore
+        )
+    if move_type == "discard":
+        return models.Discard(
+            identifier=identifier,
+            cards=list(map(__card, db_move["cards"])),  # type: ignore
+        )
+    if move_type == "play":
+        return models.Play(
+            identifier=identifier,
+            card=__card(db_move["card"]),  # type: ignore
+        )
+    if move_type == "unpass":
+        return models.Unpass(identifier=identifier)
 
-def __bid(bid: db.Bid) -> models.Bid:
-    return models.Bid(
-        identifier=bid["identifier"], amount=models.BidAmount(bid["amount"])
-    )
-
-
-def __deck(deck: db.Deck) -> models.Deck:
-    return models.Deck(seed=deck["seed"], pulled=deck["pulled"])
-
-
-def __discard(discard: db.Discard) -> models.DetailedDiscard:
-    return models.DetailedDiscard(
-        identifier=discard["identifier"],
-        cards=list(map(__card, discard["cards"])),
-        kept=list(map(__card, discard["kept"])),
-    )
-
-
-def __play(play: db.Play) -> models.Play:
-    return models.Play(identifier=play["identifier"], card=__card(play["card"]))
-
-
-def __trick(trick: db.Trick) -> models.Trick:
-    return models.Trick(
-        plays=list(map(__play, trick["plays"])),
-        round_trump=models.SelectableSuit[trick["round_trump"]],
-    )
-
-
-def __round(db_round: db.Round) -> models.Round:
-
-    trump_name = db_round["trump"]
-    trump = models.SelectableSuit[trump_name] if trump_name else None
-
-    model_round = models.Round(
-        players=models.Group(map(__player, db_round["players"])),
-        bids=list(map(__bid, db_round["bids"])),
-        deck=__deck(db_round["deck"]),
-        discards=list(map(__discard, db_round["discards"])),
-        tricks=list(map(__trick, db_round["tricks"])),
-    )
-
-    active_bidder = model_round.active_bidder
-    model_round.selection = (
-        models.SelectTrump(active_bidder.identifier, trump)
-        if (active_bidder and trump)
-        else None
-    )
-
-    return model_round
+    raise ValueError(f"Unknown move type: {move_type}")
