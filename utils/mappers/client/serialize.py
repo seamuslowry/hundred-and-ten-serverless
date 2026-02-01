@@ -122,7 +122,6 @@ def __round(m_round: models.Round, client_identifier: str) -> client.Round:
 
 
 def __person(person: models.Person) -> client.Person:
-    # Person is lobby phase only - no RoundRole, so prepassed is always False
     return client.Person(
         identifier=person.identifier, automate=person.automate
     )
