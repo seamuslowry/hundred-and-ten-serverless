@@ -19,34 +19,14 @@ def game(db_game: db.Game) -> models.Game:
     """Convert a Game DB DTO to its model"""
 
     # Create the game with lobby data
-    m_game = models.Game(
+    return models.Game(
         id=db_game["id"],
         name=db_game["name"],
         seed=db_game["seed"],
         accessibility=models.Accessibility[db_game["accessibility"]],
         people=PersonGroup(map(__person, db_game["people"])),
+        # TODO: update to take a list of moves to build the internal engine
     )
-
-    # If there are rounds, the game has started - reconstruct the game engine
-    if db_game["rounds"]:
-        rounds = list(map(__round, db_game["rounds"]))
-
-        # Create players for the game engine from the people who are players
-        game_players = models.Group(
-            [
-                models.Player(identifier=p.identifier, automate=p.automate)
-                for p in m_game.players
-            ]
-        )
-
-        # Create the game engine with the same seed
-        m_game._game = models.HundredAndTen(players=game_players, seed=m_game.seed)
-
-        # Replace the rounds with our deserialized ones
-        # Note: This is a workaround since v2's game engine manages rounds internally
-        m_game._game._rounds = rounds
-
-    return m_game
 
 
 def __person(person: db.Person) -> models.Person:
