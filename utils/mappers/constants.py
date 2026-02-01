@@ -1,9 +1,11 @@
-'''Constants to support DB mapping'''
+"""Constants to support DB mapping"""
+
 from enum import Enum
 
 
 class EventType(str, Enum):
-    '''Enum value for event types to client'''
+    """Enum value for event types to client"""
+
     GAME_START = 1
     ROUND_START = 2
     BID = 3

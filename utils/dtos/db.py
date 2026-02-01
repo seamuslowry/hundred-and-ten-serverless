@@ -1,59 +1,68 @@
-'''Format of a game of Hundred and Ten in the DB'''
+"""Format of a game of Hundred and Ten in the DB"""
 
 from typing import Optional, TypedDict
 
 
 class Person(TypedDict):
-    '''A class to model the DB format of a person'''
+    """A class to model the DB format of a person"""
+
     identifier: str
     roles: list[str]
     automate: bool
 
 
 class Card(TypedDict):
-    '''A class to model the DB format of a card'''
+    """A class to model the DB format of a card"""
+
     suit: str
     number: str
 
 
 class Player(Person):
-    '''A class to model the DB format of a player'''
+    """A class to model the DB format of a player"""
+
     hand: list[Card]
 
 
 class Bid(TypedDict):
-    '''A class to model the DB format of a Hundred and Ten bid'''
+    """A class to model the DB format of a Hundred and Ten bid"""
+
     identifier: str
     amount: int
 
 
 class Play(TypedDict):
-    '''A class to model the DB format of a Hundred and Ten play'''
+    """A class to model the DB format of a Hundred and Ten play"""
+
     identifier: str
     card: Card
 
 
 class Trick(TypedDict):
-    '''A class to model the DB format of a Hundred and Ten trick'''
+    """A class to model the DB format of a Hundred and Ten trick"""
+
     plays: list[Play]
     round_trump: str
 
 
 class Deck(TypedDict):
-    '''A class to model the DB format of a Hundred and Ten deck'''
+    """A class to model the DB format of a Hundred and Ten deck"""
+
     seed: str
     pulled: int
 
 
 class Discard(TypedDict):
-    '''A class to model the DB format of a Hundred and Ten discard'''
+    """A class to model the DB format of a Hundred and Ten discard"""
+
     identifier: str
     cards: list[Card]
     kept: list[Card]
 
 
 class Round(TypedDict):
-    '''A class to model the DB format of a Hundred and Ten round'''
+    """A class to model the DB format of a Hundred and Ten round"""
+
     players: list[Player]
     bids: list[Bid]
     deck: Deck
@@ -63,7 +72,8 @@ class Round(TypedDict):
 
 
 class Game(TypedDict):
-    '''A class to model the DB format of a Hundred and Ten game'''
+    """A class to model the DB format of a Hundred and Ten game"""
+
     id: str
     status: str
     name: str
@@ -76,14 +86,16 @@ class Game(TypedDict):
 
 
 class User(TypedDict):
-    '''A class to model the DB format of a Hundred and Ten user'''
+    """A class to model the DB format of a Hundred and Ten user"""
+
     identifier: str
     name: str
     picture_url: Optional[str]
 
 
 class SearchGame(TypedDict):
-    '''A class to model how the client will search for Hundred and Ten games'''
+    """A class to model how the client will search for Hundred and Ten games"""
+
     name: str
     client: str
     statuses: Optional[list[str]]
