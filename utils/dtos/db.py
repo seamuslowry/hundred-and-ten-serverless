@@ -69,6 +69,7 @@ class Game(TypedDict):
     accessibility: str
     people: list[Person]
     winner: Optional[str]
+    active_player: Optional[str]
     moves: list[Move]
     lobby: bool
     status: str

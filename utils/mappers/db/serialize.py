@@ -6,6 +6,11 @@ from utils.dtos import db
 
 def game(m_game: models.Game) -> db.Game:
     """Convert a Game model to its DB DTO"""
+    active_player = (
+        m_game.active_round.active_player
+        if not m_game.lobby and m_game._game and not m_game._game.winner
+        else None
+    )
     return db.Game(
         id=m_game.id,
         name=m_game.name,
@@ -13,9 +18,10 @@ def game(m_game: models.Game) -> db.Game:
         accessibility=m_game.accessibility.name,
         people=list(map(__person, m_game.people)),
         winner=m_game.winner.identifier if m_game.winner else None,
+        active_player=active_player.identifier if active_player else None,
         moves=list(map(__move, m_game.moves)),
         lobby=m_game.lobby,
-        status=str(m_game.status),
+        status=m_game.status.name,
     )
 
 
