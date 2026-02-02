@@ -1,6 +1,6 @@
 """Format of a game of Hundred and Ten in the DB"""
 
-from typing import Optional, TypedDict
+from typing import Literal, Optional, TypedDict, Union
 
 
 class Person(TypedDict):
@@ -18,41 +18,46 @@ class Card(TypedDict):
     number: str
 
 
-class Move(TypedDict):
-    """Base class for all game moves"""
-
-    type: str
-    identifier: str
-
-
-class BidMove(Move):
+class BidMove(TypedDict):
     """A bid move"""
 
+    type: Literal["bid"]
+    identifier: str
     amount: int
 
 
-class SelectTrumpMove(Move):
+class SelectTrumpMove(TypedDict):
     """A select trump move"""
 
+    type: Literal["select_trump"]
+    identifier: str
     suit: str
 
 
-class DiscardMove(Move):
+class DiscardMove(TypedDict):
     """A discard move"""
 
+    type: Literal["discard"]
+    identifier: str
     cards: list[Card]
 
 
-class PlayMove(Move):
+class PlayMove(TypedDict):
     """A play card move"""
 
+    type: Literal["play"]
+    identifier: str
     card: Card
 
 
-class UnpassMove(Move):
+class UnpassMove(TypedDict):
     """An unpass move"""
 
-    pass
+    type: Literal["unpass"]
+    identifier: str
+
+
+Move = Union[BidMove, SelectTrumpMove, DiscardMove, PlayMove, UnpassMove]
 
 
 class Game(TypedDict):
@@ -63,8 +68,10 @@ class Game(TypedDict):
     seed: str
     accessibility: str
     people: list[Person]
+    winner: Optional[str]
     moves: list[Move]
-    started: bool
+    lobby: bool
+    status: str
 
 
 class User(TypedDict):

@@ -18,25 +18,15 @@ def user(db_user: db.User) -> models.User:
 def game(db_game: db.Game) -> models.Game:
     """Convert a Game DB DTO to its model"""
 
-    # Create the game with lobby data
-    m_game = models.Game(
+    return models.Game(
         id=db_game["id"],
         name=db_game["name"],
         seed=db_game["seed"],
         accessibility=models.Accessibility[db_game["accessibility"]],
         people=PersonGroup(map(__person, db_game["people"])),
+        initial_moves=list(map(__move, db_game["moves"])),
+        lobby=db_game["lobby"],
     )
-
-    # If the game has started, reconstruct the game engine by replaying moves
-    if db_game["started"]:
-        m_game.start_game()
-
-        # Replay all moves
-        for move in db_game["moves"]:
-            action = __move(move)
-            m_game.act(action)
-
-    return m_game
 
 
 def __person(person: db.Person) -> models.Person:
@@ -49,30 +39,28 @@ def __person(person: db.Person) -> models.Person:
 
 def __move(db_move: db.Move) -> models.Action:
     """Convert a DB move to a game action"""
-    move_type = db_move["type"]
     identifier = db_move["identifier"]
 
-    if move_type == "bid":
-        return models.Bid(
-            identifier=identifier,
-            amount=models.BidAmount(db_move["amount"]),  # type: ignore
-        )
-    if move_type == "select_trump":
-        return models.SelectTrump(
-            identifier=identifier,
-            suit=models.SelectableSuit[db_move["suit"]],  # type: ignore
-        )
-    if move_type == "discard":
-        return models.Discard(
-            identifier=identifier,
-            cards=list(map(__card, db_move["cards"])),  # type: ignore
-        )
-    if move_type == "play":
-        return models.Play(
-            identifier=identifier,
-            card=__card(db_move["card"]),  # type: ignore
-        )
-    if move_type == "unpass":
-        return models.Unpass(identifier=identifier)
-
-    raise ValueError(f"Unknown move type: {move_type}")
+    match db_move["type"]:
+        case "bid":
+            return models.Bid(
+                identifier=identifier,
+                amount=models.BidAmount(db_move["amount"]),
+            )
+        case "select_trump":
+            return models.SelectTrump(
+                identifier=identifier,
+                suit=models.SelectableSuit[db_move["suit"]],
+            )
+        case "discard":
+            return models.Discard(
+                identifier=identifier,
+                cards=list(map(__card, db_move["cards"])),
+            )
+        case "play":
+            return models.Play(
+                identifier=identifier,
+                card=__card(db_move["card"]),
+            )
+        case "unpass":
+            return models.Unpass(identifier=identifier)

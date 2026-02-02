@@ -122,9 +122,7 @@ def __round(m_round: models.Round, client_identifier: str) -> client.Round:
 
 
 def __person(person: models.Person) -> client.Person:
-    return client.Person(
-        identifier=person.identifier, automate=person.automate
-    )
+    return client.Person(identifier=person.identifier, automate=person.automate)
 
 
 def __player(player: models.Player, client_identifier: str) -> client.Player:

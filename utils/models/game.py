@@ -1,6 +1,6 @@
 """Model the game of Hundred and Ten that is being played."""
 
-from dataclasses import dataclass, field
+from dataclasses import InitVar, dataclass, field
 from typing import Optional, Union
 from uuid import uuid4
 
@@ -46,22 +46,28 @@ class Game:
     name: str = field(default="")
     seed: str = field(default_factory=lambda: str(uuid4()))
     accessibility: Accessibility = field(default=Accessibility.PUBLIC)
+    lobby: bool = field(default=True)
+    # don't want to have to keep this in sync with game players.
+    # should refactor into a separate Lobby model
     people: PersonGroup = field(default_factory=PersonGroup)
 
-    # The underlying game engine (None until game starts)
-    _game: Optional[HundredAndTen] = field(default=None, repr=False)
-    # Track all moves made for persistence
-    _moves: list[Action] = field(default_factory=list, repr=False)
+    initial_moves: InitVar[Optional[list[Action]]] = field(default=None)
 
-    @property
-    def started(self) -> bool:
-        """Check if the game has started"""
-        return self._game is not None
+    # The underlying game engine
+    _game: Optional[HundredAndTen] = field(default=None, init=False, repr=False)
+
+    def __post_init__(self, initial_moves: Optional[list[Action]]):
+        if not self.lobby:
+            self._game = self._initialize_game(initial_moves or [])
 
     @property
     def moves(self) -> list[Action]:
         """Get all moves made in the game"""
-        return self._moves
+        return (
+            [event for event in self._game.events if isinstance(event, Action)]
+            if self._game
+            else []
+        )
 
     @property
     def organizer(self) -> Person:
@@ -69,7 +75,6 @@ class Game:
         organizers = self.people.by_role(GameRole.ORGANIZER)
         if organizers:
             return organizers[0]
-        # Return a dummy organizer if none exists
         if self.people:
             return self.people[0]
         return Person(identifier="unknown")
@@ -87,7 +92,7 @@ class Game:
     @property
     def status(self) -> Union[GameStatus, RoundStatus]:
         """Get the current game status"""
-        if self._game is None:
+        if self.lobby or not self._game:
             return GameStatus.WAITING_FOR_PLAYERS
         if self._game.winner:
             return GameStatus.WON
@@ -130,25 +135,29 @@ class Game:
 
     def join(self, identifier: str) -> None:
         """Add a player to the game"""
-        if self._game:
-            raise ValueError("Cannot join a game that has started")
+        if self.status != GameStatus.WAITING_FOR_PLAYERS:
+            raise ValueError("Cannot join an in-progress game")
+
+        person = self.people.by_identifier(identifier)
+
         if self.accessibility == Accessibility.PRIVATE:
             # Check if invited or already a player
-            person = self.people.by_identifier(identifier)
-            if not person or GameRole.INVITEE not in person.roles:
-                if not person or GameRole.PLAYER not in person.roles:
-                    raise ValueError("Cannot join private game without invitation")
+            if not (
+                person
+                and (
+                    GameRole.INVITEE in person.roles or GameRole.PLAYER in person.roles
+                )
+            ):
+                raise ValueError("Cannot join private game without invitation")
 
-        existing = self.people.by_identifier(identifier)
-        if existing:
-            existing.roles.add(GameRole.PLAYER)
-            existing.roles.discard(GameRole.INVITEE)
+        if person:
+            person.roles.add(GameRole.PLAYER)
         else:
             self.people.append(Person(identifier=identifier, roles={GameRole.PLAYER}))
 
     def leave(self, identifier: str) -> None:
         """Remove a player from the game"""
-        if self._game:
+        if not self.lobby:
             # For active games, automate instead
             self.automate(identifier)
             return
@@ -158,7 +167,7 @@ class Game:
 
     def invite(self, inviter: str, invitee: str) -> None:
         """Invite someone to the game"""
-        if self._game:
+        if not self.lobby:
             raise ValueError("Cannot invite to a game that has started")
         # Check inviter has permission
         inviter_person = self.people.by_identifier(inviter)
@@ -180,26 +189,22 @@ class Game:
         if person:
             person.automate = True
         if self._game:
-            player = self._game.players.by_identifier(identifier)
-            if player:
-                player.automate = True
-                # Trigger automated actions
-                self._trigger_automation()
+            self._game = self._initialize_game(self.moves)
+            # Trigger automated actions
+            self._trigger_automation()
 
     def start_game(self) -> None:
         """Start the game with current players"""
-        if self._game:
+        if self._game or not self.lobby:
             raise ValueError("Game already started")
         if len(self.players) < 2:
             raise ValueError("Need at least 2 players to start")
 
-        # Create players for the game engine
-        game_players = Group(
-            [Player(identifier=p.identifier, automate=p.automate) for p in self.players]
-        )
+        # Not a lobby anymore
+        self.lobby = False
 
         # Create the game
-        self._game = HundredAndTen(players=game_players, seed=self.seed)
+        self._game = self._initialize_game([])
 
         # Trigger automation for any automated players
         self._trigger_automation()
@@ -209,8 +214,6 @@ class Game:
         if not self._game:
             raise ValueError("Game has not started")
         self._game.act(action)
-        # Track the move for persistence
-        self._moves.append(action)
 
     def suggestion(self) -> Action:
         """Get a suggested action"""
@@ -229,3 +232,15 @@ class Game:
                 player = self._game.players.by_identifier(person.identifier)
                 if player:
                     player.automate = True
+
+    def _initialize_game(self, moves: list[Action]) -> HundredAndTen:
+        return HundredAndTen(
+            players=Group(
+                [
+                    Player(identifier=p.identifier, automate=p.automate)
+                    for p in self.players
+                ]
+            ),
+            seed=self.seed,
+            moves=moves,
+        )

@@ -12,8 +12,10 @@ def game(m_game: models.Game) -> db.Game:
         seed=m_game.seed,
         accessibility=m_game.accessibility.name,
         people=list(map(__person, m_game.people)),
+        winner=m_game.winner.identifier if m_game.winner else None,
         moves=list(map(__move, m_game.moves)),
-        started=m_game.started,
+        lobby=m_game.lobby,
+        status=str(m_game.status),
     )
 
 
