@@ -130,7 +130,9 @@ class TestPlayingGame(TestCase):
             for p in game["round"]["players"]
             if p["identifier"] == non_active_player["identifier"]
         )
-        self.assertTrue(non_active_player["prepassed"])
+        self.assertTrue(
+            "prepassed" in non_active_player and non_active_player["prepassed"]
+        )
 
         # rescind prepass
         resp = rescind_prepass(
@@ -145,7 +147,10 @@ class TestPlayingGame(TestCase):
             for p in game["round"]["players"]
             if p["identifier"] == non_active_player["identifier"]
         )
-        self.assertFalse(non_active_player["prepassed"])
+        self.assertTrue("prepassed" in non_active_player)
+        self.assertFalse(
+            "prepassed" in non_active_player and non_active_player["prepassed"]
+        )
 
     def test_leave_playing_game(self):
         """A player can leave an active game by automating themselves"""
