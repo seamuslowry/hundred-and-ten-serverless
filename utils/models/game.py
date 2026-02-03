@@ -25,13 +25,13 @@ class Game:
     accessibility: Accessibility = field(default=Accessibility.PUBLIC)
     people: PersonGroup = field(default_factory=PersonGroup)
 
-    initial_moves: InitVar[list[Action]] = field(default_factory=list)
+    initial_moves: InitVar[Optional[list[Action]]] = None
 
     # The underlying game engine (always exists for a Game)
     _game: HundredAndTen = field(init=False, repr=False)
 
-    def __post_init__(self, initial_moves: list[Action]):
-        self._game = self._initialize_game(initial_moves)
+    def __post_init__(self, initial_moves: Optional[list[Action]]):
+        self._game = self._initialize_game(initial_moves or [])
 
     @classmethod
     def from_lobby(cls, lobby: Lobby) -> "Game":
@@ -121,5 +121,5 @@ class Game:
                 ]
             ),
             seed=self.seed,
-            initial_moves=moves,
+            moves=moves,
         )

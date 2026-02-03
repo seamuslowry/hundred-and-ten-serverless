@@ -10,10 +10,10 @@ from function_app import (
     game_info as wrapped_game_info,
 )
 from function_app import (
-    join_game as wrapped_join_game,
+    join_lobby as wrapped_join_lobby,
 )
 from function_app import (
-    players as wrapped_players,
+    lobby_players as wrapped_lobby_players,
 )
 from function_app import (
     search_games as wrapped_search_games,
@@ -35,8 +35,8 @@ from utils.mappers.constants import EventType
 
 events = wrapped_events.build().get_user_function()
 game_info = wrapped_game_info.build().get_user_function()
-join_game = wrapped_join_game.build().get_user_function()
-players = wrapped_players.build().get_user_function()
+join_lobby = wrapped_join_lobby.build().get_user_function()
+lobby_players = wrapped_lobby_players.build().get_user_function()
 search_games = wrapped_search_games.build().get_user_function()
 search_users = wrapped_search_users.build().get_user_function()
 
@@ -81,24 +81,26 @@ class TestRetrieveInfo(TestCase):
         )
         self.assertEqual(retrieved_events[-1]["type"], EventType.GAME_END.name)
 
-    def test_game_players(self):
-        """Can retrieve user information for players on a game"""
-        original_game: WaitingGame = lobby_game()
+    def test_lobby_players(self):
+        """Can retrieve user information for players in a lobby"""
+        original_lobby: WaitingGame = lobby_game()
         other_player_ids = list(map(lambda i: f"{time()}-{i}", range(1, 4)))
 
-        organizer: User = create_user(original_game["organizer"]["identifier"])
+        organizer: User = create_user(original_lobby["organizer"]["identifier"])
         other_players: list[User] = list(map(create_user, other_player_ids))
 
         for player in other_players:
-            join_game(
+            join_lobby(
                 build_request(
-                    route_params={"game_id": original_game["id"]},
+                    route_params={"lobby_id": original_lobby["id"]},
                     headers={"x-ms-client-principal-id": player["identifier"]},
                 )
             )
 
-        # get that game's players
-        resp = players(build_request(route_params={"game_id": original_game["id"]}))
+        # get that lobby's players
+        resp = lobby_players(
+            build_request(route_params={"lobby_id": original_lobby["id"]})
+        )
         retrieved_users: list[User] = read_response_body(resp.get_body())
 
         self.assertEqual(4, len(retrieved_users))

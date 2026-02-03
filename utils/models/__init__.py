@@ -30,7 +30,7 @@ from hundredandten.events import (
     TrickEnd,
     TrickStart,
 )
-from hundredandten.group import Group, Player, RoundPlayer
+from hundredandten.group import Group, Player
 from hundredandten.hundred_and_ten_error import HundredAndTenError
 from hundredandten.round import Round
 from hundredandten.trick import Trick
@@ -73,7 +73,6 @@ __all__ = [
     # Group
     "Group",
     "Player",
-    "RoundPlayer",
     # Error
     "HundredAndTenError",
     # Round
