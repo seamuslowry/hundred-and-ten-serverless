@@ -8,9 +8,10 @@ def game(m_game: models.Game) -> db.Game:
     """Convert a Game model to its DB DTO"""
     active_player = (
         m_game.active_round.active_player
-        if not m_game.lobby and m_game._game and not m_game._game.winner
+        if not m_game.lobby and not m_game.winner
         else None
     )
+
     return db.Game(
         id=m_game.id,
         name=m_game.name,
