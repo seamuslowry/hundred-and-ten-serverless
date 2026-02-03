@@ -64,7 +64,7 @@ class Game:
     def moves(self) -> list[Action]:
         """Get all moves made in the game"""
         return (
-            [event for event in self._game.events if isinstance(event, Action)]
+            self._game.moves
             if self._game
             else []
         )
@@ -242,5 +242,5 @@ class Game:
                 ]
             ),
             seed=self.seed,
-            moves=moves,
+            initial_moves=moves,
         )
