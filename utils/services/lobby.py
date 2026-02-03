@@ -1,36 +1,33 @@
 """Facilitate interaction with the lobby DB"""
 
-from typing import cast
-
-from utils.dtos import db
 from utils.dtos.db import SearchLobby
 from utils.mappers.db import deserialize, serialize
 from utils.models import Accessibility, Game, Lobby
-from utils.services.mongo import game_client
+from utils.services.mongo import game_client, lobby_client
 
 
 def save(lobby: Lobby) -> Lobby:
     """Save the provided lobby to the DB"""
-    game_client.update_one({"id": lobby.id}, {"$set": serialize.lobby(lobby)}, upsert=True)
+    lobby_client.update_one({"id": lobby.id}, {"$set": serialize.lobby(lobby)}, upsert=True)
     return lobby
 
 
 def get(lobby_id: str) -> Lobby:
     """Retrieve the lobby with the provided ID"""
-    result = game_client.find_one({"id": lobby_id, "type": "lobby"})
+    result = lobby_client.find_one({"id": lobby_id, "type": "lobby"})
 
     if not result:
         raise ValueError(f"No lobby found with id {lobby_id}")
 
-    return deserialize.lobby(cast(db.Lobby, result))
+    return deserialize.lobby(result)
 
 
 def search(search_lobby: SearchLobby, max_count: int) -> list[Lobby]:
     """Search for lobbies matching the provided criteria"""
     return list(
         map(
-            lambda doc: deserialize.lobby(cast(db.Lobby, doc)),
-            game_client.find(
+            deserialize.lobby,
+            lobby_client.find(
                 {
                     "type": "lobby",
                     "name": {"$regex": search_lobby["name"], "$options": "i"},

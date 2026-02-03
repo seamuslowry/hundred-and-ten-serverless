@@ -79,9 +79,6 @@ class Game(TypedDict):
     status: str
 
 
-Document = Union[Lobby, Game]
-
-
 class User(TypedDict):
     """A class to model the DB format of a Hundred and Ten user"""
 
