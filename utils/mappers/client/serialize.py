@@ -125,7 +125,7 @@ def __person(person: models.Person) -> client.Person:
     return client.Person(identifier=person.identifier, automate=person.automate)
 
 
-def __player(player: models.Player, client_identifier: str) -> client.Player:
+def __player(player: models.RoundPlayer, client_identifier: str) -> client.Player:
     if player.identifier == client_identifier:
         return client.Self(
             identifier=player.identifier,
