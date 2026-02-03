@@ -18,6 +18,8 @@ from utils.models import (
     Game,
     GameRole,
     HundredAndTenError,
+    Person,
+    PersonGroup,
     Play,
     RoundStatus,
     SelectableSuit,
@@ -68,13 +70,15 @@ def create_game(req: func.HttpRequest) -> func.HttpResponse:
 
     body = req.get_json()
 
-    game = Game()
-    game.join(identifier)
-    game.people.add_role(identifier, GameRole.ORGANIZER)
-    game.name = body.get("name", f"{identifier} Game")
-    game.accessibility = Accessibility[
-        body.get("accessibility", Accessibility.PUBLIC.name)
-    ]
+    game = Game(
+        people=PersonGroup(
+            [Person(identifier=identifier, roles={GameRole.ORGANIZER, GameRole.PLAYER})]
+        ),
+        name=body.get("name", f"{identifier} Game"),
+        accessibility=Accessibility[
+            body.get("accessibility", Accessibility.PUBLIC.name)
+        ],
+    )
 
     game = GameService.save(game)
 

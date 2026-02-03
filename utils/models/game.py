@@ -25,18 +25,6 @@ class PersonGroup(list[Person]):
         """Find all persons with a specific role"""
         return [p for p in self if role in p.roles]
 
-    def add_role(self, identifier: str, role: GameRole) -> None:
-        """Add a role to a person"""
-        person = self.by_identifier(identifier)
-        if person:
-            person.roles.add(role)
-
-    def remove_role(self, identifier: str, role: GameRole) -> None:
-        """Remove a role from a person"""
-        person = self.by_identifier(identifier)
-        if person:
-            person.roles.discard(role)
-
 
 @dataclass
 class Game:
@@ -100,13 +88,6 @@ class Game:
         if self._game and self._game.winner:
             return self.people.by_identifier(self._game.winner.identifier)
         return None
-
-    @property
-    def rounds(self) -> list[Round]:
-        """Get all rounds played"""
-        if self._game:
-            return list(self._game.rounds)
-        return []
 
     @property
     def active_round(self) -> Round:
@@ -186,8 +167,6 @@ class Game:
             person.automate = True
         if self._game:
             self._game = self._initialize_game(self.moves)
-            # Trigger automated actions
-            self._trigger_automation()
 
     def start_game(self) -> None:
         """Start the game with current players"""
@@ -202,9 +181,6 @@ class Game:
         # Create the game
         self._game = self._initialize_game([])
 
-        # Trigger automation for any automated players
-        self._trigger_automation()
-
     def act(self, action: Action) -> None:
         """Perform a game action"""
         if not self._game:
@@ -216,18 +192,6 @@ class Game:
         if not self._game:
             raise ValueError("Game has not started")
         return self._game.suggestion()
-
-    def _trigger_automation(self) -> None:
-        """Trigger automated actions for automated players"""
-        if not self._game:
-            return
-        # The v2 game handles automation internally
-        # But we need to sync automate flags
-        for person in self.people:
-            if person.automate:
-                player = self._game.players.by_identifier(person.identifier)
-                if player:
-                    player.automate = True
 
     def _initialize_game(self, moves: list[Action]) -> HundredAndTen:
         return HundredAndTen(
