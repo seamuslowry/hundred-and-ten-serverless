@@ -3,7 +3,7 @@
 from utils import models
 from utils.dtos import db
 from utils.mappers.shared.deserialize import card as __card
-from utils.models.lobby import PersonGroup
+from utils.models.game import PersonGroup
 
 
 def user(db_user: db.User) -> models.User:
