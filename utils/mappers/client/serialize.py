@@ -16,7 +16,6 @@ def user(m_user: models.User) -> client.User:
 
 def lobby(
     m_lobby: models.Lobby,
-    client_identifier: str,
 ) -> client.WaitingGame:
     """Return a lobby as it can be provided to the client"""
     return client.WaitingGame(

@@ -21,8 +21,8 @@ class PersonGroup(list[Person]):
 
 
 @dataclass
-class Lobby:
-    """A class to model the lobby phase of a Hundred and Ten game"""
+class BaseGame:
+    """Shared fields and properties for Lobby and Game"""
 
     id: str = field(default_factory=lambda: str(uuid4()))
     name: str = field(default="")
@@ -49,6 +49,11 @@ class Lobby:
     def invitees(self) -> list[Person]:
         """Get people who have been invited but not joined"""
         return self.people.by_role(GameRole.INVITEE)
+
+
+@dataclass
+class Lobby(BaseGame):
+    """A class to model the lobby phase of a Hundred and Ten game"""
 
     def join(self, identifier: str) -> None:
         """Add a player to the lobby"""

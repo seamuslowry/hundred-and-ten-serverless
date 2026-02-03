@@ -280,7 +280,7 @@ def create_lobby(req: func.HttpRequest) -> func.HttpResponse:
 
     logging.debug("Lobby %s created successfully", lobby.seed)
 
-    return func.HttpResponse(json.dumps(serialize.lobby(lobby, identifier)))
+    return func.HttpResponse(json.dumps(serialize.lobby(lobby)))
 
 
 @app.function_name("invite_to_lobby")
@@ -299,7 +299,7 @@ def invite_to_lobby(req: func.HttpRequest) -> func.HttpResponse:
         lobby.invite(identifier, invitee)
     lobby = LobbyService.save(lobby)
 
-    return func.HttpResponse(json.dumps(serialize.lobby(lobby, identifier)))
+    return func.HttpResponse(json.dumps(serialize.lobby(lobby)))
 
 
 @app.function_name("join_lobby")
@@ -313,7 +313,7 @@ def join_lobby(req: func.HttpRequest) -> func.HttpResponse:
     lobby.join(identifier)
     lobby = LobbyService.save(lobby)
 
-    return func.HttpResponse(json.dumps(serialize.lobby(lobby, identifier)))
+    return func.HttpResponse(json.dumps(serialize.lobby(lobby)))
 
 
 @app.function_name("leave_lobby")
@@ -327,7 +327,7 @@ def leave_lobby(req: func.HttpRequest) -> func.HttpResponse:
     lobby.leave(identifier)
     lobby = LobbyService.save(lobby)
 
-    return func.HttpResponse(json.dumps(serialize.lobby(lobby, identifier)))
+    return func.HttpResponse(json.dumps(serialize.lobby(lobby)))
 
 
 @app.function_name("lobby_info")
@@ -337,9 +337,9 @@ def lobby_info(req: func.HttpRequest) -> func.HttpResponse:
     """
     Retrieve 110 lobby.
     """
-    identifier, lobby = parse_lobby_request(req)
+    _, lobby = parse_lobby_request(req)
 
-    return func.HttpResponse(json.dumps(serialize.lobby(lobby, identifier)))
+    return func.HttpResponse(json.dumps(serialize.lobby(lobby)))
 
 
 @app.function_name("lobby_players")
@@ -374,7 +374,7 @@ def search_lobbies(req: func.HttpRequest) -> func.HttpResponse:
         json.dumps(
             list(
                 map(
-                    lambda l: serialize.lobby(l, identifier),
+                    serialize.lobby,
                     LobbyService.search(
                         SearchLobby(
                             name=body.get("searchText", ""),

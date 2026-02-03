@@ -2,7 +2,6 @@
 
 from dataclasses import InitVar, dataclass, field
 from typing import Optional, Union
-from uuid import uuid4
 
 from hundredandten import HundredAndTen
 from hundredandten.actions import Action
@@ -10,20 +9,13 @@ from hundredandten.constants import RoundStatus
 from hundredandten.group import Group, Player
 from hundredandten.round import Round
 
-from utils.constants import Accessibility, GameRole, GameStatus
-from utils.models.lobby import Lobby, PersonGroup
-from utils.models.person import Person
+from utils.constants import GameStatus
+from utils.models.lobby import BaseGame, Lobby
 
 
 @dataclass
-class Game:
+class Game(BaseGame):
     """A class to model an in-progress or completed Hundred and Ten game"""
-
-    id: str = field(default_factory=lambda: str(uuid4()))
-    name: str = field(default="")
-    seed: str = field(default_factory=lambda: str(uuid4()))
-    accessibility: Accessibility = field(default=Accessibility.PUBLIC)
-    people: PersonGroup = field(default_factory=PersonGroup)
 
     initial_moves: InitVar[Optional[list[Action]]] = None
 
@@ -54,21 +46,6 @@ class Game:
         return self._game.moves
 
     @property
-    def organizer(self) -> Person:
-        """Get the organizer of the game"""
-        organizers = self.people.by_role(GameRole.ORGANIZER)
-        if organizers:
-            return organizers[0]
-        if self.people:
-            return self.people[0]
-        return Person(identifier="unknown")
-
-    @property
-    def players(self) -> list[Person]:
-        """Get players who have joined the game"""
-        return self.people.by_role(GameRole.PLAYER)
-
-    @property
     def status(self) -> Union[GameStatus, RoundStatus]:
         """Get the current game status"""
         if self._game.winner:
@@ -76,7 +53,7 @@ class Game:
         return self._game.active_round.status
 
     @property
-    def winner(self) -> Optional[Person]:
+    def winner(self) -> Optional["Person"]:
         """Get the winner of the game"""
         if self._game.winner:
             return self.people.by_identifier(self._game.winner.identifier)
