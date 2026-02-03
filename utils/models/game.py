@@ -63,11 +63,7 @@ class Game:
     @property
     def moves(self) -> list[Action]:
         """Get all moves made in the game"""
-        return (
-            self._game.moves
-            if self._game
-            else []
-        )
+        return self._game.moves if self._game else []
 
     @property
     def organizer(self) -> Person:
