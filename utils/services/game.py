@@ -1,5 +1,8 @@
 """Facilitate interaction with the game DB"""
 
+from typing import cast
+
+from utils.dtos import db
 from utils.dtos.db import SearchGame
 from utils.mappers.db import deserialize, serialize
 from utils.models import Accessibility, Game
@@ -19,7 +22,7 @@ def get(game_id: str) -> Game:
     if not result:
         raise ValueError(f"No game found with id {game_id}")
 
-    return deserialize.game(result)
+    return deserialize.game(cast(db.Game, result))
 
 
 def search(search_game: SearchGame, max_count: int) -> list[Game]:
@@ -31,7 +34,7 @@ def search(search_game: SearchGame, max_count: int) -> list[Game]:
 
     return list(
         map(
-            deserialize.game,
+            lambda doc: deserialize.game(cast(db.Game, doc)),
             game_client.find(
                 {
                     "type": "game",

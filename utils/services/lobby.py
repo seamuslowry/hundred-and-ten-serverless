@@ -1,5 +1,8 @@
 """Facilitate interaction with the lobby DB"""
 
+from typing import cast
+
+from utils.dtos import db
 from utils.dtos.db import SearchLobby
 from utils.mappers.db import deserialize, serialize
 from utils.models import Accessibility, Game, Lobby
@@ -19,14 +22,14 @@ def get(lobby_id: str) -> Lobby:
     if not result:
         raise ValueError(f"No lobby found with id {lobby_id}")
 
-    return deserialize.lobby(result)
+    return deserialize.lobby(cast(db.Lobby, result))
 
 
 def search(search_lobby: SearchLobby, max_count: int) -> list[Lobby]:
     """Search for lobbies matching the provided criteria"""
     return list(
         map(
-            deserialize.lobby,
+            lambda doc: deserialize.lobby(cast(db.Lobby, doc)),
             game_client.find(
                 {
                     "type": "lobby",

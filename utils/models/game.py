@@ -11,6 +11,7 @@ from hundredandten.round import Round
 
 from utils.constants import GameStatus
 from utils.models.lobby import BaseGame, Lobby
+from utils.models.person import Person
 
 
 @dataclass
@@ -53,7 +54,7 @@ class Game(BaseGame):
         return self._game.active_round.status
 
     @property
-    def winner(self) -> Optional["Person"]:
+    def winner(self) -> Optional[Person]:
         """Get the winner of the game"""
         if self._game.winner:
             return self.people.by_identifier(self._game.winner.identifier)
