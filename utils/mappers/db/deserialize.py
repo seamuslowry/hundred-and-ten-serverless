@@ -62,7 +62,5 @@ def __move(db_move: db.Move) -> models.Action:
                 identifier=identifier,
                 card=__card(db_move["card"]),
             )
-        case "unpass":
-            return models.Unpass(identifier=identifier)
         case _:  # type: ignore[unreachable]
             raise ValueError(f"Unknown move type: {db_move['type']}")

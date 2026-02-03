@@ -50,14 +50,7 @@ class PlayMove(TypedDict):
     card: Card
 
 
-class UnpassMove(TypedDict):
-    """An unpass move"""
-
-    type: Literal["unpass"]
-    identifier: str
-
-
-Move = Union[BidMove, SelectTrumpMove, DiscardMove, PlayMove, UnpassMove]
+Move = Union[BidMove, SelectTrumpMove, DiscardMove, PlayMove]
 
 
 class Game(TypedDict):

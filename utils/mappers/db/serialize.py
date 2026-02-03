@@ -71,9 +71,4 @@ def __move(move: models.Action) -> db.Move:
             identifier=move.identifier,
             card=__card(move.card),
         )
-    if isinstance(move, models.Unpass):
-        return db.UnpassMove(
-            type="unpass",
-            identifier=move.identifier,
-        )
-    raise ValueError(f"Unknown move type: {type(move)}")
+    raise ValueError(f"Unknown move type: {type(move)}")  # pragma: no cover
