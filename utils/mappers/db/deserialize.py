@@ -3,11 +3,11 @@
 from utils import models
 from utils.dtos import db
 from utils.mappers.shared.deserialize import card as __card
-from utils.models.game import PersonGroup
+from utils.models.lobby import PersonGroup
 
 
 def user(db_user: db.User) -> models.User:
-    """Convert a User model to its DB DTO"""
+    """Convert a User DB DTO to its model"""
     return models.User(
         identifier=db_user["identifier"],
         name=db_user["name"],
@@ -15,9 +15,19 @@ def user(db_user: db.User) -> models.User:
     )
 
 
+def lobby(db_lobby: db.Lobby) -> models.Lobby:
+    """Convert a Lobby DB DTO to its model"""
+    return models.Lobby(
+        id=db_lobby["id"],
+        name=db_lobby["name"],
+        seed=db_lobby["seed"],
+        accessibility=models.Accessibility[db_lobby["accessibility"]],
+        people=PersonGroup(map(__person, db_lobby["people"])),
+    )
+
+
 def game(db_game: db.Game) -> models.Game:
     """Convert a Game DB DTO to its model"""
-
     return models.Game(
         id=db_game["id"],
         name=db_game["name"],
@@ -25,7 +35,6 @@ def game(db_game: db.Game) -> models.Game:
         accessibility=models.Accessibility[db_game["accessibility"]],
         people=PersonGroup(map(__person, db_game["people"])),
         initial_moves=list(map(__move, db_game["moves"])),
-        lobby=db_game["lobby"],
     )
 
 
@@ -33,7 +42,7 @@ def __person(person: db.Person) -> models.Person:
     return models.Person(
         identifier=person["identifier"],
         automate=person["automate"],
-        roles=set(map(lambda r: models.GameRole[r], person["roles"])),
+        roles={models.GameRole[r] for r in person["roles"]},
     )
 
 

@@ -14,8 +14,7 @@ def save(game: Game) -> Game:
 
 def get(game_id: str) -> Game:
     """Retrieve the game with the provided ID"""
-
-    result = game_client.find_one({"id": game_id})
+    result = game_client.find_one({"id": game_id, "type": "game"})
 
     if not result:
         raise ValueError(f"No game found with id {game_id}")
@@ -35,6 +34,7 @@ def search(search_game: SearchGame, max_count: int) -> list[Game]:
             deserialize.game,
             game_client.find(
                 {
+                    "type": "game",
                     "name": {"$regex": search_game["name"], "$options": "i"},
                     "$or": [
                         {"accessibility": Accessibility.PUBLIC.name},

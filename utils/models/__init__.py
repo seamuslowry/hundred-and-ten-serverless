@@ -36,7 +36,8 @@ from hundredandten.round import Round
 from hundredandten.trick import Trick
 
 from utils.constants import Accessibility, GameRole, GameStatus
-from utils.models.game import Game, PersonGroup
+from utils.models.game import Game
+from utils.models.lobby import Lobby, PersonGroup
 from utils.models.person import Person
 from utils.models.user import User
 
@@ -85,6 +86,7 @@ __all__ = [
     "GameStatus",
     # Utils models
     "Game",
+    "Lobby",
     "PersonGroup",
     "Person",
     "User",
