@@ -121,5 +121,5 @@ class Game:
                 ]
             ),
             seed=self.seed,
-            moves=moves,
+            initial_moves=moves,
         )
