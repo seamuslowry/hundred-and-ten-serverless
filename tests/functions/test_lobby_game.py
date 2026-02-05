@@ -14,6 +14,7 @@ from function_app import (
 from function_app import (
     leave_lobby as wrapped_leave_lobby,
 )
+from function_app import lobby_info as wrapped_lobby_info
 from function_app import (
     search_lobbies as wrapped_search_lobbies,
 )
@@ -24,6 +25,7 @@ from tests.helpers import build_request, lobby_game, read_response_body
 from utils.dtos.client import StartedGame, WaitingGame
 from utils.models import GameStatus, RoundStatus
 
+lobby_info = wrapped_lobby_info.build().get_user_function()
 create_lobby = wrapped_create_lobby.build().get_user_function()
 invite_to_lobby = wrapped_invite_to_lobby.build().get_user_function()
 join_lobby = wrapped_join_lobby.build().get_user_function()
@@ -314,10 +316,6 @@ class TestLobby(TestCase):
             )
         )
 
-        # Get lobby info - the remaining player should be the organizer now
-        from function_app import lobby_info as wrapped_lobby_info
-
-        lobby_info = wrapped_lobby_info.build().get_user_function()
         resp = lobby_info(
             build_request(
                 route_params={"lobby_id": created_lobby["id"]},
