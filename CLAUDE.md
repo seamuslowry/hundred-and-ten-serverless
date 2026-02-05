@@ -14,6 +14,7 @@ docker compose up -d --build
 
 # Run tests (requires docker-compose.test.yml)
 docker compose -f docker-compose.test.yml up --build
+coverage run --branch --source=. -m pytest tests && coverage report -m
 
 # Manual commands (if deps installed locally)
 pytest tests                    # Run all tests
