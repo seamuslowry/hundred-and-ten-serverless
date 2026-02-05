@@ -1,7 +1,7 @@
 """Model a Hundred and Ten game through its lifecycle (lobby and play phases)."""
 
 from dataclasses import InitVar, dataclass, field
-from typing import Optional, Union
+from typing import Optional, Union, override
 from uuid import uuid4
 
 from hundredandten import HundredAndTen
@@ -17,7 +17,22 @@ from utils.models.person import Person
 class PersonGroup(list[Person]):
     """A group of persons in a game"""
 
-    def by_identifier(self, identifier: str) -> Optional[Person]:
+    def find_or_throw(self, identifier: str) -> Person:
+        """Find the person with the passed identifier; throw if they don't exist"""
+        p = self._by_identifier(identifier)
+        if not p:
+            raise ValueError(f'Unable to find {identifier}')
+        return p
+
+    def find_or_append(self, identifier: str, backup: Person) -> Person:
+        """Find the person with the passed identifier; return the backup if they don't exist"""
+        p = self._by_identifier(identifier)
+        if not p:
+            self.append(backup)
+            return backup
+        return p
+
+    def _by_identifier(self, identifier: str) -> Optional[Person]:
         """Find a person by identifier"""
         return next((p for p in self if p.identifier == identifier), None)
 
@@ -56,6 +71,11 @@ class BaseGame:
         """Get people who have been invited but not joined"""
         return self.people.by_role(GameRole.INVITEE)
 
+    def automate(self, identifier: str) -> None:
+        """Automate a player"""
+        person = self.people.find_or_throw(identifier)
+        person.automate = True
+
 
 @dataclass
 class Lobby(BaseGame):
@@ -63,7 +83,7 @@ class Lobby(BaseGame):
 
     def join(self, identifier: str) -> None:
         """Add a player to the lobby"""
-        person = self.people.by_identifier(identifier)
+        person = self.people.find_or_append(identifier, Person(identifier=identifier))
 
         if self.accessibility == Accessibility.PRIVATE:
             if not (
@@ -74,31 +94,24 @@ class Lobby(BaseGame):
             ):
                 raise ValueError("Cannot join private game without invitation")
 
-        if person:
-            person.roles.add(GameRole.PLAYER)
-        else:
-            self.people.append(Person(identifier=identifier, roles={GameRole.PLAYER}))
+        person.roles.add(GameRole.PLAYER)
 
     def leave(self, identifier: str) -> None:
         """Remove a player from the lobby"""
-        person = self.people.by_identifier(identifier)
-        if person:
-            self.people.remove(person)
+        # for now, you can "leave" even if not in the game
+        person = self.people.find_or_append(identifier, Person(identifier))
+        self.people.remove(person)
 
     def invite(self, inviter: str, invitee: str) -> None:
         """Invite someone to the game"""
-        inviter_person = self.people.by_identifier(inviter)
-        if not inviter_person:
-            raise ValueError("Inviter not in game")
+        inviter_person = self.people.find_or_throw(inviter)
         if (
             GameRole.PLAYER not in inviter_person.roles
             and GameRole.ORGANIZER not in inviter_person.roles
         ):
             raise ValueError("Only players or organizer can invite")
 
-        existing = self.people.by_identifier(invitee)
-        if not existing:
-            self.people.append(Person(identifier=invitee, roles={GameRole.INVITEE}))
+        self.people.find_or_append(invitee, Person(identifier=invitee)).roles.add(GameRole.INVITEE)
 
 
 @dataclass
@@ -144,7 +157,7 @@ class Game(BaseGame):
     def winner(self) -> Optional[Person]:
         """Get the winner of the game"""
         if self._game.winner:
-            return self.people.by_identifier(self._game.winner.identifier)
+            return self.people.find_or_throw(self._game.winner.identifier)
         return None
 
     @property
@@ -162,11 +175,10 @@ class Game(BaseGame):
         """Get current scores"""
         return self._game.scores
 
+    @override
     def automate(self, identifier: str) -> None:
         """Automate a player (used when leaving an active game)"""
-        person = self.people.by_identifier(identifier)
-        if person:
-            person.automate = True
+        super().automate(identifier)
         self._game = self._initialize_game(self.moves)
 
     def act(self, action: Action) -> None:

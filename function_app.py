@@ -405,10 +405,7 @@ def start_game(req: func.HttpRequest) -> func.HttpResponse:
         cpu_identifier = str(num + 1)
         lobby.invite(identifier, cpu_identifier)
         lobby.join(cpu_identifier)
-        # Mark as automated
-        person = lobby.people.by_identifier(cpu_identifier)
-        if person:
-            person.automate = True
+        lobby.automate(cpu_identifier)
 
     # Start the game (converts lobby record to game record)
     game = LobbyService.start_game(lobby)
