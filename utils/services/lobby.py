@@ -3,19 +3,18 @@
 from utils.dtos.db import SearchLobby
 from utils.mappers.db import deserialize, serialize
 from utils.models import Accessibility, Game, Lobby
-from utils.services.mongo import game_client, lobby_client
 from utils.services.game import save as save_game
+from utils.services.mongo import lobby_client
 
 
 def save(lobby: Lobby) -> Lobby:
     """Save the provided lobby to the DB"""
     lobby_client.update_one(
+        {"id": lobby.id, "type": "lobby"},  # Only update if it's actually a lobby
         {
-            "id": lobby.id,
-            "type": "lobby"  # Only update if it's actually a lobby
-        },
-        {"$set": {**serialize.lobby(lobby), "type": "lobby"}},  # always ensure this is a lobby
-        upsert=True
+            "$set": {**serialize.lobby(lobby), "type": "lobby"}
+        },  # always ensure this is a lobby
+        upsert=True,
     )
     return lobby
 

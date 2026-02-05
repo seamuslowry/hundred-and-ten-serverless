@@ -9,12 +9,11 @@ from utils.services.mongo import game_client
 def save(game: Game) -> Game:
     """Save the provided game to the DB"""
     game_client.update_one(
+        {"id": game.id, "type": "game"},  # Only update if it's actually a game
         {
-            "id": game.id,
-            "type": "game"  # Only update if it's actually a game
-        },
-        {"$set": {**serialize.game(game), "type": "game"}},  # always ensure this is a game
-        upsert=True
+            "$set": {**serialize.game(game), "type": "game"}
+        },  # always ensure this is a game
+        upsert=True,
     )
     game_client.update_one({"id": game.id}, {"$set": serialize.game(game)}, upsert=True)
     return game
