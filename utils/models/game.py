@@ -21,7 +21,7 @@ class PersonGroup(list[Person]):
         """Find the person with the passed identifier; throw if they don't exist"""
         p = self._by_identifier(identifier)
         if not p:
-            raise ValueError(f'Unable to find {identifier}')
+            raise ValueError(f"Unable to find {identifier}")
         return p
 
     def find_or_append(self, identifier: str, backup: Person) -> Person:
@@ -111,7 +111,9 @@ class Lobby(BaseGame):
         ):
             raise ValueError("Only players or organizer can invite")
 
-        self.people.find_or_append(invitee, Person(identifier=invitee)).roles.add(GameRole.INVITEE)
+        self.people.find_or_append(invitee, Person(identifier=invitee)).roles.add(
+            GameRole.INVITEE
+        )
 
 
 @dataclass

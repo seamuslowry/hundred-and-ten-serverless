@@ -143,22 +143,6 @@ def play(req: func.HttpRequest) -> func.HttpResponse:
     )
 
 
-@app.function_name("game_players")
-@app.route(route="players/game/{game_id}", methods=[func.HttpMethod.GET])
-@catcher
-def game_players(req: func.HttpRequest) -> func.HttpResponse:
-    """
-    Retrieve players on a 110 game.
-    """
-    _, game = parse_game_request(req)
-
-    people_ids = [p.identifier for p in game.people]
-
-    return func.HttpResponse(
-        json.dumps(list(map(serialize.user, UserService.by_identifiers(people_ids))))
-    )
-
-
 @app.function_name("rescind_prepass")
 @app.route(route="unpass/{game_id}", methods=[func.HttpMethod.POST])
 @catcher

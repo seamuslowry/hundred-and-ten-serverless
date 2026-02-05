@@ -15,6 +15,9 @@ from function_app import (
     leave_lobby as wrapped_leave_lobby,
 )
 from function_app import (
+    search_lobbies as wrapped_search_lobbies,
+)
+from function_app import (
     start_game as wrapped_start_game,
 )
 from tests.helpers import build_request, lobby_game, read_response_body
@@ -25,6 +28,7 @@ create_lobby = wrapped_create_lobby.build().get_user_function()
 invite_to_lobby = wrapped_invite_to_lobby.build().get_user_function()
 join_lobby = wrapped_join_lobby.build().get_user_function()
 leave_lobby = wrapped_leave_lobby.build().get_user_function()
+search_lobbies = wrapped_search_lobbies.build().get_user_function()
 start_game = wrapped_start_game.build().get_user_function()
 
 
@@ -268,3 +272,76 @@ class TestLobby(TestCase):
         self.assertEqual(created_lobby["id"], game["id"])
         self.assertEqual(4, len(game["round"]["players"]))
         self.assertEqual(RoundStatus.BIDDING.name, game["status"])
+
+    def test_unknown_user_cannot_invite(self):
+        """A user not in the lobby cannot invite others"""
+        unknown_user = "unknown_user"
+        invitee = "invitee"
+
+        created_lobby: WaitingGame = lobby_game()
+
+        # Unknown user tries to invite - should fail because they're not in the lobby
+        resp = invite_to_lobby(
+            build_request(
+                route_params={"lobby_id": created_lobby["id"]},
+                headers={"x-ms-client-principal-id": unknown_user},
+                body={"invitees": [invitee]},
+            )
+        )
+        self.assertEqual(400, resp.status_code)
+
+    def test_organizer_leaves_fallback(self):
+        """When organizer leaves and another player remains, the first player becomes organizer"""
+        player = "player"
+
+        created_lobby: WaitingGame = lobby_game()
+
+        # Another player joins
+        join_lobby(
+            build_request(
+                route_params={"lobby_id": created_lobby["id"]},
+                headers={"x-ms-client-principal-id": player},
+            )
+        )
+
+        # Organizer leaves
+        leave_lobby(
+            build_request(
+                route_params={"lobby_id": created_lobby["id"]},
+                headers={
+                    "x-ms-client-principal-id": created_lobby["organizer"]["identifier"]
+                },
+            )
+        )
+
+        # Get lobby info - the remaining player should be the organizer now
+        from function_app import lobby_info as wrapped_lobby_info
+
+        lobby_info = wrapped_lobby_info.build().get_user_function()
+        resp = lobby_info(
+            build_request(
+                route_params={"lobby_id": created_lobby["id"]},
+                headers={"x-ms-client-principal-id": player},
+            )
+        )
+        updated_lobby: WaitingGame = read_response_body(resp.get_body())
+
+        # The remaining player should now be shown as organizer
+        self.assertEqual(player, updated_lobby["organizer"]["identifier"])
+
+    def test_search_lobbies(self):
+        """Can search for lobbies"""
+        created_lobby: WaitingGame = lobby_game()
+
+        resp = search_lobbies(
+            build_request(
+                method="GET",
+                headers={
+                    "x-ms-client-principal-id": created_lobby["organizer"]["identifier"]
+                },
+                body={"searchText": "test"},
+            )
+        )
+
+        lobbies = read_response_body(resp.get_body())
+        self.assertGreaterEqual(len(lobbies), 1)

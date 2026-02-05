@@ -4,11 +4,19 @@ from utils.dtos.db import SearchLobby
 from utils.mappers.db import deserialize, serialize
 from utils.models import Accessibility, Game, Lobby
 from utils.services.mongo import game_client, lobby_client
+from utils.services.game import save as save_game
 
 
 def save(lobby: Lobby) -> Lobby:
     """Save the provided lobby to the DB"""
-    lobby_client.update_one({"id": lobby.id}, {"$set": serialize.lobby(lobby)}, upsert=True)
+    lobby_client.update_one(
+        {
+            "id": lobby.id,
+            "type": "lobby"  # Only update if it's actually a lobby
+        },
+        {"$set": {**serialize.lobby(lobby), "type": "lobby"}},  # always ensure this is a lobby
+        upsert=True
+    )
     return lobby
 
 
@@ -49,7 +57,5 @@ def search(search_lobby: SearchLobby, max_count: int) -> list[Lobby]:
 
 def start_game(lobby: Lobby) -> Game:
     """Convert a lobby to a game (starts the game)"""
-    game = Game.from_lobby(lobby)
     # Update the same record in DB (change type from lobby to game)
-    game_client.update_one({"id": game.id}, {"$set": serialize.game(game)})
-    return game
+    return save_game(Game.from_lobby(lobby))

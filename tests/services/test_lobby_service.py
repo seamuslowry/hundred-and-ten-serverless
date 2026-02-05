@@ -66,3 +66,10 @@ class TestLobbyService(TestCase):
 
         self.assertIsNotNone(game)
         self.assertEqual(game.id, lobby.id)
+
+    def test_start_game_requires_minimum_players(self):
+        """Lobby cannot be converted to a game with fewer than 2 players"""
+        lobby = _make_lobby(str(time()))
+        LobbyService.save(lobby)
+
+        self.assertRaises(ValueError, LobbyService.start_game, lobby)
