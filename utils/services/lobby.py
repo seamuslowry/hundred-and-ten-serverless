@@ -12,8 +12,9 @@ def save(lobby: Lobby) -> Lobby:
     lobby_client.update_one(
         {"id": lobby.id, "type": "lobby"},  # Only update if it's actually a lobby
         {
+            # always ensure this is a lobby
             "$set": {**serialize.lobby(lobby), "type": "lobby"}
-        },  # always ensure this is a lobby
+        },
         upsert=True,
     )
     return lobby

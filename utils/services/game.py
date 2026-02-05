@@ -11,8 +11,9 @@ def save(game: Game) -> Game:
     game_client.update_one(
         {"id": game.id, "type": "game"},  # Only update if it's actually a game
         {
+            # always ensure this is a game
             "$set": {**serialize.game(game), "type": "game"}
-        },  # always ensure this is a game
+        },
         upsert=True,
     )
     game_client.update_one({"id": game.id}, {"$set": serialize.game(game)}, upsert=True)
