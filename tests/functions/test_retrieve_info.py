@@ -7,6 +7,9 @@ from function_app import (
     game_info as wrapped_game_info,
 )
 from function_app import (
+    game_players as wrapped_game_players,
+)
+from function_app import (
     join_lobby as wrapped_join_lobby,
 )
 from function_app import (
@@ -30,6 +33,7 @@ from tests.helpers import (
 from utils.dtos.client import CompletedGame, User, WaitingGame
 
 game_info = wrapped_game_info.build().get_user_function()
+game_players = wrapped_game_players.build().get_user_function()
 join_lobby = wrapped_join_lobby.build().get_user_function()
 lobby_players = wrapped_lobby_players.build().get_user_function()
 search_games = wrapped_search_games.build().get_user_function()
@@ -58,6 +62,24 @@ class TestRetrieveInfo(TestCase):
         resp = game_info(build_request(route_params={"game_id": original_game["id"]}))
         game = read_response_body(resp.get_body())
         self.assertEqual(game["id"], original_game["id"])
+
+    def test_game_players(self):
+        """Can retrieve user information for players in a game"""
+        original_game: CompletedGame = completed_game()
+
+        # Create user records for the human player (organizer)
+        organizer_id = original_game["organizer"]["identifier"]
+        organizer: User = create_user(organizer_id)
+
+        # get that game's players
+        resp = game_players(
+            build_request(route_params={"game_id": original_game["id"]})
+        )
+        retrieved_users: list[User] = read_response_body(resp.get_body())
+
+        # Should have at least the organizer (CPU players may not have user records)
+        retrieved_user_ids = list(map(lambda u: u["identifier"], retrieved_users))
+        self.assertIn(organizer["identifier"], retrieved_user_ids)
 
     def test_lobby_players(self):
         """Can retrieve user information for players in a lobby"""

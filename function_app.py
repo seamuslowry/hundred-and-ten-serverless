@@ -92,6 +92,22 @@ def game_info(req: func.HttpRequest) -> func.HttpResponse:
     return func.HttpResponse(json.dumps(serialize.game(game, identifier)))
 
 
+@app.function_name("game_players")
+@app.route(route="players/game/{game_id}", methods=[func.HttpMethod.GET])
+@catcher
+def game_players(req: func.HttpRequest) -> func.HttpResponse:
+    """
+    Retrieve players in a 110 game.
+    """
+    _, game = parse_game_request(req)
+
+    people_ids = [p.identifier for p in game.people]
+
+    return func.HttpResponse(
+        json.dumps(list(map(serialize.user, UserService.by_identifiers(people_ids))))
+    )
+
+
 @app.function_name("leave_game")
 @app.route(route="leave/game/{game_id}", methods=[func.HttpMethod.POST])
 @catcher
