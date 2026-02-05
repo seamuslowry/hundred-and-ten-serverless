@@ -151,7 +151,7 @@ def rescind_prepass(req: func.HttpRequest) -> func.HttpResponse:
 
 
 @app.function_name("search_games")
-@app.route(route="games", methods=[func.HttpMethod.GET])
+@app.route(route="games", methods=[func.HttpMethod.POST])
 @catcher
 def search_games(req: func.HttpRequest) -> func.HttpResponse:
     """
@@ -331,7 +331,7 @@ def lobby_players(req: func.HttpRequest) -> func.HttpResponse:
 
 
 @app.function_name("search_lobbies")
-@app.route(route="lobbies", methods=[func.HttpMethod.GET])
+@app.route(route="lobbies", methods=[func.HttpMethod.POST])
 @catcher
 def search_lobbies(req: func.HttpRequest) -> func.HttpResponse:
     """
