@@ -81,7 +81,7 @@ def discard(req: func.HttpRequest) -> func.HttpResponse:
 
 
 @app.function_name("game_info")
-@app.route(route="info/{game_id}", methods=[func.HttpMethod.POST])
+@app.route(route="info/{game_id}", methods=[func.HttpMethod.GET])
 @catcher
 def game_info(req: func.HttpRequest) -> func.HttpResponse:
     """
@@ -205,7 +205,7 @@ def select_trump(req: func.HttpRequest) -> func.HttpResponse:
 
 
 @app.function_name("suggestion")
-@app.route(route="suggestion/{game_id}", methods=[func.HttpMethod.POST])
+@app.route(route="suggestion/{game_id}", methods=[func.HttpMethod.GET])
 @catcher
 def suggestion(req: func.HttpRequest) -> func.HttpResponse:
     """
@@ -303,7 +303,7 @@ def leave_lobby(req: func.HttpRequest) -> func.HttpResponse:
 
 
 @app.function_name("lobby_info")
-@app.route(route="lobby/{lobby_id}", methods=[func.HttpMethod.POST])
+@app.route(route="lobby/{lobby_id}", methods=[func.HttpMethod.GET])
 @catcher
 def lobby_info(req: func.HttpRequest) -> func.HttpResponse:
     """
