@@ -4,9 +4,6 @@ from time import time
 from unittest import TestCase
 
 from function_app import (
-    events as wrapped_events,
-)
-from function_app import (
     game_info as wrapped_game_info,
 )
 from function_app import (
@@ -30,10 +27,8 @@ from tests.helpers import (
     request_suggestion,
     started_game,
 )
-from utils.dtos.client import CompletedGame, Event, User, WaitingGame
-from utils.mappers.constants import EventType
+from utils.dtos.client import CompletedGame, User, WaitingGame
 
-events = wrapped_events.build().get_user_function()
 game_info = wrapped_game_info.build().get_user_function()
 join_lobby = wrapped_join_lobby.build().get_user_function()
 lobby_players = wrapped_lobby_players.build().get_user_function()
@@ -63,23 +58,6 @@ class TestRetrieveInfo(TestCase):
         resp = game_info(build_request(route_params={"game_id": original_game["id"]}))
         game = read_response_body(resp.get_body())
         self.assertEqual(game["id"], original_game["id"])
-
-    def test_game_events(self):
-        """Can retrieve event information about a game"""
-        original_game: CompletedGame = completed_game()
-
-        # get that game's events
-        resp = events(build_request(route_params={"game_id": original_game["id"]}))
-        retrieved_events: list[Event] = read_response_body(resp.get_body())
-        self.assertIsNotNone(original_game["results"])
-        assert original_game["results"]
-        self.assertNotEqual(original_game["results"], [])
-        self.assertGreaterEqual(len(retrieved_events), len(original_game["results"]))
-        self.assertEqual(
-            retrieved_events[len(retrieved_events) - len(original_game["results"]) :],
-            original_game["results"],
-        )
-        self.assertEqual(retrieved_events[-1]["type"], EventType.GAME_END.name)
 
     def test_lobby_players(self):
         """Can retrieve user information for players in a lobby"""

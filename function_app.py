@@ -80,18 +80,6 @@ def discard(req: func.HttpRequest) -> func.HttpResponse:
     )
 
 
-@app.function_name("events")
-@app.route(route="events/{game_id}", methods=[func.HttpMethod.POST])
-@catcher
-def events(req: func.HttpRequest) -> func.HttpResponse:
-    """
-    Retrieve events on a 110 game.
-    """
-    identifier, game = parse_game_request(req)
-
-    return func.HttpResponse(json.dumps(serialize.events(game.events, identifier)))
-
-
 @app.function_name("game_info")
 @app.route(route="info/{game_id}", methods=[func.HttpMethod.POST])
 @catcher
