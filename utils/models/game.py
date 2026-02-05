@@ -1,4 +1,4 @@
-"""Model the game of Hundred and Ten that is being played."""
+"""Model a Hundred and Ten game through its lifecycle (lobby and play phases)."""
 
 from dataclasses import InitVar, dataclass, field
 from typing import Optional, Union
@@ -15,7 +15,7 @@ from utils.models.person import Person
 
 
 class PersonGroup(list[Person]):
-    """A group of persons in the lobby phase"""
+    """A group of persons in a game"""
 
     def by_identifier(self, identifier: str) -> Optional[Person]:
         """Find a person by identifier"""
@@ -27,31 +27,14 @@ class PersonGroup(list[Person]):
 
 
 @dataclass
-class Game:
-    """A class to model the Hundred and Ten game with lobby support"""
+class BaseGame:
+    """Shared fields and properties for Lobby and Game"""
 
     id: str = field(default_factory=lambda: str(uuid4()))
     name: str = field(default="")
     seed: str = field(default_factory=lambda: str(uuid4()))
     accessibility: Accessibility = field(default=Accessibility.PUBLIC)
-    lobby: bool = field(default=True)
-    # don't want to have to keep this in sync with game players.
-    # should refactor into a separate Lobby model
     people: PersonGroup = field(default_factory=PersonGroup)
-
-    initial_moves: InitVar[Optional[list[Action]]] = field(default=None)
-
-    # The underlying game engine
-    _game: Optional[HundredAndTen] = field(default=None, init=False, repr=False)
-
-    def __post_init__(self, initial_moves: Optional[list[Action]]):
-        if not self.lobby:
-            self._game = self._initialize_game(initial_moves or [])
-
-    @property
-    def moves(self) -> list[Action]:
-        """Get all moves made in the game"""
-        return self._game.moves if self._game else []
 
     @property
     def organizer(self) -> Person:
@@ -73,52 +56,16 @@ class Game:
         """Get people who have been invited but not joined"""
         return self.people.by_role(GameRole.INVITEE)
 
-    @property
-    def status(self) -> Union[GameStatus, RoundStatus]:
-        """Get the current game status"""
-        if self.lobby or not self._game:
-            return GameStatus.WAITING_FOR_PLAYERS
-        if self._game.winner:
-            return GameStatus.WON
-        return self._game.active_round.status
 
-    @property
-    def winner(self) -> Optional[Person]:
-        """Get the winner of the game"""
-        if self._game and self._game.winner:
-            return self.people.by_identifier(self._game.winner.identifier)
-        return None
-
-    @property
-    def active_round(self) -> Round:
-        """Get the current active round"""
-        if not self._game:
-            raise ValueError("Game has not started")
-        return self._game.active_round
-
-    @property
-    def events(self) -> list:
-        """Get all game events"""
-        if self._game:
-            return self._game.events
-        return []
-
-    @property
-    def scores(self) -> dict[str, int]:
-        """Get current scores"""
-        if self._game:
-            return self._game.scores
-        return {}
+@dataclass
+class Lobby(BaseGame):
+    """A class to model the lobby phase of a Hundred and Ten game"""
 
     def join(self, identifier: str) -> None:
-        """Add a player to the game"""
-        if self.status != GameStatus.WAITING_FOR_PLAYERS:
-            raise ValueError("Cannot join an in-progress game")
-
+        """Add a player to the lobby"""
         person = self.people.by_identifier(identifier)
 
         if self.accessibility == Accessibility.PRIVATE:
-            # Check if invited or already a player
             if not (
                 person
                 and (
@@ -133,20 +80,13 @@ class Game:
             self.people.append(Person(identifier=identifier, roles={GameRole.PLAYER}))
 
     def leave(self, identifier: str) -> None:
-        """Remove a player from the game"""
-        if not self.lobby:
-            # For active games, automate instead
-            self.automate(identifier)
-            return
+        """Remove a player from the lobby"""
         person = self.people.by_identifier(identifier)
         if person:
             self.people.remove(person)
 
     def invite(self, inviter: str, invitee: str) -> None:
         """Invite someone to the game"""
-        if not self.lobby:
-            raise ValueError("Cannot invite to a game that has started")
-        # Check inviter has permission
         inviter_person = self.people.by_identifier(inviter)
         if not inviter_person:
             raise ValueError("Inviter not in game")
@@ -160,37 +100,81 @@ class Game:
         if not existing:
             self.people.append(Person(identifier=invitee, roles={GameRole.INVITEE}))
 
+
+@dataclass
+class Game(BaseGame):
+    """A class to model an in-progress or completed Hundred and Ten game"""
+
+    initial_moves: InitVar[Optional[list[Action]]] = None
+
+    # The underlying game engine (always exists for a Game)
+    _game: HundredAndTen = field(init=False, repr=False)
+
+    def __post_init__(self, initial_moves: Optional[list[Action]]):
+        self._game = self._initialize_game(initial_moves or [])
+
+    @classmethod
+    def from_lobby(cls, lobby: Lobby) -> "Game":
+        """Create a Game from a Lobby (starts the game)"""
+        if len(lobby.players) < 2:
+            raise ValueError("Need at least 2 players to start")
+
+        return cls(
+            id=lobby.id,
+            name=lobby.name,
+            seed=lobby.seed,
+            accessibility=lobby.accessibility,
+            people=lobby.people,
+            initial_moves=[],
+        )
+
+    @property
+    def moves(self) -> list[Action]:
+        """Get all moves made in the game"""
+        return self._game.moves
+
+    @property
+    def status(self) -> Union[GameStatus, RoundStatus]:
+        """Get the current game status"""
+        if self._game.winner:
+            return GameStatus.WON
+        return self._game.active_round.status
+
+    @property
+    def winner(self) -> Optional[Person]:
+        """Get the winner of the game"""
+        if self._game.winner:
+            return self.people.by_identifier(self._game.winner.identifier)
+        return None
+
+    @property
+    def active_round(self) -> Round:
+        """Get the current active round"""
+        return self._game.active_round
+
+    @property
+    def events(self) -> list:
+        """Get all game events"""
+        return self._game.events
+
+    @property
+    def scores(self) -> dict[str, int]:
+        """Get current scores"""
+        return self._game.scores
+
     def automate(self, identifier: str) -> None:
-        """Automate a player"""
+        """Automate a player (used when leaving an active game)"""
         person = self.people.by_identifier(identifier)
         if person:
             person.automate = True
-        if self._game:
-            self._game = self._initialize_game(self.moves)
-
-    def start_game(self) -> None:
-        """Start the game with current players"""
-        if self._game or not self.lobby:
-            raise ValueError("Game already started")
-        if len(self.players) < 2:
-            raise ValueError("Need at least 2 players to start")
-
-        # Not a lobby anymore
-        self.lobby = False
-
-        # Create the game
-        self._game = self._initialize_game([])
+        self._game = self._initialize_game(self.moves)
 
     def act(self, action: Action) -> None:
         """Perform a game action"""
-        if not self._game:
-            raise ValueError("Game has not started")
         self._game.act(action)
 
     def suggestion(self) -> Action:
         """Get a suggested action"""
-        if not self._game:
-            raise ValueError("Game has not started")
         return self._game.suggestion()
 
     def _initialize_game(self, moves: list[Action]) -> HundredAndTen:

@@ -36,6 +36,7 @@ class TestMapperEdgeCases(TestCase):
             ValueError,
             db_deserialize.game,
             DbGame(
+                type="game",
                 id="test",
                 name="test",
                 seed="test",
@@ -43,7 +44,6 @@ class TestMapperEdgeCases(TestCase):
                 people=[],
                 # ignoring type because this wants to test bad value
                 moves=[{"identifier": identifier, "type": "unknown"}],  # type: ignore
-                lobby=False,
                 status="PLAYING",
                 winner=None,
                 active_player=None,

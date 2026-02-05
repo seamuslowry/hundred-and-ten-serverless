@@ -53,9 +53,21 @@ class PlayMove(TypedDict):
 Move = Union[BidMove, SelectTrumpMove, DiscardMove, PlayMove]
 
 
+class Lobby(TypedDict):
+    """A class to model the DB format of a Hundred and Ten lobby"""
+
+    type: Literal["lobby"]
+    id: str
+    name: str
+    seed: str
+    accessibility: str
+    people: list[Person]
+
+
 class Game(TypedDict):
     """A class to model the DB format of a Hundred and Ten game"""
 
+    type: Literal["game"]
     id: str
     name: str
     seed: str
@@ -64,7 +76,6 @@ class Game(TypedDict):
     winner: Optional[str]
     active_player: Optional[str]
     moves: list[Move]
-    lobby: bool
     status: str
 
 
@@ -76,8 +87,15 @@ class User(TypedDict):
     picture_url: Optional[str]
 
 
+class SearchLobby(TypedDict):
+    """A class to model how the client will search for lobbies"""
+
+    name: str
+    client: str
+
+
 class SearchGame(TypedDict):
-    """A class to model how the client will search for Hundred and Ten games"""
+    """A class to model how the client will search for games"""
 
     name: str
     client: str

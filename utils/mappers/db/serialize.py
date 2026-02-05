@@ -4,15 +4,24 @@ from utils import models
 from utils.dtos import db
 
 
-def game(m_game: models.Game) -> db.Game:
-    """Convert a Game model to its DB DTO"""
-    active_player = (
-        m_game.active_round.active_player
-        if not m_game.lobby and not m_game.winner
-        else None
+def lobby(m_lobby: models.Lobby) -> db.Lobby:
+    """Convert a Lobby model to its DB DTO"""
+    return db.Lobby(
+        type="lobby",
+        id=m_lobby.id,
+        name=m_lobby.name,
+        seed=m_lobby.seed,
+        accessibility=m_lobby.accessibility.name,
+        people=list(map(__person, m_lobby.people)),
     )
 
+
+def game(m_game: models.Game) -> db.Game:
+    """Convert a Game model to its DB DTO"""
+    active_player = m_game.active_round.active_player if not m_game.winner else None
+
     return db.Game(
+        type="game",
         id=m_game.id,
         name=m_game.name,
         seed=m_game.seed,
@@ -21,7 +30,6 @@ def game(m_game: models.Game) -> db.Game:
         winner=m_game.winner.identifier if m_game.winner else None,
         active_player=active_player.identifier if active_player else None,
         moves=list(map(__move, m_game.moves)),
-        lobby=m_game.lobby,
         status=m_game.status.name,
     )
 
@@ -40,7 +48,7 @@ def __card(card: models.Card) -> db.Card:
 def __person(person: models.Person) -> db.Person:
     return db.Person(
         identifier=person.identifier,
-        roles=list(map(lambda r: r.name, person.roles)),
+        roles=[r.name for r in person.roles],
         automate=person.automate,
     )
 
