@@ -16,8 +16,7 @@ classifiers = [
 ]
 dependencies = [
     "azure-functions==1.24.0",
-    # v2 from GitHub feat/v2 branch until released to PyPI
-    "hundredandten @ git+https://github.com/seamuslowry/hundred-and-ten.git@feat/v2",
+    "hundredandten==2.0.0",
     "pymongo==4.16.0",
 ]
 
