@@ -96,10 +96,17 @@ class TrickEnd(Event):
     winner: str
 
 
+class Score(TypedDict):
+    """A class to model the client format of a score in a Hundred and Ten round end event"""
+
+    identifier: str
+    value: int
+
+
 class RoundEnd(Event):
     """A class to model the client format of a Hundred and Ten round end event"""
 
-    scores: dict[str, int]
+    scores: list[Score]
 
 
 class GameEnd(Event):

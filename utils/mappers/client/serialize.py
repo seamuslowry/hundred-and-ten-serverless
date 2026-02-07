@@ -242,8 +242,15 @@ def __trick_end_json(event: models.TrickEnd) -> client.TrickEnd:
     return {"type": EventType.TRICK_END.name, "winner": event.winner}
 
 
+def __score(score: models.Score) -> client.Score:
+    return {"identifier": score.identifier, "value": score.value}
+
+
 def __round_end_json(event: models.RoundEnd) -> client.RoundEnd:
-    return {"type": EventType.ROUND_END.name, "scores": event.scores}
+    return {
+        "type": EventType.ROUND_END.name,
+        "scores": list(map(__score, event.scores)),
+    }
 
 
 def __game_end_json(event: models.GameEnd) -> client.GameEnd:

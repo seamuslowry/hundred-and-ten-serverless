@@ -27,6 +27,7 @@ from hundredandten.events import (
     GameStart,
     RoundEnd,
     RoundStart,
+    Score,
     TrickEnd,
     TrickStart,
 )
@@ -69,6 +70,7 @@ __all__ = [
     "RoundStart",
     "TrickEnd",
     "TrickStart",
+    "Score",
     # Group
     "Group",
     "Player",
