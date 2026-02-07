@@ -1,7 +1,6 @@
 """Init the models module"""
 
-# App-level types (removed from hundredandten v2)
-# Import from hundredandten v2
+# App-level types: import from engine
 from hundredandten import HundredAndTen
 from hundredandten.actions import (
     Action,
