@@ -8,14 +8,21 @@ from utils.services.mongo import game_client
 
 def save(game: Game) -> Game:
     """Save the provided game to the DB"""
+    game_client.update_one(
+        {"id": game.id, "type": "game"},  # Only update if it's actually a game
+        {
+            # always ensure this is a game
+            "$set": {**serialize.game(game), "type": "game"}
+        },
+        upsert=True,
+    )
     game_client.update_one({"id": game.id}, {"$set": serialize.game(game)}, upsert=True)
     return game
 
 
 def get(game_id: str) -> Game:
     """Retrieve the game with the provided ID"""
-
-    result = game_client.find_one({"id": game_id})
+    result = game_client.find_one({"id": game_id, "type": "game"})
 
     if not result:
         raise ValueError(f"No game found with id {game_id}")
@@ -35,6 +42,7 @@ def search(search_game: SearchGame, max_count: int) -> list[Game]:
             deserialize.game,
             game_client.find(
                 {
+                    "type": "game",
                     "name": {"$regex": search_game["name"], "$options": "i"},
                     "$or": [
                         {"accessibility": Accessibility.PUBLIC.name},

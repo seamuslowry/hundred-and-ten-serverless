@@ -6,7 +6,7 @@ from typing import Optional
 import azure.functions as func
 
 from function_app import (
-    create_game as wrapped_create_game,
+    create_lobby as wrapped_create_lobby,
 )
 from function_app import (
     leave_game as wrapped_leave_game,
@@ -23,7 +23,7 @@ from function_app import (
 from utils import models
 from utils.dtos.client import CompletedGame, StartedGame, Suggestion, User, WaitingGame
 
-create_game = wrapped_create_game.build().get_user_function()
+create_lobby = wrapped_create_lobby.build().get_user_function()
 leave_game = wrapped_leave_game.build().get_user_function()
 self_http = wrapped_self.build().get_user_function()
 start_game = wrapped_start_game.build().get_user_function()
@@ -64,8 +64,8 @@ def read_response_body(body: bytes):
 def lobby_game(
     organizer: str = DEFAULT_ID, organizer_name: str = DEFAULT_NAME
 ) -> WaitingGame:
-    """Get a started game waiting for the players"""
-    resp = create_game(
+    """Get a lobby waiting for the players"""
+    resp = create_lobby(
         build_request(
             headers={
                 "x-ms-client-principal-id": organizer,
@@ -102,12 +102,12 @@ def __user(method: str, user: models.User) -> User:
 
 def started_game() -> StartedGame:
     """Get a started game waiting for the first move"""
-    created_game: WaitingGame = lobby_game()
+    created_lobby: WaitingGame = lobby_game()
     resp = start_game(
         build_request(
-            route_params={"game_id": created_game["id"]},
+            route_params={"lobby_id": created_lobby["id"]},
             headers={
-                "x-ms-client-principal-id": created_game["organizer"]["identifier"]
+                "x-ms-client-principal-id": created_lobby["organizer"]["identifier"]
             },
         )
     )

@@ -16,7 +16,6 @@ class Person(TypedDict):
 
     identifier: str
     automate: bool
-    prepassed: bool
 
 
 class OtherPlayer(Person):
@@ -36,6 +35,7 @@ class Self(Person):
     """A class to model the client format of the logged in Hundred and Ten player"""
 
     hand: list[Card]
+    prepassed: bool
 
 
 Player = Union[Self, OtherPlayer]
@@ -96,10 +96,17 @@ class TrickEnd(Event):
     winner: str
 
 
+class Score(TypedDict):
+    """A class to model the client format of a score in a Hundred and Ten round end event"""
+
+    identifier: str
+    value: int
+
+
 class RoundEnd(Event):
     """A class to model the client format of a Hundred and Ten round end event"""
 
-    scores: dict[str, int]
+    scores: list[Score]
 
 
 class GameEnd(Event):
