@@ -18,6 +18,8 @@ def lobby(
     m_lobby: models.Lobby,
 ) -> client.WaitingGame:
     """Return a lobby as it can be provided to the client"""
+    assert m_lobby.id  # lobbies sent to the client will be saved and have an id
+
     return client.WaitingGame(
         id=m_lobby.id,
         name=m_lobby.name,
@@ -44,6 +46,7 @@ def game(
         if initial_event_knowledge is not None
         else None
     )
+    assert m_game.id  # games sent to clients will be saved and have an id
 
     if m_game.status == models.GameStatus.WON:
         assert m_game.winner  # won games will have winners
