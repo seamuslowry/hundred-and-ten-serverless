@@ -45,7 +45,7 @@ class PersonGroup(list[Person]):
 class BaseGame:
     """Shared fields and properties for Lobby and Game"""
 
-    id: str = field(default_factory=lambda: str(uuid4()))
+    id: Optional[str] = field(default=None)
     name: str = field(default="")
     seed: str = field(default_factory=lambda: str(uuid4()))
     accessibility: Accessibility = field(default=Accessibility.PUBLIC)
@@ -87,10 +87,7 @@ class Lobby(BaseGame):
 
         if self.accessibility == Accessibility.PRIVATE:
             if not (
-                person
-                and (
-                    GameRole.INVITEE in person.roles or GameRole.PLAYER in person.roles
-                )
+                GameRole.INVITEE in person.roles or GameRole.PLAYER in person.roles
             ):
                 raise ValueError("Cannot join private game without invitation")
 
@@ -128,13 +125,13 @@ class Game(BaseGame):
     def __post_init__(self, initial_moves: Optional[list[Action]]):
         self._game = self._initialize_game(initial_moves or [])
 
-    @classmethod
-    def from_lobby(cls, lobby: Lobby) -> "Game":
+    @staticmethod
+    def from_lobby(lobby: Lobby) -> "Game":
         """Create a Game from a Lobby (starts the game)"""
         if len(lobby.players) < 2:
             raise ValueError("Need at least 2 players to start")
 
-        return cls(
+        return Game(
             id=lobby.id,
             name=lobby.name,
             seed=lobby.seed,

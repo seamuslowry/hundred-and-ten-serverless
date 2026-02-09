@@ -1,5 +1,7 @@
 """Facilitate interaction with the lobby DB"""
 
+from bson import ObjectId
+
 from utils.dtos.db import SearchLobby
 from utils.mappers.db import deserialize, serialize
 from utils.models import Accessibility, Game, Lobby
@@ -9,20 +11,20 @@ from utils.services.mongo import lobby_client
 
 def save(lobby: Lobby) -> Lobby:
     """Save the provided lobby to the DB"""
-    lobby_client.update_one(
-        {"id": lobby.id, "type": "lobby"},  # Only update if it's actually a lobby
-        {
-            # always ensure this is a lobby
-            "$set": {**serialize.lobby(lobby), "type": "lobby"}
-        },
-        upsert=True,
-    )
+    if lobby.id is None:
+        result = lobby_client.insert_one(serialize.lobby(lobby))
+        lobby.id = str(result.inserted_id)
+    else:
+        lobby_client.update_one(
+            {"_id": ObjectId(lobby.id), "type": "lobby"},
+            {"$set": serialize.lobby(lobby)},
+        )
     return lobby
 
 
 def get(lobby_id: str) -> Lobby:
     """Retrieve the lobby with the provided ID"""
-    result = lobby_client.find_one({"id": lobby_id, "type": "lobby"})
+    result = lobby_client.find_one({"_id": ObjectId(lobby_id), "type": "lobby"})
 
     if not result:
         raise ValueError(f"No lobby found with id {lobby_id}")

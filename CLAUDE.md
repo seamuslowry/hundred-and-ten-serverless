@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Azure Functions REST API for the card game "Hundred and Ten" (110). Uses the `hundredandten` library (v2 from feat/v2 branch) for game logic, with this repo adding lobby management, persistence, and HTTP endpoints.
+Azure Functions REST API for the card game "Hundred and Ten" (110). Uses the `hundredandten` library for game logic, with this repo adding lobby management, persistence, and HTTP endpoints.
 
 ## Commands
 
@@ -19,8 +19,8 @@ coverage run --branch --source=. -m pytest tests && coverage report -m
 # Manual commands (if deps installed locally)
 pytest tests                    # Run all tests
 pytest tests/functions/test_bid.py  # Single test file
-ruff check utils tests          # Lint
-black --check utils tests       # Format check
+ruff check                      # Lint
+black --check .                 # Format check
 pyright                         # Type check
 ```
 

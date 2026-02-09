@@ -1,28 +1,36 @@
 """A module to convert models to DB DTOs"""
 
+from bson import ObjectId
+
 from utils import models
 from utils.dtos import db
 
 
 def lobby(m_lobby: models.Lobby) -> db.Lobby:
     """Convert a Lobby model to its DB DTO"""
-    return db.Lobby(
+    result = db.Lobby(
         type="lobby",
-        id=m_lobby.id,
         name=m_lobby.name,
         seed=m_lobby.seed,
         accessibility=m_lobby.accessibility.name,
         people=list(map(__person, m_lobby.people)),
     )
 
+    if m_lobby.id is not None:
+        result["_id"] = ObjectId(m_lobby.id)
+
+    return result
+
 
 def game(m_game: models.Game) -> db.Game:
     """Convert a Game model to its DB DTO"""
     active_player = m_game.active_round.active_player if not m_game.winner else None
 
+    assert m_game.id  # games must have been created from existing lobby records
+
     return db.Game(
         type="game",
-        id=m_game.id,
+        _id=ObjectId(m_game.id),
         name=m_game.name,
         seed=m_game.seed,
         accessibility=m_game.accessibility.name,

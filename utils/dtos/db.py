@@ -1,6 +1,8 @@
 """Format of a game of Hundred and Ten in the DB"""
 
-from typing import Literal, Optional, TypedDict, Union
+from typing import Literal, NotRequired, Optional, TypedDict, Union
+
+from bson import ObjectId
 
 
 class Person(TypedDict):
@@ -57,7 +59,7 @@ class Lobby(TypedDict):
     """A class to model the DB format of a Hundred and Ten lobby"""
 
     type: Literal["lobby"]
-    id: str
+    _id: NotRequired[ObjectId]
     name: str
     seed: str
     accessibility: str
@@ -68,7 +70,7 @@ class Game(TypedDict):
     """A class to model the DB format of a Hundred and Ten game"""
 
     type: Literal["game"]
-    id: str
+    _id: NotRequired[ObjectId]
     name: str
     seed: str
     accessibility: str

@@ -1,5 +1,7 @@
 """Facilitate interaction with the game DB"""
 
+from bson import ObjectId
+
 from utils.dtos.db import SearchGame
 from utils.mappers.db import deserialize, serialize
 from utils.models import Accessibility, Game
@@ -9,20 +11,15 @@ from utils.services.mongo import game_client
 def save(game: Game) -> Game:
     """Save the provided game to the DB"""
     game_client.update_one(
-        {"id": game.id, "type": "game"},  # Only update if it's actually a game
-        {
-            # always ensure this is a game
-            "$set": {**serialize.game(game), "type": "game"}
-        },
-        upsert=True,
+        {"_id": ObjectId(game.id)},
+        {"$set": serialize.game(game)},
     )
-    game_client.update_one({"id": game.id}, {"$set": serialize.game(game)}, upsert=True)
     return game
 
 
 def get(game_id: str) -> Game:
     """Retrieve the game with the provided ID"""
-    result = game_client.find_one({"id": game_id, "type": "game"})
+    result = game_client.find_one({"_id": ObjectId(game_id), "type": "game"})
 
     if not result:
         raise ValueError(f"No game found with id {game_id}")

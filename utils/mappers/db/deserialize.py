@@ -18,7 +18,7 @@ def user(db_user: db.User) -> models.User:
 def lobby(db_lobby: db.Lobby) -> models.Lobby:
     """Convert a Lobby DB DTO to its model"""
     return models.Lobby(
-        id=db_lobby["id"],
+        id=str(db_lobby["_id"]) if "_id" in db_lobby else None,
         name=db_lobby["name"],
         seed=db_lobby["seed"],
         accessibility=models.Accessibility[db_lobby["accessibility"]],
@@ -29,7 +29,7 @@ def lobby(db_lobby: db.Lobby) -> models.Lobby:
 def game(db_game: db.Game) -> models.Game:
     """Convert a Game DB DTO to its model"""
     return models.Game(
-        id=db_game["id"],
+        id=str(db_game["_id"]) if "_id" in db_game else None,
         name=db_game["name"],
         seed=db_game["seed"],
         accessibility=models.Accessibility[db_game["accessibility"]],
