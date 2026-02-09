@@ -1,6 +1,7 @@
 """Facilitate interaction with the lobby DB"""
 
 from bson import ObjectId
+from bson.errors import InvalidId
 
 from utils.dtos.db import SearchLobby
 from utils.mappers.db import deserialize, serialize
@@ -24,7 +25,12 @@ def save(lobby: Lobby) -> Lobby:
 
 def get(lobby_id: str) -> Lobby:
     """Retrieve the lobby with the provided ID"""
-    result = lobby_client.find_one({"_id": ObjectId(lobby_id), "type": "lobby"})
+    try:
+        oid = ObjectId(lobby_id)
+    except InvalidId as exc:
+        raise ValueError(f"No lobby found with id {lobby_id}") from exc
+
+    result = lobby_client.find_one({"_id": oid, "type": "lobby"})
 
     if not result:
         raise ValueError(f"No lobby found with id {lobby_id}")

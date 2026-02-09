@@ -37,6 +37,11 @@ start_game = wrapped_start_game.build().get_user_function()
 class TestLobby(TestCase):
     """Unit tests to ensure lobbies work as expected"""
 
+    def test_lobby_info_invalid_id(self):
+        """Invalid lobby ID returns 400"""
+        resp = lobby_info(build_request(route_params={"lobby_id": "not-an-id"}))
+        self.assertEqual(400, resp.status_code)
+
     def test_create_lobby(self):
         """New lobby can be created"""
         organizer = "organizer"

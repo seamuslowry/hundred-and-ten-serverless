@@ -1,6 +1,7 @@
 """Facilitate interaction with the game DB"""
 
 from bson import ObjectId
+from bson.errors import InvalidId
 
 from utils.dtos.db import SearchGame
 from utils.mappers.db import deserialize, serialize
@@ -19,7 +20,12 @@ def save(game: Game) -> Game:
 
 def get(game_id: str) -> Game:
     """Retrieve the game with the provided ID"""
-    result = game_client.find_one({"_id": ObjectId(game_id), "type": "game"})
+    try:
+        oid = ObjectId(game_id)
+    except InvalidId as exc:
+        raise ValueError(f"No game found with id {game_id}") from exc
+
+    result = game_client.find_one({"_id": oid, "type": "game"})
 
     if not result:
         raise ValueError(f"No game found with id {game_id}")

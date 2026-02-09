@@ -54,6 +54,11 @@ class TestRetrieveInfo(TestCase):
         games = read_response_body(resp.get_body())
         self.assertIn(game["id"], list(map(lambda g: g["id"], games)))
 
+    def test_game_info_invalid_id(self):
+        """Invalid game ID returns 400"""
+        resp = game_info(build_request(route_params={"game_id": "not-an-id"}))
+        self.assertEqual(400, resp.status_code)
+
     def test_game_info(self):
         """Can retrieve information about a game"""
         original_game: CompletedGame = completed_game()
