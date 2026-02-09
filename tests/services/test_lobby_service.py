@@ -34,6 +34,7 @@ class TestLobbyService(TestCase):
         """Lobby can be retrieved from the DB"""
         original_lobby = _make_lobby()
         LobbyService.save(original_lobby)
+        assert original_lobby.id
         lobby = LobbyService.get(original_lobby.id)
 
         self.assertIsNotNone(lobby)
