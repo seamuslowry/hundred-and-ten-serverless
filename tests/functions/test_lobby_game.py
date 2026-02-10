@@ -42,6 +42,19 @@ class TestLobby(TestCase):
         resp = lobby_info(build_request(route_params={"lobby_id": "not-an-id"}))
         self.assertEqual(400, resp.status_code)
 
+    def test_lobby_info(self):
+        """Invalid lobby ID returns 400"""
+        lobby: WaitingGame = lobby_game()
+        resp = lobby_info(build_request(route_params={"lobby_id": lobby["id"]}))
+
+        retrieved_lobby_info: WaitingGame = read_response_body(resp.get_body())
+
+        self.assertIsNotNone(retrieved_lobby_info["id"])
+        self.assertIsNotNone(retrieved_lobby_info["name"])
+        self.assertIsNotNone(retrieved_lobby_info["organizer"])
+        self.assertEqual([], retrieved_lobby_info["players"])
+        self.assertEqual([], retrieved_lobby_info["invitees"])
+
     def test_create_lobby(self):
         """New lobby can be created"""
         organizer = "organizer"
@@ -217,27 +230,38 @@ class TestLobby(TestCase):
         self.assertEqual(GameStatus.WAITING_FOR_PLAYERS.name, joined_lobby["status"])
 
     def test_leave_lobby(self):
-        """Players can leave a lobby"""
+        """Any player can join a public lobby"""
+        player = "player"
+
         created_lobby: WaitingGame = lobby_game()
+
+        resp = join_lobby(
+            build_request(
+                route_params={"lobby_id": created_lobby["id"]},
+                headers={"x-ms-client-principal-id": player},
+            )
+        )
+        joined_lobby: WaitingGame = read_response_body(resp.get_body())
+
+        self.assertEqual(created_lobby["id"], joined_lobby["id"])
+        self.assertEqual(1, len(joined_lobby["players"]))
+        self.assertEqual(player, joined_lobby["players"][0]["identifier"])
 
         resp = leave_lobby(
             build_request(
                 route_params={"lobby_id": created_lobby["id"]},
-                headers={
-                    "x-ms-client-principal-id": created_lobby["organizer"]["identifier"]
-                },
+                headers={"x-ms-client-principal-id": player},
             )
         )
 
         left_lobby: WaitingGame = read_response_body(resp.get_body())
 
         self.assertEqual(created_lobby["id"], left_lobby["id"])
-        self.assertNotEqual(
+        self.assertEqual(
             created_lobby["organizer"]["identifier"],
             left_lobby["organizer"]["identifier"],
         )
         self.assertEqual(0, len(left_lobby["players"]))
-        self.assertEqual(0, len(left_lobby["invitees"]))
         self.assertEqual(GameStatus.WAITING_FOR_PLAYERS.name, left_lobby["status"])
 
     def test_player_start_game(self):
@@ -297,8 +321,24 @@ class TestLobby(TestCase):
         )
         self.assertEqual(400, resp.status_code)
 
-    def test_organizer_leaves_fallback(self):
-        """When organizer leaves and another player remains, the first player becomes organizer"""
+    def test_unknown_player_leaves_fails(self):
+        """When an unknown player leaves, return 400 because they're not in the lobby"""
+        player = "player"
+
+        created_lobby: WaitingGame = lobby_game()
+
+        # Unrecognized player attempts to leave
+        resp = leave_lobby(
+            build_request(
+                route_params={"lobby_id": created_lobby["id"]},
+                headers={"x-ms-client-principal-id": player},
+            )
+        )
+
+        self.assertEqual(400, resp.status_code)
+
+    def test_organizer_leaves_fails(self):
+        """When organizer attempts to leave, prevent it"""
         player = "player"
 
         created_lobby: WaitingGame = lobby_game()
@@ -311,8 +351,8 @@ class TestLobby(TestCase):
             )
         )
 
-        # Organizer leaves
-        leave_lobby(
+        # Organizer attempts to leave
+        resp = leave_lobby(
             build_request(
                 route_params={"lobby_id": created_lobby["id"]},
                 headers={
@@ -321,16 +361,8 @@ class TestLobby(TestCase):
             )
         )
 
-        resp = lobby_info(
-            build_request(
-                route_params={"lobby_id": created_lobby["id"]},
-                headers={"x-ms-client-principal-id": player},
-            )
-        )
-        updated_lobby: WaitingGame = read_response_body(resp.get_body())
-
-        # The remaining player should now be shown as organizer
-        self.assertEqual(player, updated_lobby["organizer"]["identifier"])
+        # Organizer cannot leave. Needs to delete lobby.
+        self.assertEqual(400, resp.status_code)
 
     def test_search_lobbies(self):
         """Can search for lobbies"""

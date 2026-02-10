@@ -15,11 +15,9 @@ from utils.models import (
     Bid,
     BidAmount,
     Discard,
-    GameRole,
     HundredAndTenError,
     Lobby,
     Person,
-    PersonGroup,
     Play,
     SelectableSuit,
     SelectTrump,
@@ -101,7 +99,7 @@ def game_players(req: func.HttpRequest) -> func.HttpResponse:
     """
     _, game = parse_game_request(req)
 
-    people_ids = [p.identifier for p in game.people]
+    people_ids = [p.identifier for p in game.ordered_players]
 
     return func.HttpResponse(
         json.dumps(list(map(serialize.user, UserService.by_identifiers(people_ids))))
@@ -118,7 +116,7 @@ def leave_game(req: func.HttpRequest) -> func.HttpResponse:
     identifier, game = parse_game_request(req)
     initial_event_knowledge = len(game.events)
 
-    game.automate(identifier)
+    game.leave(identifier)
     game = GameService.save(game)
 
     return func.HttpResponse(
@@ -255,9 +253,7 @@ def create_lobby(req: func.HttpRequest) -> func.HttpResponse:
     body = req.get_json()
 
     lobby = Lobby(
-        people=PersonGroup(
-            [Person(identifier=identifier, roles={GameRole.ORGANIZER, GameRole.PLAYER})]
-        ),
+        organizer=Person(identifier=identifier),
         name=body.get("name", f"{identifier} Game"),
         accessibility=Accessibility[
             body.get("accessibility", Accessibility.PUBLIC.name)
@@ -281,10 +277,10 @@ def invite_to_lobby(req: func.HttpRequest) -> func.HttpResponse:
     identifier, lobby = parse_lobby_request(req)
 
     body = req.get_json()
-    invitees = body.get("invitees", [])
+    invitees: list[str] = body.get("invitees", [])
 
     for invitee in invitees:
-        lobby.invite(identifier, invitee)
+        lobby.invite(identifier, Person(identifier=invitee))
     lobby = LobbyService.save(lobby)
 
     return func.HttpResponse(json.dumps(serialize.lobby(lobby)))
@@ -298,7 +294,7 @@ def join_lobby(req: func.HttpRequest) -> func.HttpResponse:
     Join a 110 lobby
     """
     identifier, lobby = parse_lobby_request(req)
-    lobby.join(identifier)
+    lobby.join(Person(identifier))
     lobby = LobbyService.save(lobby)
 
     return func.HttpResponse(json.dumps(serialize.lobby(lobby)))
@@ -339,7 +335,7 @@ def lobby_players(req: func.HttpRequest) -> func.HttpResponse:
     """
     _, lobby = parse_lobby_request(req)
 
-    people_ids = [p.identifier for p in lobby.people]
+    people_ids = [p.identifier for p in lobby.ordered_players]
 
     return func.HttpResponse(
         json.dumps(list(map(serialize.user, UserService.by_identifiers(people_ids))))
@@ -389,11 +385,10 @@ def start_game(req: func.HttpRequest) -> func.HttpResponse:
         raise HundredAndTenError("Only the organizer can start the game")
 
     # Add CPU players if needed
-    for num in range(len(lobby.players), MIN_PLAYERS):
+    for num in range(len(lobby.ordered_players), MIN_PLAYERS):
         cpu_identifier = str(num + 1)
-        lobby.invite(identifier, cpu_identifier)
-        lobby.join(cpu_identifier)
-        lobby.automate(cpu_identifier)
+        lobby.invite(identifier, Person(cpu_identifier, automate=True))
+        lobby.join(Person(cpu_identifier, automate=True))
 
     # Start the game (converts lobby record to game record)
     game = LobbyService.start_game(lobby)

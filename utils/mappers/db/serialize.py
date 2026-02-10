@@ -13,7 +13,9 @@ def lobby(m_lobby: models.Lobby) -> db.Lobby:
         name=m_lobby.name,
         seed=m_lobby.seed,
         accessibility=m_lobby.accessibility.name,
-        people=list(map(__person, m_lobby.people)),
+        organizer=__person(m_lobby.organizer),
+        players=list(map(__person, m_lobby.players)),
+        invitees=list(map(__person, m_lobby.invitees)),
     )
 
     if m_lobby.id is not None:
@@ -34,7 +36,8 @@ def game(m_game: models.Game) -> db.Game:
         name=m_game.name,
         seed=m_game.seed,
         accessibility=m_game.accessibility.name,
-        people=list(map(__person, m_game.people)),
+        organizer=__person(m_game.organizer),
+        players=list(map(__person, m_game.players)),
         winner=m_game.winner.identifier if m_game.winner else None,
         active_player=active_player.identifier if active_player else None,
         moves=list(map(__move, m_game.moves)),
@@ -56,7 +59,6 @@ def __card(card: models.Card) -> db.Card:
 def __person(person: models.Person) -> db.Person:
     return db.Person(
         identifier=person.identifier,
-        roles=[r.name for r in person.roles],
         automate=person.automate,
     )
 

@@ -35,13 +35,13 @@ from hundredandten.hundred_and_ten_error import HundredAndTenError
 from hundredandten.round import Round
 from hundredandten.trick import Trick
 
-from utils.constants import Accessibility, GameRole, GameStatus
+from utils.constants import Accessibility, GameStatus
 from utils.models.game import Game, Lobby, PersonGroup
 from utils.models.person import Person
 from utils.models.user import User
 
 __all__ = [
-    # hundredandten v2
+    # Engine
     "HundredAndTen",
     # Actions
     "Action",
@@ -82,7 +82,6 @@ __all__ = [
     "Trick",
     # Utils constants
     "Accessibility",
-    "GameRole",
     "GameStatus",
     # Utils models
     "Game",

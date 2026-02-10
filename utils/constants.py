@@ -10,14 +10,6 @@ class Accessibility(str, Enum):
     PRIVATE = "PRIVATE"
 
 
-class GameRole(str, Enum):
-    """Roles a person can have in a game (lobby phase)"""
-
-    ORGANIZER = "ORGANIZER"
-    PLAYER = "PLAYER"
-    INVITEE = "INVITEE"
-
-
 class GameStatus(str, Enum):
     """Status of a game at the app level (includes lobby phase)"""
 

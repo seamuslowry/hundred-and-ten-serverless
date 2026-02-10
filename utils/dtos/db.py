@@ -9,7 +9,6 @@ class Person(TypedDict):
     """A class to model the DB format of a person"""
 
     identifier: str
-    roles: list[str]
     automate: bool
 
 
@@ -63,7 +62,9 @@ class Lobby(TypedDict):
     name: str
     seed: str
     accessibility: str
-    people: list[Person]
+    organizer: Person
+    players: list[Person]
+    invitees: list[Person]
 
 
 class Game(TypedDict):
@@ -74,7 +75,8 @@ class Game(TypedDict):
     name: str
     seed: str
     accessibility: str
-    people: list[Person]
+    organizer: Person
+    players: list[Person]
     winner: Optional[str]
     active_player: Optional[str]
     moves: list[Move]

@@ -2,13 +2,10 @@
 
 from dataclasses import dataclass, field
 
-from utils.constants import GameRole
-
 
 @dataclass
 class Person:
     """A person in the lobby phase of a game"""
 
     identifier: str
-    roles: set[GameRole] = field(default_factory=set)
-    automate: bool = False
+    automate: bool = field(compare=False, default=False)

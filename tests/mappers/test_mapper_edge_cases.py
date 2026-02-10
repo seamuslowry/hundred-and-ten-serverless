@@ -5,6 +5,7 @@ from unittest import TestCase
 import azure.functions as func
 
 from utils.dtos.db import Game as DbGame
+from utils.dtos.db import Person as DbPerson
 from utils.mappers.client import deserialize as client_deserialize
 from utils.mappers.client import serialize as client_serialize
 from utils.mappers.db import deserialize as db_deserialize
@@ -41,7 +42,8 @@ class TestMapperEdgeCases(TestCase):
                 name="test",
                 seed="test",
                 accessibility="PUBLIC",
-                people=[],
+                organizer=DbPerson(identifier="dummy", automate=False),
+                players=[],
                 # ignoring type because this wants to test bad value
                 moves=[{"identifier": identifier, "type": "unknown"}],  # type: ignore
                 status="PLAYING",

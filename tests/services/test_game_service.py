@@ -5,7 +5,7 @@ from unittest import TestCase
 from bson import ObjectId
 
 from utils.dtos.db import SearchGame
-from utils.models import Game, GameRole, Lobby, Person, PersonGroup
+from utils.models import Game, Lobby, Person, PersonGroup
 from utils.services import GameService, LobbyService
 
 
@@ -13,10 +13,10 @@ def _make_game(name: str = "") -> Game:
     """Create a valid Game from a saved Lobby with players"""
     lobby = Lobby(
         name=name,
-        people=PersonGroup(
+        organizer=Person("p1"),
+        players=PersonGroup(
             [
-                Person(identifier="p1", roles={GameRole.ORGANIZER, GameRole.PLAYER}),
-                Person(identifier="p2", roles={GameRole.PLAYER}),
+                Person(identifier="p2"),
             ]
         ),
     )

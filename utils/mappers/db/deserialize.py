@@ -22,7 +22,9 @@ def lobby(db_lobby: db.Lobby) -> models.Lobby:
         name=db_lobby["name"],
         seed=db_lobby["seed"],
         accessibility=models.Accessibility[db_lobby["accessibility"]],
-        people=PersonGroup(map(__person, db_lobby["people"])),
+        organizer=__person(db_lobby["organizer"]),
+        players=PersonGroup(map(__person, db_lobby["players"])),
+        invitees=PersonGroup(map(__person, db_lobby["invitees"])),
     )
 
 
@@ -33,7 +35,8 @@ def game(db_game: db.Game) -> models.Game:
         name=db_game["name"],
         seed=db_game["seed"],
         accessibility=models.Accessibility[db_game["accessibility"]],
-        people=PersonGroup(map(__person, db_game["people"])),
+        organizer=__person(db_game["organizer"]),
+        players=PersonGroup(map(__person, db_game["players"])),
         initial_moves=list(map(__move, db_game["moves"])),
     )
 
@@ -42,7 +45,6 @@ def __person(person: db.Person) -> models.Person:
     return models.Person(
         identifier=person["identifier"],
         automate=person["automate"],
-        roles={models.GameRole[r] for r in person["roles"]},
     )
 
 

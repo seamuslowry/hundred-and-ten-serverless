@@ -41,7 +41,7 @@ utils/
     db.py                # TypedDict DTOs for MongoDB documents
   decorators/            # @catcher converts exceptions to 400 responses
   parsers/               # parse_request() extracts identity + loads game
-  constants.py           # Accessibility, GameRole, GameStatus enums
+  constants.py           # Accessibility, GameStatus enums
 tests/
   helpers.py             # build_request(), read_response_body() utilities
 ```

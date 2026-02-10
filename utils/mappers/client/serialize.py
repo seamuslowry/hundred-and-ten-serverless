@@ -58,7 +58,7 @@ def game(
             results=client_events,
             winner=__person(m_game.winner),
             organizer=__person(m_game.organizer),
-            players=list(map(__person, m_game.players)),
+            players=list(map(__person, m_game.ordered_players)),
         )
 
     return client.StartedGame(
