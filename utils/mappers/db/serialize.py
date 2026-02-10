@@ -1,26 +1,47 @@
 """A module to convert models to DB DTOs"""
 
+from bson import ObjectId
+
 from utils import models
 from utils.dtos import db
 
 
-def game(m_game: models.Game) -> db.Game:
-    """Convert a Game model to its DB DTO"""
-    winner = m_game.winner
-    active_player = (
-        m_game.active_round.active_player if m_game.rounds and not winner else None
+def lobby(m_lobby: models.Lobby) -> db.Lobby:
+    """Convert a Lobby model to its DB DTO"""
+    result = db.Lobby(
+        type="lobby",
+        name=m_lobby.name,
+        seed=m_lobby.seed,
+        accessibility=m_lobby.accessibility.name,
+        organizer=__person(m_lobby.organizer),
+        players=list(map(__person, m_lobby.players)),
+        invitees=list(map(__person, m_lobby.invitees)),
     )
 
+    if m_lobby.id is not None:
+        result["_id"] = ObjectId(m_lobby.id)
+
+    return result
+
+
+def game(m_game: models.Game) -> db.Game:
+    """Convert a Game model to its DB DTO"""
+    active_player = m_game.active_round.active_player if not m_game.winner else None
+
+    assert m_game.id  # games must have been created from existing lobby records
+
     return db.Game(
-        id=m_game.id,
-        status=m_game.status.name,
+        type="game",
+        _id=ObjectId(m_game.id),
         name=m_game.name,
         seed=m_game.seed,
         accessibility=m_game.accessibility.name,
-        people=list(map(__person, m_game.people)),
-        rounds=list(map(__round, m_game.rounds)),
+        organizer=__person(m_game.organizer),
+        players=list(map(__person, m_game.players)),
+        winner=m_game.winner.identifier if m_game.winner else None,
         active_player=active_player.identifier if active_player else None,
-        winner=winner.identifier if winner else None,
+        moves=list(map(__move, m_game.moves)),
+        status=m_game.status.name,
     )
 
 
@@ -38,52 +59,34 @@ def __card(card: models.Card) -> db.Card:
 def __person(person: models.Person) -> db.Person:
     return db.Person(
         identifier=person.identifier,
-        roles=list(map(lambda r: r.name, person.roles)),
         automate=person.automate,
     )
 
 
-def __player(player: models.Player) -> db.Player:
-    return db.Player(
-        identifier=player.identifier,
-        roles=list(map(lambda r: r.name, player.roles)),
-        automate=player.automate,
-        hand=list(map(__card, player.hand)),
-    )
-
-
-def __bid(bid: models.Bid) -> db.Bid:
-    return db.Bid(identifier=bid.identifier, amount=bid.amount.value)
-
-
-def __deck(deck: models.Deck) -> db.Deck:
-    return db.Deck(seed=deck.seed, pulled=deck.pulled)
-
-
-def __discard(discard: models.DetailedDiscard) -> db.Discard:
-    return db.Discard(
-        identifier=discard.identifier,
-        cards=list(map(__card, discard.cards)),
-        kept=list(map(__card, discard.kept)),
-    )
-
-
-def __play(play: models.Play) -> db.Play:
-    return db.Play(identifier=play.identifier, card=__card(play.card))
-
-
-def __trick(trick: models.Trick) -> db.Trick:
-    return db.Trick(
-        plays=list(map(__play, trick.plays)), round_trump=trick.round_trump.name
-    )
-
-
-def __round(m_round: models.Round) -> db.Round:
-    return db.Round(
-        players=list(map(__player, m_round.players)),
-        bids=list(map(__bid, m_round.bids)),
-        deck=__deck(m_round.deck),
-        trump=m_round.trump.name if m_round.trump else None,
-        discards=list(map(__discard, m_round.discards)),
-        tricks=list(map(__trick, m_round.tricks)),
-    )
+def __move(move: models.Action) -> db.Move:
+    """Convert a game action to a DB move"""
+    if isinstance(move, models.Bid):
+        return db.BidMove(
+            type="bid",
+            identifier=move.identifier,
+            amount=move.amount.value,
+        )
+    if isinstance(move, models.SelectTrump):
+        return db.SelectTrumpMove(
+            type="select_trump",
+            identifier=move.identifier,
+            suit=move.suit.name,
+        )
+    if isinstance(move, models.Discard):
+        return db.DiscardMove(
+            type="discard",
+            identifier=move.identifier,
+            cards=list(map(__card, move.cards)),
+        )
+    if isinstance(move, models.Play):
+        return db.PlayMove(
+            type="play",
+            identifier=move.identifier,
+            card=__card(move.card),
+        )
+    raise ValueError(f"Unknown move type: {type(move)}")  # pragma: no cover

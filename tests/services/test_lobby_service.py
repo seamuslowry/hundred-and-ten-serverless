@@ -1,0 +1,70 @@
+"""Lobby Service unit tests"""
+
+from unittest import TestCase
+
+from bson import ObjectId
+
+from utils.dtos.db import SearchLobby
+from utils.models import Lobby, Person
+from utils.services import LobbyService
+
+
+def _make_lobby(name: str = "") -> Lobby:
+    """Create a valid Lobby with an organizer"""
+    return Lobby(name=name, organizer=Person("p1"))
+
+
+class TestLobbyService(TestCase):
+    """Unit tests to ensure lobby service works as expected"""
+
+    def test_save_lobby(self):
+        """Lobby can be saved to the DB and receives a generated id"""
+        lobby = _make_lobby()
+
+        self.assertIsNone(lobby.id)
+        LobbyService.save(lobby)
+        self.assertIsNotNone(lobby.id)
+
+    def test_get_lobby(self):
+        """Lobby can be retrieved from the DB"""
+        original_lobby = _make_lobby()
+        LobbyService.save(original_lobby)
+        assert original_lobby.id
+        lobby = LobbyService.get(original_lobby.id)
+
+        self.assertIsNotNone(lobby)
+        self.assertEqual(lobby.id, original_lobby.id)
+
+    def test_get_non_existent_lobby(self):
+        """Unknown lobby cannot be retrieved from the DB"""
+        self.assertRaises(ValueError, LobbyService.get, str(ObjectId()))
+
+    def test_search_lobby(self):
+        """Lobbies can be searched in the DB"""
+        text = f"search_test{ObjectId()}"
+        lobbies = [LobbyService.save(_make_lobby(name=f"{text} {i}")) for i in range(5)]
+
+        found_lobbies = LobbyService.search(
+            SearchLobby(name=text, client="p1"),
+            len(lobbies) + 1,
+        )
+
+        self.assertEqual(len(found_lobbies), len(lobbies))
+
+    def test_start_game(self):
+        """Lobby can be converted to a game"""
+        lobby = _make_lobby()
+        lobby.join(Person("p2"))
+        LobbyService.save(lobby)
+
+        game = LobbyService.start_game(lobby)
+
+        self.assertIsNotNone(game)
+        self.assertEqual(game.id, lobby.id)
+
+    def test_start_game_requires_minimum_players(self):
+        """Lobby cannot be converted to a game with fewer than 2 players"""
+        lobby = _make_lobby()
+        LobbyService.save(lobby)
+
+        self.assertRaises(ValueError, LobbyService.start_game, lobby)

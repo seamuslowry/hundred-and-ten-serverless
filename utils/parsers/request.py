@@ -7,15 +7,32 @@ from typing import Tuple
 import azure.functions as func
 
 from utils.mappers.client import deserialize
-from utils.models import Game
-from utils.services import GameService
+from utils.models import Game, Lobby
+from utils.services import GameService, LobbyService
 
 
-def parse(req: func.HttpRequest) -> Tuple[str, Game]:
+def parse(req: func.HttpRequest) -> Tuple[str]:
     """
-    Parse the request for the models
+    Parse the user identifier from the request
     """
-    game_id = req.route_params.get("game_id", None)
-    game = GameService.get(game_id) if game_id else Game()
+    return (deserialize.user_id(req),)
+
+
+def parse_lobby_request(req: func.HttpRequest) -> Tuple[str, Lobby]:
+    """
+    Parse the request for a lobby
+    """
+    lobby_id = req.route_params.get("lobby_id", "")
+    lobby = LobbyService.get(lobby_id)
+
+    return (deserialize.user_id(req), lobby)
+
+
+def parse_game_request(req: func.HttpRequest) -> Tuple[str, Game]:
+    """
+    Parse the request for a game
+    """
+    game_id = req.route_params.get("game_id", "")
+    game = GameService.get(game_id)
 
     return (deserialize.user_id(req), game)

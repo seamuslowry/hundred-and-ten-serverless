@@ -14,32 +14,39 @@ def user(m_user: models.User) -> client.User:
     )
 
 
+def lobby(
+    m_lobby: models.Lobby,
+) -> client.WaitingGame:
+    """Return a lobby as it can be provided to the client"""
+    assert m_lobby.id  # lobbies sent to the client will be saved and have an id
+
+    return client.WaitingGame(
+        id=m_lobby.id,
+        name=m_lobby.name,
+        status=models.GameStatus.WAITING_FOR_PLAYERS.name,
+        accessibility=m_lobby.accessibility.name,
+        organizer=__person(m_lobby.organizer),
+        players=list(
+            map(__person, (p for p in m_lobby.players if p != m_lobby.organizer))
+        ),
+        invitees=list(
+            map(__person, (p for p in m_lobby.invitees if p not in m_lobby.players))
+        ),
+    )
+
+
 def game(
     m_game: models.Game,
     client_identifier: str,
     initial_event_knowledge: Optional[int] = None,
 ) -> client.Game:
     """Return a game as it can be provided to the client"""
-    if m_game.status == models.GameStatus.WAITING_FOR_PLAYERS:
-        return client.WaitingGame(
-            id=m_game.id,
-            name=m_game.name,
-            status=m_game.status.name,
-            accessibility=m_game.accessibility.name,
-            organizer=__person(m_game.organizer),
-            players=list(
-                map(__person, (p for p in m_game.players if p != m_game.organizer))
-            ),
-            invitees=list(
-                map(__person, (p for p in m_game.invitees if p not in m_game.players))
-            ),
-        )
-
     client_events = (
         events(m_game.events[initial_event_knowledge:], client_identifier)
         if initial_event_knowledge is not None
         else None
     )
+    assert m_game.id  # games sent to clients will be saved and have an id
 
     if m_game.status == models.GameStatus.WON:
         assert m_game.winner  # won games will have winners
@@ -51,7 +58,7 @@ def game(
             results=client_events,
             winner=__person(m_game.winner),
             organizer=__person(m_game.organizer),
-            players=list(map(__person, m_game.players)),
+            players=list(map(__person, m_game.ordered_players)),
         )
 
     return client.StartedGame(
@@ -122,14 +129,10 @@ def __round(m_round: models.Round, client_identifier: str) -> client.Round:
 
 
 def __person(person: models.Person) -> client.Person:
-    return client.Person(
-        identifier=person.identifier,
-        automate=person.automate,
-        prepassed=models.RoundRole.PRE_PASSED in person.roles,
-    )
+    return client.Person(identifier=person.identifier, automate=person.automate)
 
 
-def __player(player: models.Player, client_identifier: str) -> client.Player:
+def __player(player: models.RoundPlayer, client_identifier: str) -> client.Player:
     if player.identifier == client_identifier:
         return client.Self(
             identifier=player.identifier,
@@ -141,7 +144,6 @@ def __player(player: models.Player, client_identifier: str) -> client.Player:
     return client.OtherPlayer(
         identifier=player.identifier,
         automate=player.automate,
-        prepassed=models.RoundRole in player.roles,
         hand_size=len(player.hand),
     )
 
@@ -243,8 +245,15 @@ def __trick_end_json(event: models.TrickEnd) -> client.TrickEnd:
     return {"type": EventType.TRICK_END.name, "winner": event.winner}
 
 
+def __score(score: models.Score) -> client.Score:
+    return {"identifier": score.identifier, "value": score.value}
+
+
 def __round_end_json(event: models.RoundEnd) -> client.RoundEnd:
-    return {"type": EventType.ROUND_END.name, "scores": event.scores}
+    return {
+        "type": EventType.ROUND_END.name,
+        "scores": list(map(__score, event.scores)),
+    }
 
 
 def __game_end_json(event: models.GameEnd) -> client.GameEnd:

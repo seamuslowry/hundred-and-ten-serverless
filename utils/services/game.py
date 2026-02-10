@@ -1,5 +1,8 @@
 """Facilitate interaction with the game DB"""
 
+from bson import ObjectId
+from bson.errors import InvalidId
+
 from utils.dtos.db import SearchGame
 from utils.mappers.db import deserialize, serialize
 from utils.models import Accessibility, Game
@@ -8,14 +11,21 @@ from utils.services.mongo import game_client
 
 def save(game: Game) -> Game:
     """Save the provided game to the DB"""
-    game_client.update_one({"id": game.id}, {"$set": serialize.game(game)}, upsert=True)
+    game_client.update_one(
+        {"_id": ObjectId(game.id)},
+        {"$set": serialize.game(game)},
+    )
     return game
 
 
 def get(game_id: str) -> Game:
     """Retrieve the game with the provided ID"""
+    try:
+        oid = ObjectId(game_id)
+    except InvalidId as exc:
+        raise ValueError(f"No game found with id {game_id}") from exc
 
-    result = game_client.find_one({"id": game_id})
+    result = game_client.find_one({"_id": oid, "type": "game"})
 
     if not result:
         raise ValueError(f"No game found with id {game_id}")
@@ -35,6 +45,7 @@ def search(search_game: SearchGame, max_count: int) -> list[Game]:
             deserialize.game,
             game_client.find(
                 {
+                    "type": "game",
                     "name": {"$regex": search_game["name"], "$options": "i"},
                     "$or": [
                         {"accessibility": Accessibility.PUBLIC.name},

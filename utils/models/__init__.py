@@ -1,5 +1,7 @@
 """Init the models module"""
 
+# App-level types: import from engine
+from hundredandten import HundredAndTen
 from hundredandten.actions import (
     Action,
     Bid,
@@ -10,11 +12,8 @@ from hundredandten.actions import (
     Unpass,
 )
 from hundredandten.constants import (
-    Accessibility,
     BidAmount,
     CardNumber,
-    GameRole,
-    GameStatus,
     RoundRole,
     RoundStatus,
     SelectableSuit,
@@ -27,18 +26,23 @@ from hundredandten.events import (
     GameStart,
     RoundEnd,
     RoundStart,
+    Score,
     TrickEnd,
     TrickStart,
 )
-from hundredandten.group import Group, Person, Player
+from hundredandten.group import Group, Player, RoundPlayer
 from hundredandten.hundred_and_ten_error import HundredAndTenError
 from hundredandten.round import Round
 from hundredandten.trick import Trick
 
-from utils.models.game import Game
+from utils.constants import Accessibility, GameStatus
+from utils.models.game import Game, Lobby, PersonGroup
+from utils.models.person import Person
 from utils.models.user import User
 
 __all__ = [
+    # Engine
+    "HundredAndTen",
     # Actions
     "Action",
     "Bid",
@@ -48,11 +52,8 @@ __all__ = [
     "SelectTrump",
     "Unpass",
     # Constants
-    "Accessibility",
     "BidAmount",
     "CardNumber",
-    "GameRole",
-    "GameStatus",
     "RoundRole",
     "RoundStatus",
     "SelectableSuit",
@@ -68,17 +69,24 @@ __all__ = [
     "RoundStart",
     "TrickEnd",
     "TrickStart",
+    "Score",
     # Group
     "Group",
-    "Person",
     "Player",
+    "RoundPlayer",
     # Error
     "HundredAndTenError",
     # Round
     "Round",
     # Trick
     "Trick",
+    # Utils constants
+    "Accessibility",
+    "GameStatus",
     # Utils models
     "Game",
+    "Lobby",
+    "PersonGroup",
+    "Person",
     "User",
 ]

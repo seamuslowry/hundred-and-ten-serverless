@@ -15,4 +15,5 @@ database_name = os.environ.get("DatabaseName", "test")
 mongo_client = MongoClient(connection_string)
 
 game_client: Collection[db.Game] = mongo_client[database_name]["game"]
+lobby_client: Collection[db.Lobby] = mongo_client[database_name]["game"]
 user_client: Collection[db.User] = mongo_client[database_name]["user"]
