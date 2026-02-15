@@ -8,8 +8,6 @@ updates:
       day: "sunday"
       time: "03:00"
       timezone: "America/New_York"
-    commit-message:
-      prefix: '#patch'
     groups:
       dev-dependencies:
         dependency-type: "development"
@@ -17,5 +15,3 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    commit-message:
-      prefix: '#patch'
