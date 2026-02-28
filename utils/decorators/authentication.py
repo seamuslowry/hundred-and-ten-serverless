@@ -1,13 +1,12 @@
 """Authenticate requests via Google OAuth"""
 
-from typing import Callable
 from contextvars import ContextVar
+from typing import Callable
 
 import azure.functions as func
 
 from utils.auth import Identity, verify_google_token
 from utils.errors import AuthenticationError
-
 
 _current_identity: ContextVar[Identity] = ContextVar("current_identity")
 
@@ -27,7 +26,7 @@ def handle_authentication(
         if not auth_header.startswith("Bearer "):
             raise AuthenticationError("Missing Bearer token")
 
-        token = auth_header[len("Bearer "):]
+        token = auth_header[len("Bearer ") :]
 
         try:
             identifier = verify_google_token(token)

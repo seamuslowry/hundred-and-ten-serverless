@@ -6,7 +6,7 @@ from unittest.mock import patch
 import azure.functions as func
 
 from tests.helpers import build_request
-from utils.decorators.authentication import handle_authentication, get_identity
+from utils.decorators.authentication import get_identity, handle_authentication
 from utils.decorators.error_aggregation import handle_error
 from utils.errors import AuthenticationError, AuthorizationError
 from utils.models import HundredAndTenError
