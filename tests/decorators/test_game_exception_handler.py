@@ -6,6 +6,7 @@ from unittest.mock import patch
 import azure.functions as func
 
 from tests.helpers import build_request
+from utils.auth import Identity
 from utils.decorators.authentication import get_identity, handle_authentication
 from utils.decorators.error_aggregation import handle_error
 from utils.errors import AuthenticationError, AuthorizationError
@@ -59,13 +60,19 @@ class TestAuthentication(TestCase):
     """Authentication decorator unit tests"""
 
     @patch(
-        "utils.decorators.authentication.verify_google_token", return_value="user-123"
+        "utils.decorators.authentication.verify_google_token",
+        return_value=Identity(
+            id="user-123", name="Test User", picture_url="https://example.com/pic.jpg"
+        ),
     )
     def test_sets_identity_on_request(self, mock_verify):
         """Valid Bearer token sets identity in context"""
 
         def capture_identity(_):
-            self.assertEqual("user-123", get_identity().id)
+            identity = get_identity()
+            self.assertEqual("user-123", identity.id)
+            self.assertEqual("Test User", identity.name)
+            self.assertEqual("https://example.com/pic.jpg", identity.picture_url)
             return func.HttpResponse(status_code=200)
 
         wrapped = handle_authentication(capture_identity)

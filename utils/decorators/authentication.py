@@ -29,14 +29,14 @@ def handle_authentication(
         token = auth_header[len("Bearer ") :]
 
         try:
-            identifier = verify_google_token(token)
+            identity = verify_google_token(token)
         except ValueError as exc:
             raise AuthenticationError(str(exc)) from exc
 
-        token = _current_identity.set(Identity(id=identifier))
+        ctx_token = _current_identity.set(identity)
         try:
             return function(req)
         finally:
-            _current_identity.reset(token)
+            _current_identity.reset(ctx_token)
 
     return inner_function

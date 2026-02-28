@@ -16,16 +16,20 @@ class TestVerifyGoogleToken(TestCase):
 
     @patch("utils.auth.google.id_token.verify_oauth2_token")
     def test_valid_token(self, mock_verify):
-        """A valid token returns the sub claim"""
+        """A valid token returns an Identity with id, name, and picture_url"""
         mock_verify.return_value = {
             "sub": FAKE_SUB,
+            "name": "Test User",
+            "picture": "https://example.com/photo.jpg",
             "email": "user@example.com",
             "email_verified": True,
         }
 
         result = verify_google_token(FAKE_TOKEN)
 
-        self.assertEqual(FAKE_SUB, result)
+        self.assertEqual(FAKE_SUB, result.id)
+        self.assertEqual("Test User", result.name)
+        self.assertEqual("https://example.com/photo.jpg", result.picture_url)
         mock_verify.assert_called_once()
 
     @patch("utils.auth.google.id_token.verify_oauth2_token")
