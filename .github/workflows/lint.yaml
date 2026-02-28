@@ -5,6 +5,7 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    name: PyLint
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
