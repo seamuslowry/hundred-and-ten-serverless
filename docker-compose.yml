@@ -13,6 +13,7 @@ services:
       dockerfile: ./Dockerfile
     environment:
       MongoDb: mongodb://root:rootpassword@db:27017
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
     depends_on:
       - db
     ports:

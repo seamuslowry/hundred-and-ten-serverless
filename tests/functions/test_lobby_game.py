@@ -60,7 +60,7 @@ class TestLobby(TestCase):
         organizer = "organizer"
         resp = create_lobby(
             build_request(
-                headers={"x-ms-client-principal-id": organizer},
+                headers={"authorization": f"Bearer {organizer}"},
                 body={"name": "create test"},
             )
         )
@@ -81,7 +81,7 @@ class TestLobby(TestCase):
             build_request(
                 route_params={"lobby_id": created_lobby["id"]},
                 headers={
-                    "x-ms-client-principal-id": created_lobby["organizer"]["identifier"]
+                    "authorization": f"Bearer {created_lobby["organizer"]["identifier"]}"
                 },
                 body={"invitees": [invitee]},
             )
@@ -106,7 +106,7 @@ class TestLobby(TestCase):
             build_request(
                 route_params={"lobby_id": created_lobby["id"]},
                 headers={
-                    "x-ms-client-principal-id": created_lobby["organizer"]["identifier"]
+                    "authorization": f"Bearer {created_lobby["organizer"]["identifier"]}"
                 },
                 body={"invitees": [invitee]},
             )
@@ -116,7 +116,7 @@ class TestLobby(TestCase):
         failed_invite = invite_to_lobby(
             build_request(
                 route_params={"lobby_id": created_lobby["id"]},
-                headers={"x-ms-client-principal-id": invitee},
+                headers={"authorization": f"Bearer {invitee}"},
                 body={"invitees": [second_invitee]},
             )
         )
@@ -133,7 +133,7 @@ class TestLobby(TestCase):
         join_lobby(
             build_request(
                 route_params={"lobby_id": created_lobby["id"]},
-                headers={"x-ms-client-principal-id": player},
+                headers={"authorization": f"Bearer {player}"},
             )
         )
 
@@ -141,7 +141,7 @@ class TestLobby(TestCase):
         invite = invite_to_lobby(
             build_request(
                 route_params={"lobby_id": created_lobby["id"]},
-                headers={"x-ms-client-principal-id": player},
+                headers={"authorization": f"Bearer {player}"},
                 body={"invitees": [invitee]},
             )
         )
@@ -163,7 +163,7 @@ class TestLobby(TestCase):
         resp = join_lobby(
             build_request(
                 route_params={"lobby_id": created_lobby["id"]},
-                headers={"x-ms-client-principal-id": player},
+                headers={"authorization": f"Bearer {player}"},
             )
         )
         joined_lobby: WaitingGame = read_response_body(resp.get_body())
@@ -188,7 +188,7 @@ class TestLobby(TestCase):
         resp = join_lobby(
             build_request(
                 route_params={"lobby_id": created_lobby["id"]},
-                headers={"x-ms-client-principal-id": player},
+                headers={"authorization": f"Bearer {player}"},
             )
         )
         self.assertEqual(400, resp.status_code)
@@ -208,7 +208,7 @@ class TestLobby(TestCase):
             build_request(
                 route_params={"lobby_id": created_lobby["id"]},
                 headers={
-                    "x-ms-client-principal-id": created_lobby["organizer"]["identifier"]
+                    "authorization": f"Bearer {created_lobby["organizer"]["identifier"]}"
                 },
                 body={"invitees": [player]},
             )
@@ -217,7 +217,7 @@ class TestLobby(TestCase):
         resp = join_lobby(
             build_request(
                 route_params={"lobby_id": created_lobby["id"]},
-                headers={"x-ms-client-principal-id": player},
+                headers={"authorization": f"Bearer {player}"},
             )
         )
 
@@ -238,7 +238,7 @@ class TestLobby(TestCase):
         resp = join_lobby(
             build_request(
                 route_params={"lobby_id": created_lobby["id"]},
-                headers={"x-ms-client-principal-id": player},
+                headers={"authorization": f"Bearer {player}"},
             )
         )
         joined_lobby: WaitingGame = read_response_body(resp.get_body())
@@ -250,7 +250,7 @@ class TestLobby(TestCase):
         resp = leave_lobby(
             build_request(
                 route_params={"lobby_id": created_lobby["id"]},
-                headers={"x-ms-client-principal-id": player},
+                headers={"authorization": f"Bearer {player}"},
             )
         )
 
@@ -273,14 +273,14 @@ class TestLobby(TestCase):
         join_lobby(
             build_request(
                 route_params={"lobby_id": created_lobby["id"]},
-                headers={"x-ms-client-principal-id": player},
+                headers={"authorization": f"Bearer {player}"},
             )
         )
 
         resp = start_game(
             build_request(
                 route_params={"lobby_id": created_lobby["id"]},
-                headers={"x-ms-client-principal-id": player},
+                headers={"authorization": f"Bearer {player}"},
             )
         )
         self.assertEqual(400, resp.status_code)
@@ -292,7 +292,7 @@ class TestLobby(TestCase):
         resp = start_game(
             build_request(
                 headers={
-                    "x-ms-client-principal-id": created_lobby["organizer"]["identifier"]
+                    "authorization": f"Bearer {created_lobby["organizer"]["identifier"]}"
                 },
                 route_params={"lobby_id": created_lobby["id"]},
             )
@@ -315,7 +315,7 @@ class TestLobby(TestCase):
         resp = invite_to_lobby(
             build_request(
                 route_params={"lobby_id": created_lobby["id"]},
-                headers={"x-ms-client-principal-id": unknown_user},
+                headers={"authorization": f"Bearer {unknown_user}"},
                 body={"invitees": [invitee]},
             )
         )
@@ -331,7 +331,7 @@ class TestLobby(TestCase):
         resp = leave_lobby(
             build_request(
                 route_params={"lobby_id": created_lobby["id"]},
-                headers={"x-ms-client-principal-id": player},
+                headers={"authorization": f"Bearer {player}"},
             )
         )
 
@@ -347,7 +347,7 @@ class TestLobby(TestCase):
         join_lobby(
             build_request(
                 route_params={"lobby_id": created_lobby["id"]},
-                headers={"x-ms-client-principal-id": player},
+                headers={"authorization": f"Bearer {player}"},
             )
         )
 
@@ -356,7 +356,7 @@ class TestLobby(TestCase):
             build_request(
                 route_params={"lobby_id": created_lobby["id"]},
                 headers={
-                    "x-ms-client-principal-id": created_lobby["organizer"]["identifier"]
+                    "authorization": f"Bearer {created_lobby["organizer"]["identifier"]}"
                 },
             )
         )
@@ -372,7 +372,7 @@ class TestLobby(TestCase):
             build_request(
                 method="GET",
                 headers={
-                    "x-ms-client-principal-id": created_lobby["organizer"]["identifier"]
+                    "authorization": f"Bearer {created_lobby["organizer"]["identifier"]}"
                 },
                 body={"searchText": "test"},
             )

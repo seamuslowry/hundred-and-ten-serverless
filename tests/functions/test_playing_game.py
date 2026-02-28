@@ -120,7 +120,7 @@ class TestPlayingGame(TestCase):
         resp = bid(
             build_request(
                 route_params={"game_id": game["id"]},
-                headers={"x-ms-client-principal-id": non_active_player["identifier"]},
+                headers={"authorization": f"Bearer {non_active_player["identifier"]}"},
                 body={"amount": BidAmount.PASS},
             )
         )
@@ -138,7 +138,7 @@ class TestPlayingGame(TestCase):
         resp = rescind_prepass(
             build_request(
                 route_params={"game_id": game["id"]},
-                headers={"x-ms-client-principal-id": non_active_player["identifier"]},
+                headers={"authorization": f"Bearer {non_active_player["identifier"]}"},
             )
         )
         game: StartedGame = read_response_body(resp.get_body())

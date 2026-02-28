@@ -7,7 +7,8 @@ import logging
 
 import azure.functions as func
 
-from utils.decorators import catcher
+from utils.decorators import authenticate, catcher
+from utils.decorators.authentication import get_identity
 from utils.dtos.db import SearchGame, SearchLobby
 from utils.mappers.client import deserialize, serialize
 from utils.models import (
@@ -23,7 +24,7 @@ from utils.models import (
     SelectTrump,
     Unpass,
 )
-from utils.parsers import parse_game_request, parse_lobby_request, parse_request
+from utils.parsers import parse_game_request, parse_lobby_request
 from utils.services import GameService, LobbyService, UserService
 
 MIN_PLAYERS = 4
@@ -39,6 +40,7 @@ app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 @app.function_name("bid")
 @app.route(route="bid/{game_id}", methods=[func.HttpMethod.POST])
 @catcher
+@authenticate
 def bid(req: func.HttpRequest) -> func.HttpResponse:
     """
     Bid in a 110 game
@@ -60,6 +62,7 @@ def bid(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name("discard")
 @app.route(route="discard/{game_id}", methods=[func.HttpMethod.POST])
 @catcher
+@authenticate
 def discard(req: func.HttpRequest) -> func.HttpResponse:
     """
     Discard in a 110 game
@@ -81,6 +84,7 @@ def discard(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name("game_info")
 @app.route(route="info/{game_id}", methods=[func.HttpMethod.GET])
 @catcher
+@authenticate
 def game_info(req: func.HttpRequest) -> func.HttpResponse:
     """
     Retrieve 110 game.
@@ -93,6 +97,7 @@ def game_info(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name("game_players")
 @app.route(route="players/game/{game_id}", methods=[func.HttpMethod.GET])
 @catcher
+@authenticate
 def game_players(req: func.HttpRequest) -> func.HttpResponse:
     """
     Retrieve players in a 110 game.
@@ -109,6 +114,7 @@ def game_players(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name("leave_game")
 @app.route(route="leave/game/{game_id}", methods=[func.HttpMethod.POST])
 @catcher
+@authenticate
 def leave_game(req: func.HttpRequest) -> func.HttpResponse:
     """
     Leave a 110 game (automates the player)
@@ -127,6 +133,7 @@ def leave_game(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name("play")
 @app.route(route="play/{game_id}", methods=[func.HttpMethod.POST])
 @catcher
+@authenticate
 def play(req: func.HttpRequest) -> func.HttpResponse:
     """
     Play a card in a 110 game
@@ -148,6 +155,7 @@ def play(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name("rescind_prepass")
 @app.route(route="unpass/{game_id}", methods=[func.HttpMethod.POST])
 @catcher
+@authenticate
 def rescind_prepass(req: func.HttpRequest) -> func.HttpResponse:
     """
     Unpass in a 110 game
@@ -167,11 +175,12 @@ def rescind_prepass(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name("search_games")
 @app.route(route="games", methods=[func.HttpMethod.POST])
 @catcher
+@authenticate
 def search_games(req: func.HttpRequest) -> func.HttpResponse:
     """
     Search for games
     """
-    identifier, *_ = parse_request(req)
+    identifier = get_identity().id
 
     body = req.get_json()
     max_count = body.get("max", 20)
@@ -200,6 +209,7 @@ def search_games(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name("select_trump")
 @app.route(route="select/{game_id}", methods=[func.HttpMethod.POST])
 @catcher
+@authenticate
 def select_trump(req: func.HttpRequest) -> func.HttpResponse:
     """
     Select trump in a 110 game
@@ -221,6 +231,7 @@ def select_trump(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name("suggestion")
 @app.route(route="suggestion/{game_id}", methods=[func.HttpMethod.GET])
 @catcher
+@authenticate
 def suggestion(req: func.HttpRequest) -> func.HttpResponse:
     """
     Ask for a suggestion in a 110 game
@@ -240,13 +251,14 @@ def suggestion(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name("create_lobby")
 @app.route(route="create", methods=[func.HttpMethod.POST])
 @catcher
+@authenticate
 def create_lobby(req: func.HttpRequest) -> func.HttpResponse:
     """
     Create a new 110 lobby.
     """
     logging.info("Initiating create lobby request.")
 
-    identifier, *_ = parse_request(req)
+    identifier = get_identity().id
 
     logging.debug("Creating lobby for %s", identifier)
 
@@ -270,6 +282,7 @@ def create_lobby(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name("invite_to_lobby")
 @app.route(route="invite/{lobby_id}", methods=[func.HttpMethod.POST])
 @catcher
+@authenticate
 def invite_to_lobby(req: func.HttpRequest) -> func.HttpResponse:
     """
     Invite to join a 110 lobby
@@ -289,6 +302,7 @@ def invite_to_lobby(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name("join_lobby")
 @app.route(route="join/{lobby_id}", methods=[func.HttpMethod.POST])
 @catcher
+@authenticate
 def join_lobby(req: func.HttpRequest) -> func.HttpResponse:
     """
     Join a 110 lobby
@@ -303,6 +317,7 @@ def join_lobby(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name("leave_lobby")
 @app.route(route="leave/lobby/{lobby_id}", methods=[func.HttpMethod.POST])
 @catcher
+@authenticate
 def leave_lobby(req: func.HttpRequest) -> func.HttpResponse:
     """
     Leave a 110 lobby
@@ -317,6 +332,7 @@ def leave_lobby(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name("lobby_info")
 @app.route(route="lobby/{lobby_id}", methods=[func.HttpMethod.GET])
 @catcher
+@authenticate
 def lobby_info(req: func.HttpRequest) -> func.HttpResponse:
     """
     Retrieve 110 lobby.
@@ -329,6 +345,7 @@ def lobby_info(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name("lobby_players")
 @app.route(route="players/lobby/{lobby_id}", methods=[func.HttpMethod.GET])
 @catcher
+@authenticate
 def lobby_players(req: func.HttpRequest) -> func.HttpResponse:
     """
     Retrieve players in a 110 lobby.
@@ -345,11 +362,12 @@ def lobby_players(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name("search_lobbies")
 @app.route(route="lobbies", methods=[func.HttpMethod.POST])
 @catcher
+@authenticate
 def search_lobbies(req: func.HttpRequest) -> func.HttpResponse:
     """
     Search for lobbies
     """
-    identifier, *_ = parse_request(req)
+    identifier = get_identity().id
 
     body = req.get_json()
     max_count = body.get("max", 20)
@@ -375,6 +393,7 @@ def search_lobbies(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name("start_game")
 @app.route(route="start/{lobby_id}", methods=[func.HttpMethod.POST])
 @catcher
+@authenticate
 def start_game(req: func.HttpRequest) -> func.HttpResponse:
     """
     Start a 110 game from a lobby
@@ -404,6 +423,7 @@ def start_game(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name("search_users")
 @app.route(route="users", methods=[func.HttpMethod.GET])
 @catcher
+@authenticate
 def search_users(req: func.HttpRequest) -> func.HttpResponse:
     """
     Get users
@@ -423,6 +443,7 @@ def search_users(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name("self")
 @app.route(route="self", methods=[func.HttpMethod.PUT, func.HttpMethod.POST])
 @catcher
+@authenticate
 def update_self(req: func.HttpRequest) -> func.HttpResponse:
     """
     Create or update the user
@@ -430,10 +451,10 @@ def update_self(req: func.HttpRequest) -> func.HttpResponse:
 
     overwrite = req.method.upper() == "PUT"
 
-    identifier, *_ = parse_request(req)
+    identifier = get_identity().id
 
     existing_user = UserService.by_identifier(identifier)
-    provided_user = deserialize.user(req, req.get_json())
+    provided_user = deserialize.user(req.get_json())
 
     save_user = provided_user if overwrite or not existing_user else existing_user
 

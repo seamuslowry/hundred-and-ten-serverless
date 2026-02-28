@@ -1,4 +1,4 @@
-"""Deserialization behavior consistent between the client and the DB """
+"""Deserialization behavior consistent between the client and the DB"""
 
 from typing import Union
 

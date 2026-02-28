@@ -11,13 +11,6 @@ from utils.models import Game, Lobby
 from utils.services import GameService, LobbyService
 
 
-def parse(req: func.HttpRequest) -> Tuple[str]:
-    """
-    Parse the user identifier from the request
-    """
-    return (deserialize.user_id(req),)
-
-
 def parse_lobby_request(req: func.HttpRequest) -> Tuple[str, Lobby]:
     """
     Parse the request for a lobby
@@ -25,7 +18,7 @@ def parse_lobby_request(req: func.HttpRequest) -> Tuple[str, Lobby]:
     lobby_id = req.route_params.get("lobby_id", "")
     lobby = LobbyService.get(lobby_id)
 
-    return (deserialize.user_id(req), lobby)
+    return (deserialize.user_id(), lobby)
 
 
 def parse_game_request(req: func.HttpRequest) -> Tuple[str, Game]:
@@ -35,4 +28,4 @@ def parse_game_request(req: func.HttpRequest) -> Tuple[str, Game]:
     game_id = req.route_params.get("game_id", "")
     game = GameService.get(game_id)
 
-    return (deserialize.user_id(req), game)
+    return (deserialize.user_id(), game)
