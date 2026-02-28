@@ -7,8 +7,7 @@ import logging
 
 import azure.functions as func
 
-from utils.decorators import authenticate, catcher
-from utils.decorators.authentication import get_identity
+from utils.decorators import authenticate, catcher, get_identity
 from utils.dtos.db import SearchGame, SearchLobby
 from utils.mappers.client import deserialize, serialize
 from utils.models import (
