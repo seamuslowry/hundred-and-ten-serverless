@@ -99,6 +99,7 @@ resource "azurerm_linux_function_app" "app" {
   }
 
 
+  // TODO: update this configuration; need to disable easy-auth
   auth_settings_v2 {
     auth_enabled             = true
     excluded_paths           = []

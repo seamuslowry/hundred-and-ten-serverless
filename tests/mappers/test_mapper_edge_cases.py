@@ -2,8 +2,6 @@
 
 from unittest import TestCase
 
-import azure.functions as func
-
 from utils.dtos.db import Game as DbGame
 from utils.dtos.db import Person as DbPerson
 from utils.mappers.client import deserialize as client_deserialize
@@ -23,11 +21,10 @@ class TestMapperEdgeCases(TestCase):
         )
 
     def test_incomplete_user_info(self):
-        """Attempting to serialize a user with incomplete header info results in an error"""
+        """Attempting to deserialize a user without identity set raises LookupError"""
         self.assertRaises(
-            ValueError,
+            LookupError,
             client_deserialize.user_id,
-            func.HttpRequest(method="GET", body=b"", url="", headers={}),
         )
 
     def test_bad_action_from_db(self):

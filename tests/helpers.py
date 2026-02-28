@@ -30,7 +30,6 @@ start_game = wrapped_start_game.build().get_user_function()
 suggestion = wrapped_suggestion.build().get_user_function()
 
 DEFAULT_ID = "id"
-DEFAULT_NAME = "name"
 
 
 def build_request(
@@ -47,9 +46,7 @@ def build_request(
         route_params=route_params,
         url="",
         headers={
-            "x-ms-client-principal-idp": "unknown",
-            "x-ms-client-principal-id": DEFAULT_ID,
-            "x-ms-client-principal-name": DEFAULT_NAME,
+            "authorization": f"Bearer {DEFAULT_ID}",
             **(headers or {}),
         },
         params=params,
@@ -62,14 +59,13 @@ def read_response_body(body: bytes):
 
 
 def lobby_game(
-    organizer: str = DEFAULT_ID, organizer_name: str = DEFAULT_NAME
+    organizer: str = DEFAULT_ID,
 ) -> WaitingGame:
     """Get a lobby waiting for the players"""
     resp = create_lobby(
         build_request(
             headers={
-                "x-ms-client-principal-id": organizer,
-                "x-ms-client-principal-name": organizer_name,
+                "authorization": f"Bearer {organizer}",
             },
             body={"name": "test game"},
         )
@@ -94,7 +90,7 @@ def __user(method: str, user: models.User) -> User:
             build_request(
                 method=method,
                 body={"name": user.name, "picture_url": user.picture_url},
-                headers={"x-ms-client-principal-id": user.identifier},
+                headers={"authorization": f"Bearer {user.identifier}"},
             )
         ).get_body()
     )
@@ -107,7 +103,7 @@ def started_game() -> StartedGame:
         build_request(
             route_params={"lobby_id": created_lobby["id"]},
             headers={
-                "x-ms-client-principal-id": created_lobby["organizer"]["identifier"]
+                "authorization": f"Bearer {created_lobby['organizer']['identifier']}"
             },
         )
     )
@@ -124,7 +120,7 @@ def completed_game() -> CompletedGame:
     resp = leave_game(
         build_request(
             route_params={"game_id": game["id"]},
-            headers={"x-ms-client-principal-id": active_player["identifier"]},
+            headers={"authorization": f"Bearer {active_player['identifier']}"},
         )
     )
     return read_response_body(resp.get_body())
@@ -135,7 +131,7 @@ def request_suggestion(game_id: str, user: str = DEFAULT_ID) -> func.HttpRespons
     return suggestion(
         build_request(
             route_params={"game_id": game_id},
-            headers={"x-ms-client-principal-id": user},
+            headers={"authorization": f"Bearer {user}"},
         )
     )
 

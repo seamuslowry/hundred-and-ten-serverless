@@ -98,7 +98,7 @@ class TestRetrieveInfo(TestCase):
             join_lobby(
                 build_request(
                     route_params={"lobby_id": original_lobby["id"]},
-                    headers={"x-ms-client-principal-id": player["identifier"]},
+                    headers={"authorization": f"Bearer {player["identifier"]}"},
                 )
             )
 
