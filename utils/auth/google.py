@@ -1,7 +1,5 @@
 """Google OAuth ID token validation"""
 
-import os
-
 import cachecontrol
 import google.auth.transport.requests
 import requests
@@ -14,6 +12,8 @@ from google.oauth2 import id_token
 _session = requests.session()
 _cached_session = cachecontrol.CacheControl(_session)
 _request = google.auth.transport.requests.Request(session=_cached_session)
+
+AUDIENCE = "80097063421-no8el98n0f188in9pur04r9h8sh7rsen.apps.googleusercontent.com"
 
 
 def verify_google_token(token: str) -> str:
@@ -30,15 +30,11 @@ def verify_google_token(token: str) -> str:
         The user's stable unique identifier (``sub`` claim).
 
     Raises:
-        ValueError: If GOOGLE_CLIENT_ID is not configured, the token is
-            invalid/expired, or the token is missing the ``sub`` claim.
+        ValueError: If the token is invalid/expired, or the token is missing the ``sub`` claim.
     """
-    client_id = os.environ.get("GOOGLE_CLIENT_ID")
-    if not client_id:
-        raise ValueError("Google OAuth is not configured")
 
     try:
-        id_info = id_token.verify_oauth2_token(token, _request, client_id)
+        id_info = id_token.verify_oauth2_token(token, _request, AUDIENCE)
     except (ValueError, GoogleAuthError) as exc:
         raise ValueError(f"Invalid Google token: {exc}") from exc
 
