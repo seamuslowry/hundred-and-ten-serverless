@@ -12,9 +12,8 @@ resource "azurerm_federated_identity_credential" "github_actions" {
   audience            = ["api://AzureADTokenExchange"]
   issuer              = "https://token.actions.githubusercontent.com"
 
-  # Allows any branch push to authenticate. To restrict to a single branch,
-  # change to e.g. "repo:seamuslowry/hundred-and-ten-serverless:ref:refs/heads/main"
-  subject = "repo:seamuslowry/hundred-and-ten-serverless:ref:refs/heads/feat/no_publish_profile"
+  # Only the main branch can authenticate
+  subject = "repo:seamuslowry/hundred-and-ten-serverless:ref:refs/heads/main"
 }
 
 resource "azurerm_role_assignment" "github_deploy" {
