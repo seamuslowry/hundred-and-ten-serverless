@@ -14,7 +14,7 @@ resource "azurerm_federated_identity_credential" "github_actions" {
 
   # Allows any branch push to authenticate. To restrict to a single branch,
   # change to e.g. "repo:seamuslowry/hundred-and-ten-serverless:ref:refs/heads/main"
-  subject = "repo:seamuslowry/hundred-and-ten-serverless:ref:refs/heads/*"
+  subject = "repo:seamuslowry/hundred-and-ten-serverless:ref:refs/heads/feat/no_publish_profile"
 }
 
 resource "azurerm_role_assignment" "github_deploy" {
