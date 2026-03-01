@@ -152,23 +152,6 @@ resource "azurerm_linux_function_app_slot" "staging" {
   }
 }
 
-# fuck everything about this but it's the only way to get the publish profile as a data source at time of writing
-data "external" "publish_profile" {
-  depends_on = [azurerm_linux_function_app_slot.staging]
-
-  program = [
-    "bash",
-    "-c",
-    <<EOT
-    az functionapp deployment list-publishing-profiles \
-      --name ${azurerm_linux_function_app.app.name} \
-      --resource-group ${azurerm_resource_group.group.name} \
-      --slot ${azurerm_linux_function_app_slot.staging.name} \
-      --xml | jq -R '{profile: .}'
-    EOT
-  ]
-}
-
 data "azurerm_role_definition" "monitoring_contributor" {
   name     = "Monitoring Contributor"
 }
