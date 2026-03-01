@@ -18,9 +18,9 @@ resource "azurerm_federated_identity_credential" "github_actions" {
 }
 
 resource "azurerm_role_assignment" "github_deploy" {
-  # Scoped to the staging slot only. To enable production slot swaps,
-  # broaden to azurerm_linux_function_app.app.id
-  scope                = azurerm_linux_function_app_slot.staging.id
+  # Scoped to the function app (includes all slots). The deploy action validates
+  # the parent app before targeting a slot, so slot-only scope is insufficient.
+  scope                = azurerm_linux_function_app.app.id
   role_definition_name = "Contributor"
   principal_id         = azurerm_user_assigned_identity.github_deploy.principal_id
 }
