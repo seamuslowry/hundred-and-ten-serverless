@@ -77,6 +77,8 @@ resource "azurerm_linux_function_app" "app" {
   resource_group_name = azurerm_resource_group.group.name
   location            = azurerm_resource_group.group.location
 
+  https_only = true
+
   storage_account_name       = azurerm_storage_account.storage.name
   storage_account_access_key = azurerm_storage_account.storage.primary_access_key
   service_plan_id            = azurerm_service_plan.service_plan.id
@@ -85,7 +87,6 @@ resource "azurerm_linux_function_app" "app" {
     "AzureWebJobsFeatureFlags"              = "EnableWorkerIndexing"
     "AzureWebJobsSecretStorageType"         = "Blob"
     "DatabaseName"                          = "prod"
-    "GOOGLE_PROVIDER_AUTHENTICATION_SECRET" = local.google_client_secret
     "MongoDb"                               = azurerm_cosmosdb_account.db.primary_mongodb_connection_string
   }
 
@@ -96,37 +97,6 @@ resource "azurerm_linux_function_app" "app" {
     "hidden-link: /app-insights-conn-string"         = azurerm_application_insights.insights.connection_string
     "hidden-link: /app-insights-instrumentation-key" = azurerm_application_insights.insights.instrumentation_key
     "hidden-link: /app-insights-resource-id"         = azurerm_application_insights.insights.id
-  }
-
-
-  // TODO: update this configuration; need to disable easy-auth
-  auth_settings_v2 {
-    auth_enabled             = true
-    excluded_paths           = []
-    forward_proxy_convention = "NoProxy"
-    http_route_api_prefix    = "/.auth"
-    require_authentication   = true
-    require_https            = true
-    runtime_version          = "~1"
-    unauthenticated_action   = "Return401"
-
-    google_v2 {
-        allowed_audiences          = []
-        client_id                  = local.google_client_id
-        client_secret_setting_name = "GOOGLE_PROVIDER_AUTHENTICATION_SECRET"
-        login_scopes               = []
-    }
-
-    login {
-        allowed_external_redirect_urls    = []
-        cookie_expiration_convention      = "FixedTime"
-        cookie_expiration_time            = "08:00:00"
-        nonce_expiration_time             = "00:05:00"
-        preserve_url_fragments_for_logins = false
-        token_refresh_extension_time      = 72
-        token_store_enabled               = true
-        validate_nonce                    = true
-    }
   }
 
   site_config {
@@ -141,7 +111,6 @@ resource "azurerm_linux_function_app" "app" {
     app_setting_names = [
         "CosmosDb",
         "DatabaseName",
-        "GOOGLE_PROVIDER_AUTHENTICATION_SECRET"
     ]
     connection_string_names = [
         "CosmosDb"
@@ -153,13 +122,15 @@ resource "azurerm_linux_function_app_slot" "staging" {
   name                 = "staging"
   function_app_id      = azurerm_linux_function_app.app.id
 
+  https_only = true
+
   storage_account_name       = azurerm_storage_account.storage.name
   storage_account_access_key = azurerm_storage_account.storage.primary_access_key
 
   app_settings = {
+    "AzureWebJobsFeatureFlags"              = "EnableWorkerIndexing"
     "AzureWebJobsSecretStorageType"         = "Blob"
     "DatabaseName"                          = "dev"
-    "GOOGLE_PROVIDER_AUTHENTICATION_SECRET" = local.google_client_secret
     "MongoDb"                               = azurerm_cosmosdb_account.db.primary_mongodb_connection_string
   }
 
@@ -170,36 +141,6 @@ resource "azurerm_linux_function_app_slot" "staging" {
     "hidden-link: /app-insights-conn-string"         = azurerm_application_insights.insights.connection_string
     "hidden-link: /app-insights-instrumentation-key" = azurerm_application_insights.insights.instrumentation_key
     "hidden-link: /app-insights-resource-id"         = azurerm_application_insights.insights.id
-  }
-
-
-  auth_settings_v2 {
-    auth_enabled             = true
-    excluded_paths           = []
-    forward_proxy_convention = "NoProxy"
-    http_route_api_prefix    = "/.auth"
-    require_authentication   = true
-    require_https            = true
-    runtime_version          = "~1"
-    unauthenticated_action   = "Return401"
-
-    google_v2 {
-        allowed_audiences          = []
-        client_id                  = local.google_client_id
-        client_secret_setting_name = "GOOGLE_PROVIDER_AUTHENTICATION_SECRET"
-        login_scopes               = []
-    }
-
-    login {
-        allowed_external_redirect_urls    = []
-        cookie_expiration_convention      = "FixedTime"
-        cookie_expiration_time            = "08:00:00"
-        nonce_expiration_time             = "00:05:00"
-        preserve_url_fragments_for_logins = false
-        token_refresh_extension_time      = 72
-        token_store_enabled               = true
-        validate_nonce                    = true
-    }
   }
 
   site_config {
