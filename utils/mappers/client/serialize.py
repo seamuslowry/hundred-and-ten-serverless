@@ -1,6 +1,6 @@
 """A module to convert models to client objects"""
 
-from typing import Callable, Optional, cast
+from typing import Optional
 
 from utils import models
 from utils.constants import CardNumberName, SelectableSuit, Suit
@@ -158,29 +158,33 @@ def __card(card: models.Card) -> responses.Card:
 
 def __event(event: models.Event, client_identifier: str) -> responses.GameEvent:
     """Convert the provided event into the structure it should provide the client"""
-    handlers: dict[type, Callable[[models.Event], responses.GameEvent]] = {
-        models.GameStart: lambda _: __game_start_event(),
-        models.RoundStart: lambda e: __round_start_event(
-            cast(models.RoundStart, e), client_identifier
-        ),
-        models.Bid: lambda e: __bid_event(cast(models.Bid, e)),
-        models.SelectTrump: lambda e: __select_trump_event(
-            cast(models.SelectTrump, e)
-        ),
-        models.Discard: lambda e: __discard_event(
-            cast(models.Discard, e), client_identifier
-        ),
-        models.TrickStart: lambda _: __trick_start_event(),
-        models.Play: lambda e: __play_event(cast(models.Play, e)),
-        models.TrickEnd: lambda e: __trick_end_event(cast(models.TrickEnd, e)),
-        models.RoundEnd: lambda e: __round_end_event(cast(models.RoundEnd, e)),
-        models.GameEnd: lambda e: __game_end_event(cast(models.GameEnd, e)),
-    }
+    result: Optional[responses.GameEvent] = None
 
-    handler = handlers.get(type(event))
-    if handler is None:
+    if isinstance(event, models.GameStart):
+        result = __game_start_event()
+    elif isinstance(event, models.RoundStart):
+        result = __round_start_event(event, client_identifier)
+    elif isinstance(event, models.Bid):
+        result = __bid_event(event)
+    elif isinstance(event, models.SelectTrump):
+        result = __select_trump_event(event)
+    elif isinstance(event, models.Discard):
+        result = __discard_event(event, client_identifier)
+    elif isinstance(event, models.TrickStart):
+        result = __trick_start_event()
+    elif isinstance(event, models.Play):
+        result = __play_event(event)
+    elif isinstance(event, models.TrickEnd):
+        result = __trick_end_event(event)
+    elif isinstance(event, models.RoundEnd):
+        result = __round_end_event(event)
+    elif isinstance(event, models.GameEnd):
+        result = __game_end_event(event)
+
+    if result is None:
         raise ValueError(f"Unknown event type: {type(event).__name__}")
-    return handler(event)
+
+    return result
 
 
 def __game_start_event() -> responses.GameStart:
