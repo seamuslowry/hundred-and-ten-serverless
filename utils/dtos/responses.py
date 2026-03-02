@@ -218,24 +218,28 @@ class Suggestion(BaseModel):
 class BidSuggestion(Suggestion):
     """A class to model a suggested bid action to the client"""
 
+    type: Literal["BID"] = "BID"
     amount: int
 
 
 class SelectTrumpSuggestion(Suggestion):
     """A class to model a suggested trump selection action to the client"""
 
+    type: Literal["SELECT_TRUMP"] = "SELECT_TRUMP"
     suit: str
 
 
 class DiscardSuggestion(Suggestion):
     """A class to model a suggested discard action to the client"""
 
+    type: Literal["DISCARD"] = "DISCARD"
     cards: list[Card]
 
 
 class PlaySuggestion(Suggestion):
     """A class to model a suggested play action to the client"""
 
+    type: Literal["PLAY"] = "PLAY"
     card: Card
 
 
