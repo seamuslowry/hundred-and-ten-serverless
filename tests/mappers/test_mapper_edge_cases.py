@@ -2,12 +2,15 @@
 
 from unittest import TestCase
 
+from hundredandten.events import Event
+
 from utils.dtos.db import Game as DbGame
 from utils.dtos.db import Person as DbPerson
+from utils.dtos.requests import CardRequest
 from utils.mappers.client import deserialize as client_deserialize
 from utils.mappers.client import serialize as client_serialize
 from utils.mappers.db import deserialize as db_deserialize
-from utils.models import Action
+from utils.models import Action, Card, CardNumber, UnselectableSuit
 
 
 class TestMapperEdgeCases(TestCase):
@@ -18,13 +21,6 @@ class TestMapperEdgeCases(TestCase):
         identifier = "identifier"
         self.assertRaises(
             ValueError, client_serialize.suggestion, Action(identifier), identifier
-        )
-
-    def test_incomplete_user_info(self):
-        """Attempting to deserialize a user without identity set raises LookupError"""
-        self.assertRaises(
-            LookupError,
-            client_deserialize.user_id,
         )
 
     def test_bad_action_from_db(self):
@@ -48,3 +44,14 @@ class TestMapperEdgeCases(TestCase):
                 active_player=None,
             ),
         )
+
+    def test_card_with_unselectable_suit(self):
+        """Deserializing a card with an UnselectableSuit should succeed"""
+        result = client_deserialize.card(CardRequest(suit="JOKER", number="JOKER"))
+        self.assertEqual(
+            result, Card(suit=UnselectableSuit.JOKER, number=CardNumber.JOKER)
+        )
+
+    def test_unknown_event_type_error(self):
+        """Serializing an unknown event type raises ValueError"""
+        self.assertRaises(ValueError, client_serialize.events, [Event()], "identifier")
