@@ -15,7 +15,7 @@ def _mock_google_auth():
     so ``Authorization: Bearer some-user`` resolves to Identity(id="some-user").
     """
     with patch(
-        "utils.decorators.authentication.verify_google_token",
+        "function_app.verify_google_token",
         side_effect=lambda token: Identity(id=token),
     ):
         yield

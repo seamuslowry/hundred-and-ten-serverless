@@ -1,17 +1,21 @@
 """Format of a game of Hundred and Ten on the client"""
 
-from typing import Optional, TypedDict, Union
+from typing import Literal, Optional, Union
+
+from pydantic import BaseModel
+
+from utils.constants import CardNumberName, SelectableSuit, Suit
 
 
-class User(TypedDict):
+class User(BaseModel):
     """A class to model the client format of a Hundred and Ten user"""
 
     identifier: str
     name: str
-    picture_url: Optional[str]
+    picture_url: Optional[str] = None
 
 
-class Person(TypedDict):
+class Person(BaseModel):
     """A class to model the client format of a Hundred and Ten person"""
 
     identifier: str
@@ -24,16 +28,18 @@ class OtherPlayer(Person):
     hand_size: int
 
 
-class Card(TypedDict):
+class Card(BaseModel):
     """A class to model the client format of a Hundred and Ten card"""
 
-    suit: str
-    number: str
+    suit: Suit
+    number: CardNumberName
 
 
-class Self(Person):
+class Self(BaseModel):
     """A class to model the client format of the logged in Hundred and Ten player"""
 
+    identifier: str
+    automate: bool
     hand: list[Card]
     prepassed: bool
 
@@ -41,19 +47,25 @@ class Self(Person):
 Player = Union[Self, OtherPlayer]
 
 
-class Event(TypedDict):
-    """A class to model the client format of a Hundred and Ten event"""
+# =============================================================================
+# Event types
+# =============================================================================
 
-    type: str
+
+class Event(BaseModel):
+    """A class to model the client format of a Hundred and Ten event"""
 
 
 class GameStart(Event):
     """A class to model the client format of a Hundred and Ten game start event"""
 
+    type: Literal["GAME_START"] = "GAME_START"
+
 
 class RoundStart(Event):
     """A class to model the client format of a Hundred and Ten round start event"""
 
+    type: Literal["ROUND_START"] = "ROUND_START"
     dealer: str
     hands: dict[str, Union[list[Card], int]]
 
@@ -61,6 +73,7 @@ class RoundStart(Event):
 class Bid(Event):
     """A class to model the client format of a Hundred and Ten bid event"""
 
+    type: Literal["BID"] = "BID"
     identifier: str
     amount: int
 
@@ -68,13 +81,15 @@ class Bid(Event):
 class SelectTrump(Event):
     """A class to model the client format of a Hundred and Ten select trump event"""
 
+    type: Literal["SELECT_TRUMP"] = "SELECT_TRUMP"
     identifier: str
-    suit: str
+    suit: SelectableSuit
 
 
 class Discard(Event):
     """A class to model the client format of a Hundred and Ten discard event"""
 
+    type: Literal["DISCARD"] = "DISCARD"
     identifier: str
     discards: Union[list[Card], int]
 
@@ -82,10 +97,13 @@ class Discard(Event):
 class TrickStart(Event):
     """A class to model the client format of a Hundred and Ten trick start event"""
 
+    type: Literal["TRICK_START"] = "TRICK_START"
+
 
 class PlayEvent(Event):
     """A class to model the client format of a Hundred and Ten play event"""
 
+    type: Literal["PLAY"] = "PLAY"
     identifier: str
     card: Card
 
@@ -93,10 +111,11 @@ class PlayEvent(Event):
 class TrickEnd(Event):
     """A class to model the client format of a Hundred and Ten trick end event"""
 
+    type: Literal["TRICK_END"] = "TRICK_END"
     winner: str
 
 
-class Score(TypedDict):
+class Score(BaseModel):
     """A class to model the client format of a score in a Hundred and Ten round end event"""
 
     identifier: str
@@ -106,43 +125,60 @@ class Score(TypedDict):
 class RoundEnd(Event):
     """A class to model the client format of a Hundred and Ten round end event"""
 
+    type: Literal["ROUND_END"] = "ROUND_END"
     scores: list[Score]
 
 
 class GameEnd(Event):
     """A class to model the client format of a Hundred and Ten game end event"""
 
+    type: Literal["GAME_END"] = "GAME_END"
     winner: str
 
 
-class Play(TypedDict):
+# Union type for all event types (used in results field for OpenAPI)
+GameEvent = Union[
+    GameStart,
+    RoundStart,
+    Bid,
+    SelectTrump,
+    Discard,
+    TrickStart,
+    PlayEvent,
+    TrickEnd,
+    RoundEnd,
+    GameEnd,
+]
+
+
+class Play(BaseModel):
     """A class to model the client format of a Hundred and Ten play"""
 
     identifier: str
     card: Card
 
 
-class Trick(TypedDict):
+class Trick(BaseModel):
     """A class to model the client format of a Hundred and Ten trick"""
 
     bleeding: bool
     plays: list[Play]
-    winning_play: Optional[Play]
+    winning_play: Optional[Play] = None
 
 
-class Round(TypedDict):
+class Round(BaseModel):
     """A class to model the client format of a Hundred and Ten round"""
 
     players: list[Player]
     dealer: Player
-    bidder: Optional[Player]
-    bid: Optional[int]
-    trump: Optional[str]
+    bidder: Optional[Player] = None
+    bid: Optional[int] = None
+    trump: Optional[SelectableSuit] = None
     tricks: list[Trick]
-    active_player: Optional[Player]
+    active_player: Optional[Player] = None
 
 
-class Game(TypedDict):
+class Game(BaseModel):
     """A class to model the client format of a Hundred and Ten game"""
 
     id: str
@@ -162,9 +198,9 @@ class WaitingGame(Game):
 class StartedGame(Game):
     """A class to model the client format of a started Hundred and Ten game"""
 
-    round: Round
+    round: Optional[Round] = None
     scores: dict[str, int]
-    results: Optional[list[Event]]
+    results: list[GameEvent] = []
 
 
 class CompletedGame(Game):
@@ -174,32 +210,42 @@ class CompletedGame(Game):
     organizer: Person
     players: list[Person]
     scores: dict[str, int]
-    results: Optional[list[Event]]
+    results: list[GameEvent] = []
 
 
-class Suggestion(TypedDict):
-    """A class to act as a superclass for suggestioned actions to the client"""
+class Suggestion(BaseModel):
+    """A class to act as a superclass for suggested actions to the client"""
 
 
 class BidSuggestion(Suggestion):
     """A class to model a suggested bid action to the client"""
 
+    type: Literal["BID"] = "BID"
     amount: int
 
 
 class SelectTrumpSuggestion(Suggestion):
     """A class to model a suggested trump selection action to the client"""
 
-    suit: str
+    type: Literal["SELECT_TRUMP"] = "SELECT_TRUMP"
+    suit: SelectableSuit
 
 
 class DiscardSuggestion(Suggestion):
     """A class to model a suggested discard action to the client"""
 
+    type: Literal["DISCARD"] = "DISCARD"
     cards: list[Card]
 
 
 class PlaySuggestion(Suggestion):
     """A class to model a suggested play action to the client"""
 
+    type: Literal["PLAY"] = "PLAY"
     card: Card
+
+
+# Union type for all suggestion types (used in response_model for OpenAPI)
+SuggestionResponse = Union[
+    BidSuggestion, SelectTrumpSuggestion, DiscardSuggestion, PlaySuggestion
+]
