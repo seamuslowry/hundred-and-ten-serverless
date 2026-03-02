@@ -214,8 +214,6 @@ class CompletedGame(Game):
 class Suggestion(BaseModel):
     """A class to act as a superclass for suggested actions to the client"""
 
-    pass
-
 
 class BidSuggestion(Suggestion):
     """A class to model a suggested bid action to the client"""
