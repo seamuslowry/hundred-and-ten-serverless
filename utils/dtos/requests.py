@@ -1,10 +1,10 @@
 """Pydantic models for API request bodies"""
 
-from typing import Optional, Union
+from typing import Optional
 
 from pydantic import BaseModel
 
-from utils.models import CardNumber, SelectableSuit, UnselectableSuit
+from utils.constants import CardNumberName, SelectableSuit, Suit
 
 
 class BidRequest(BaseModel):
@@ -16,8 +16,8 @@ class BidRequest(BaseModel):
 class CardRequest(BaseModel):
     """A card in a request"""
 
-    suit: Union[SelectableSuit, UnselectableSuit]
-    number: CardNumber
+    suit: Suit
+    number: CardNumberName
 
 
 class DiscardRequest(BaseModel):

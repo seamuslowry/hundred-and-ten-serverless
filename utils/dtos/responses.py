@@ -4,7 +4,7 @@ from typing import Literal, Optional, Union
 
 from pydantic import BaseModel
 
-from utils.models import CardNumber, SelectableSuit, UnselectableSuit
+from utils.constants import CardNumberName, SelectableSuit, Suit
 
 
 class User(BaseModel):
@@ -31,8 +31,8 @@ class OtherPlayer(Person):
 class Card(BaseModel):
     """A class to model the client format of a Hundred and Ten card"""
 
-    suit: Union[SelectableSuit, UnselectableSuit]
-    number: CardNumber
+    suit: Suit
+    number: CardNumberName
 
 
 class Self(BaseModel):
@@ -83,7 +83,7 @@ class SelectTrump(Event):
 
     type: Literal["SELECT_TRUMP"] = "SELECT_TRUMP"
     identifier: str
-    suit: str
+    suit: SelectableSuit
 
 
 class Discard(Event):
@@ -228,7 +228,7 @@ class SelectTrumpSuggestion(Suggestion):
     """A class to model a suggested trump selection action to the client"""
 
     type: Literal["SELECT_TRUMP"] = "SELECT_TRUMP"
-    suit: str
+    suit: SelectableSuit
 
 
 class DiscardSuggestion(Suggestion):

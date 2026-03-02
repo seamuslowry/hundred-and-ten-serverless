@@ -18,15 +18,15 @@ def card(c_card: requests.CardRequest) -> models.Card:
     suit = None
 
     try:
-        suit = models.SelectableSuit[c_card.suit]
+        suit = models.SelectableSuit[c_card.suit.value]
     except KeyError:
         pass
 
     try:
-        suit = models.UnselectableSuit[c_card.suit]
+        suit = models.UnselectableSuit[c_card.suit.value]
     except KeyError:
         pass
 
     assert suit
 
-    return models.Card(suit=suit, number=models.CardNumber[c_card.number])
+    return models.Card(suit=suit, number=models.CardNumber[c_card.number.value])

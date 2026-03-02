@@ -40,6 +40,7 @@ from utils.models import (
     Lobby,
     Person,
     Play,
+    SelectableSuit,
     SelectTrump,
     Unpass,
 )
@@ -232,7 +233,7 @@ def select_trump(
     game = GameService.get(game_id)
     initial_event_knowledge = len(game.events)
 
-    game.act(SelectTrump(identity.id, body.suit))
+    game.act(SelectTrump(identity.id, SelectableSuit[body.suit.value]))
 
     game = GameService.save(game)
 

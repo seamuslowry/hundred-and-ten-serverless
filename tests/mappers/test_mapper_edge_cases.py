@@ -4,6 +4,7 @@ from unittest import TestCase
 
 from hundredandten.events import Event
 
+from utils.constants import CardNumberName, Suit
 from utils.dtos.db import Game as DbGame
 from utils.dtos.db import Person as DbPerson
 from utils.dtos.requests import CardRequest
@@ -47,7 +48,9 @@ class TestMapperEdgeCases(TestCase):
 
     def test_card_with_unselectable_suit(self):
         """Deserializing a card with an UnselectableSuit should succeed"""
-        result = client_deserialize.card(CardRequest(suit="JOKER", number="JOKER"))
+        result = client_deserialize.card(
+            CardRequest(suit=Suit.JOKER, number=CardNumberName.JOKER)
+        )
         self.assertEqual(
             result, Card(suit=UnselectableSuit.JOKER, number=CardNumber.JOKER)
         )

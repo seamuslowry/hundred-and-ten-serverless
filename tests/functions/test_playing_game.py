@@ -46,6 +46,8 @@ class TestPlayingGame(TestCase):
         )
         game = resp.json()
 
+        print(game)
+
         self.assertEqual(RoundStatus.DISCARD.name, game["status"])
 
         # assert that current suggestion is a discard
