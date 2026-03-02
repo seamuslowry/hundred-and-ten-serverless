@@ -65,7 +65,7 @@ def get_current_user(request: Request) -> Identity:
     if not auth_header.startswith("Bearer "):
         raise AuthenticationError("Missing Bearer token")
 
-    token = auth_header[len("Bearer ") :]
+    token = auth_header[len("Bearer "):]
 
     try:
         return verify_google_token(token)
@@ -371,11 +371,11 @@ def start_game(lobby_id: str, identity: Identity = Depends(get_current_user)):
 
 @fastapi_app.get("/users", response_model=list[User])
 def search_users(
-    searchText: Optional[str] = Query(default=""),
+    search_text: Optional[str] = Query(default="", alias="searchText"),
     _identity: Identity = Depends(get_current_user),
 ):
     """Get users"""
-    return [serialize.user(u) for u in UserService.search(searchText or "")]
+    return [serialize.user(u) for u in UserService.search(search_text or "")]
 
 
 @fastapi_app.put("/self", response_model=User)
