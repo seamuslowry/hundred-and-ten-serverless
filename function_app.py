@@ -40,7 +40,6 @@ from utils.models import (
     Lobby,
     Person,
     Play,
-    SelectableSuit,
     SelectTrump,
     Unpass,
 )
@@ -65,7 +64,7 @@ def get_current_user(request: Request) -> Identity:
     if not auth_header.startswith("Bearer "):
         raise AuthenticationError("Missing Bearer token")
 
-    token = auth_header[len("Bearer "):]
+    token = auth_header[len("Bearer ") :]
 
     try:
         return verify_google_token(token)
@@ -233,7 +232,7 @@ def select_trump(
     game = GameService.get(game_id)
     initial_event_knowledge = len(game.events)
 
-    game.act(SelectTrump(identity.id, SelectableSuit[body.suit]))
+    game.act(SelectTrump(identity.id, body.suit))
 
     game = GameService.save(game)
 

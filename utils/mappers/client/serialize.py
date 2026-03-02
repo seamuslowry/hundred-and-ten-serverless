@@ -117,7 +117,7 @@ def __round(m_round: models.Round, client_identifier: str) -> responses.Round:
         dealer=__player(m_round.dealer, client_identifier),
         bidder=__player(bidder, client_identifier) if bidder else None,
         bid=current_bid.amount.value if current_bid.amount else None,
-        trump=m_round.trump.name if m_round.trump else None,
+        trump=m_round.trump if m_round.trump else None,
         tricks=[__trick(t) for t in m_round.tricks],
         active_player=(
             __player(m_round.active_player, client_identifier)
@@ -148,7 +148,7 @@ def __player(player: models.RoundPlayer, client_identifier: str) -> responses.Pl
 
 
 def __card(card: models.Card) -> responses.Card:
-    return responses.Card(suit=card.suit.name, number=card.number.name)
+    return responses.Card(suit=card.suit, number=card.number)
 
 
 def __event(event: models.Event, client_identifier: str) -> responses.GameEvent:
