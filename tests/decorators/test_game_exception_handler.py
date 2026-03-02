@@ -42,20 +42,20 @@ class TestErrorHandler(TestCase):
         )
         self.assertEqual(403, resp.status_code)
 
-    def test_returns_401_for_authentication_error(self):
-        """Endpoint returns 401 when no Bearer token is provided"""
+    def test_returns_403_for_authentication_error(self):
+        """Endpoint returns 403 when no Bearer token is provided"""
         client = get_client()
         resp = client.get(
             "/info/some-id",
             headers={"authorization": ""},
         )
-        self.assertEqual(401, resp.status_code)
+        self.assertEqual(403, resp.status_code)
 
-    def test_returns_401_without_auth_header(self):
-        """Endpoint returns 401 when Authorization header is missing entirely"""
+    def test_returns_403_without_auth_header(self):
+        """Endpoint returns 403 when Authorization header is missing entirely"""
         client = get_client()
         resp = client.get("/info/some-id")
-        self.assertEqual(401, resp.status_code)
+        self.assertEqual(403, resp.status_code)
 
     @patch(
         "function_app.verify_google_token",
@@ -94,19 +94,19 @@ class TestAuthentication(TestCase):
         mock_verify.assert_called_once_with("valid.token")
 
     def test_raises_authentication_error_without_bearer(self):
-        """Missing Bearer token returns 401"""
+        """Missing Bearer token returns 403"""
         client = get_client()
         resp = client.get(
             "/info/some-id",
             headers={"authorization": ""},
         )
-        self.assertEqual(401, resp.status_code)
+        self.assertEqual(403, resp.status_code)
 
     def test_raises_authentication_error_without_auth_header(self):
-        """Missing Authorization header entirely returns 401"""
+        """Missing Authorization header entirely returns 403"""
         client = get_client()
         resp = client.get("/info/some-id", headers={})
-        self.assertEqual(401, resp.status_code)
+        self.assertEqual(403, resp.status_code)
 
     @patch(
         "function_app.verify_google_token",

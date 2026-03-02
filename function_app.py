@@ -8,6 +8,7 @@ from typing import Optional, Union
 import azure.functions as func
 from fastapi import Depends, FastAPI, Query, Request
 from fastapi.responses import JSONResponse
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from utils.auth import Identity, verify_google_token
 from utils.dtos.db import SearchGame, SearchLobby
@@ -48,6 +49,10 @@ from utils.services import GameService, LobbyService, UserService
 
 MIN_PLAYERS = 4
 
+google_bearer = HTTPBearer(
+    description="A Google OAuth2 ID token",
+)
+
 fastapi_app = FastAPI()
 
 # Type alias for game responses (can be started or completed)
@@ -59,16 +64,12 @@ GameResponse = Union[StartedGame, CompletedGame]
 # =============================================================================
 
 
-def get_current_user(request: Request) -> Identity:
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(google_bearer),
+) -> Identity:
     """Validate the Bearer token and return the authenticated identity"""
-    auth_header = request.headers.get("authorization", "")
-    if not auth_header.startswith("Bearer "):
-        raise AuthenticationError("Missing Bearer token")
-
-    token = auth_header[len("Bearer ") :]
-
     try:
-        return verify_google_token(token)
+        return verify_google_token(credentials.credentials)
     except ValueError as exc:
         raise AuthenticationError(str(exc)) from exc
 
