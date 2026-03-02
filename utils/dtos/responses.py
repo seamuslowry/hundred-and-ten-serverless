@@ -198,7 +198,7 @@ class StartedGame(Game):
 
     round: Optional[Round] = None
     scores: dict[str, int]
-    results: Optional[list[GameEvent]] = None
+    results: list[GameEvent] = []
 
 
 class CompletedGame(Game):
@@ -208,7 +208,7 @@ class CompletedGame(Game):
     organizer: Person
     players: list[Person]
     scores: dict[str, int]
-    results: Optional[list[GameEvent]] = None
+    results: list[GameEvent] = []
 
 
 class Suggestion(BaseModel):

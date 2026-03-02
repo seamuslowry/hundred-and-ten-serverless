@@ -39,7 +39,7 @@ def game(
     client_events = (
         events(m_game.events[initial_event_knowledge:], client_identifier)
         if initial_event_knowledge is not None
-        else None
+        else []
     )
     assert m_game.id  # games sent to clients will be saved and have an id
 
