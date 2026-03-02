@@ -1,6 +1,6 @@
 """A module to convert models to client objects"""
 
-from typing import Optional
+from typing import Callable, Optional, cast
 
 from utils import models
 from utils.constants import CardNumberName, SelectableSuit, Suit
@@ -158,28 +158,29 @@ def __card(card: models.Card) -> responses.Card:
 
 def __event(event: models.Event, client_identifier: str) -> responses.GameEvent:
     """Convert the provided event into the structure it should provide the client"""
-    if isinstance(event, models.GameStart):
-        return __game_start_event()
-    if isinstance(event, models.RoundStart):
-        return __round_start_event(event, client_identifier)
-    if isinstance(event, models.Bid):
-        return __bid_event(event)
-    if isinstance(event, models.SelectTrump):
-        return __select_trump_event(event)
-    if isinstance(event, models.Discard):
-        return __discard_event(event, client_identifier)
-    if isinstance(event, models.TrickStart):
-        return __trick_start_event()
-    if isinstance(event, models.Play):
-        return __play_event(event)
-    if isinstance(event, models.TrickEnd):
-        return __trick_end_event(event)
-    if isinstance(event, models.RoundEnd):
-        return __round_end_event(event)
-    if isinstance(event, models.GameEnd):
-        return __game_end_event(event)
-    # Fallback for unknown event types
-    raise ValueError(f"Unknown event type: {type(event).__name__}")
+    handlers: dict[type, Callable[[models.Event], responses.GameEvent]] = {
+        models.GameStart: lambda _: __game_start_event(),
+        models.RoundStart: lambda e: __round_start_event(
+            cast(models.RoundStart, e), client_identifier
+        ),
+        models.Bid: lambda e: __bid_event(cast(models.Bid, e)),
+        models.SelectTrump: lambda e: __select_trump_event(
+            cast(models.SelectTrump, e)
+        ),
+        models.Discard: lambda e: __discard_event(
+            cast(models.Discard, e), client_identifier
+        ),
+        models.TrickStart: lambda _: __trick_start_event(),
+        models.Play: lambda e: __play_event(cast(models.Play, e)),
+        models.TrickEnd: lambda e: __trick_end_event(cast(models.TrickEnd, e)),
+        models.RoundEnd: lambda e: __round_end_event(cast(models.RoundEnd, e)),
+        models.GameEnd: lambda e: __game_end_event(cast(models.GameEnd, e)),
+    }
+
+    handler = handlers.get(type(event))
+    if handler is None:
+        raise ValueError(f"Unknown event type: {type(event).__name__}")
+    return handler(event)
 
 
 def __game_start_event() -> responses.GameStart:
