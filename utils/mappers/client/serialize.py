@@ -4,7 +4,6 @@ from typing import Optional
 
 from utils import models
 from utils.dtos import responses
-from utils.mappers.constants import EventType
 
 
 def user(m_user: models.User) -> responses.User:
@@ -179,14 +178,13 @@ def __event(event: models.Event, client_identifier: str) -> responses.GameEvent:
 
 
 def __game_start_event() -> responses.GameStart:
-    return responses.GameStart(type=EventType.GAME_START.name)
+    return responses.GameStart()
 
 
 def __round_start_event(
     event: models.RoundStart, client_identifier: str
 ) -> responses.RoundStart:
     return responses.RoundStart(
-        type=EventType.ROUND_START.name,
         dealer=event.dealer,
         hands={
             identifier: (
@@ -201,7 +199,6 @@ def __round_start_event(
 
 def __bid_event(event: models.Bid) -> responses.Bid:
     return responses.Bid(
-        type=EventType.BID.name,
         identifier=event.identifier,
         amount=event.amount.value,
     )
@@ -209,7 +206,6 @@ def __bid_event(event: models.Bid) -> responses.Bid:
 
 def __select_trump_event(event: models.SelectTrump) -> responses.SelectTrump:
     return responses.SelectTrump(
-        type=EventType.SELECT_TRUMP.name,
         identifier=event.identifier,
         suit=event.suit.name,
     )
@@ -217,7 +213,6 @@ def __select_trump_event(event: models.SelectTrump) -> responses.SelectTrump:
 
 def __discard_event(event: models.Discard, client_identifier: str) -> responses.Discard:
     return responses.Discard(
-        type=EventType.DISCARD.name,
         identifier=event.identifier,
         discards=(
             [__card(c) for c in event.cards]
@@ -228,12 +223,11 @@ def __discard_event(event: models.Discard, client_identifier: str) -> responses.
 
 
 def __trick_start_event() -> responses.TrickStart:
-    return responses.TrickStart(type=EventType.TRICK_START.name)
+    return responses.TrickStart()
 
 
 def __play_event(event: models.Play) -> responses.PlayEvent:
     return responses.PlayEvent(
-        type=EventType.PLAY.name,
         identifier=event.identifier,
         card=__card(event.card),
     )
@@ -241,7 +235,6 @@ def __play_event(event: models.Play) -> responses.PlayEvent:
 
 def __trick_end_event(event: models.TrickEnd) -> responses.TrickEnd:
     return responses.TrickEnd(
-        type=EventType.TRICK_END.name,
         winner=event.winner,
     )
 
@@ -252,13 +245,11 @@ def __score(score: models.Score) -> responses.Score:
 
 def __round_end_event(event: models.RoundEnd) -> responses.RoundEnd:
     return responses.RoundEnd(
-        type=EventType.ROUND_END.name,
         scores=[__score(s) for s in event.scores],
     )
 
 
 def __game_end_event(event: models.GameEnd) -> responses.GameEnd:
     return responses.GameEnd(
-        type=EventType.GAME_END.name,
         winner=event.winner,
     )

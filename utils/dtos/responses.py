@@ -1,8 +1,8 @@
 """Format of a game of Hundred and Ten on the client"""
 
-from typing import Optional, Union
+from typing import Literal, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class User(BaseModel):
@@ -53,42 +53,41 @@ Player = Union[Self, OtherPlayer]
 class Event(BaseModel):
     """A class to model the client format of a Hundred and Ten event"""
 
-    type: str
-
 
 class GameStart(Event):
     """A class to model the client format of a Hundred and Ten game start event"""
 
-    pass
+    type: Literal["GAME_START"] = "GAME_START"
 
 
 class RoundStart(Event):
     """A class to model the client format of a Hundred and Ten round start event"""
 
+    type: Literal["ROUND_START"] = "ROUND_START"
     dealer: str
     hands: dict[str, Union[list[Card], int]]
 
 
-class Bid(BaseModel):
+class Bid(Event):
     """A class to model the client format of a Hundred and Ten bid event"""
 
-    type: str = Field(default="Bid")
+    type: Literal["BID"] = "BID"
     identifier: str
     amount: int
 
 
-class SelectTrump(BaseModel):
+class SelectTrump(Event):
     """A class to model the client format of a Hundred and Ten select trump event"""
 
-    type: str = Field(default="SelectTrump")
+    type: Literal["SELECT_TRUMP"] = "SELECT_TRUMP"
     identifier: str
     suit: str
 
 
-class Discard(BaseModel):
+class Discard(Event):
     """A class to model the client format of a Hundred and Ten discard event"""
 
-    type: str = Field(default="Discard")
+    type: Literal["DISCARD"] = "DISCARD"
     identifier: str
     discards: Union[list[Card], int]
 
@@ -96,21 +95,21 @@ class Discard(BaseModel):
 class TrickStart(Event):
     """A class to model the client format of a Hundred and Ten trick start event"""
 
-    pass
+    type: Literal["TRICK_START"] = "TRICK_START"
 
 
-class PlayEvent(BaseModel):
+class PlayEvent(Event):
     """A class to model the client format of a Hundred and Ten play event"""
 
-    type: str = Field(default="Play")
+    type: Literal["PLAY"] = "PLAY"
     identifier: str
     card: Card
 
 
-class TrickEnd(BaseModel):
+class TrickEnd(Event):
     """A class to model the client format of a Hundred and Ten trick end event"""
 
-    type: str = Field(default="TrickEnd")
+    type: Literal["TRICK_END"] = "TRICK_END"
     winner: str
 
 
@@ -121,17 +120,17 @@ class Score(BaseModel):
     value: int
 
 
-class RoundEnd(BaseModel):
+class RoundEnd(Event):
     """A class to model the client format of a Hundred and Ten round end event"""
 
-    type: str = Field(default="RoundEnd")
+    type: Literal["ROUND_END"] = "ROUND_END"
     scores: list[Score]
 
 
-class GameEnd(BaseModel):
+class GameEnd(Event):
     """A class to model the client format of a Hundred and Ten game end event"""
 
-    type: str = Field(default="GameEnd")
+    type: Literal["GAME_END"] = "GAME_END"
     winner: str
 
 
