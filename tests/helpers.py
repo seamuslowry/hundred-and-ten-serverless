@@ -21,7 +21,7 @@ def lobby_game(
     """Get a lobby waiting for the players"""
     client = get_client()
     resp = client.post(
-        "/create",
+        "/lobbies/create",
         json={"name": "test game"},
         headers={"authorization": f"Bearer {organizer}"},
     )
@@ -55,7 +55,7 @@ def started_game() -> dict[str, Any]:
     client = get_client()
     created_lobby = lobby_game()
     resp = client.post(
-        f"/start/{created_lobby['id']}",
+        f"/lobbies/start/{created_lobby['id']}",
         headers={"authorization": f"Bearer {created_lobby['organizer']['identifier']}"},
     )
     return resp.json()
