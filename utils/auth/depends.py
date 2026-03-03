@@ -1,3 +1,5 @@
+"""Identity retrieval as dependency to HTTP endpoints"""
+
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
