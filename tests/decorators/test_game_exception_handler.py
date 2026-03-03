@@ -12,7 +12,7 @@ class TestErrorHandler(TestCase):
     """Error handler unit tests"""
 
     @patch(
-        "function_app.verify_google_token",
+        "utils.auth.depends.verify_google_token",
         side_effect=lambda token: Identity(id=token),
     )
     def test_returns_400_for_game_error(self, _):
@@ -26,7 +26,7 @@ class TestErrorHandler(TestCase):
         self.assertEqual(400, resp.status_code)
 
     @patch(
-        "function_app.verify_google_token",
+        "utils.auth.depends.verify_google_token",
         side_effect=lambda token: Identity(id=token),
     )
     @patch(
@@ -58,7 +58,7 @@ class TestErrorHandler(TestCase):
         self.assertEqual(403, resp.status_code)
 
     @patch(
-        "function_app.verify_google_token",
+        "utils.auth.depends.verify_google_token",
         side_effect=ValueError("Invalid token"),
     )
     def test_returns_401_for_invalid_token(self, _):
@@ -75,7 +75,7 @@ class TestAuthentication(TestCase):
     """Authentication unit tests"""
 
     @patch(
-        "function_app.verify_google_token",
+        "utils.auth.depends.verify_google_token",
         return_value=Identity(
             id="user-123", name="Test User", picture_url="https://example.com/pic.jpg"
         ),
@@ -109,7 +109,7 @@ class TestAuthentication(TestCase):
         self.assertEqual(403, resp.status_code)
 
     @patch(
-        "function_app.verify_google_token",
+        "utils.auth.depends.verify_google_token",
         side_effect=ValueError("Invalid token"),
     )
     def test_raises_authentication_error_for_invalid_token(self, _):
