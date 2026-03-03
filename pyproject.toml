@@ -17,6 +17,7 @@ classifiers = [
 dependencies = [
     "azure-functions==1.24.0",
     "cachecontrol==0.14.4",
+    "fastapi==0.115.8",
     "google-auth==2.48.0",
     "hundredandten==2.1.1",
     "pymongo==4.16.0",
@@ -32,6 +33,7 @@ lint = [
 ]
 test = [
     "coverage==7.13.4",
+    "httpx==0.28.1",
     "pytest==9.0.2",
 ]
 

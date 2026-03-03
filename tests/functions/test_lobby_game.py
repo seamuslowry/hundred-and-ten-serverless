@@ -2,36 +2,8 @@
 
 from unittest import TestCase
 
-from function_app import (
-    create_lobby as wrapped_create_lobby,
-)
-from function_app import (
-    invite_to_lobby as wrapped_invite_to_lobby,
-)
-from function_app import (
-    join_lobby as wrapped_join_lobby,
-)
-from function_app import (
-    leave_lobby as wrapped_leave_lobby,
-)
-from function_app import lobby_info as wrapped_lobby_info
-from function_app import (
-    search_lobbies as wrapped_search_lobbies,
-)
-from function_app import (
-    start_game as wrapped_start_game,
-)
-from tests.helpers import build_request, lobby_game, read_response_body
-from utils.dtos.client import StartedGame, WaitingGame
+from tests.helpers import get_client, lobby_game
 from utils.models import GameStatus, RoundStatus
-
-lobby_info = wrapped_lobby_info.build().get_user_function()
-create_lobby = wrapped_create_lobby.build().get_user_function()
-invite_to_lobby = wrapped_invite_to_lobby.build().get_user_function()
-join_lobby = wrapped_join_lobby.build().get_user_function()
-leave_lobby = wrapped_leave_lobby.build().get_user_function()
-search_lobbies = wrapped_search_lobbies.build().get_user_function()
-start_game = wrapped_start_game.build().get_user_function()
 
 
 class TestLobby(TestCase):
@@ -39,15 +11,23 @@ class TestLobby(TestCase):
 
     def test_lobby_info_invalid_id(self):
         """Invalid lobby ID returns 400"""
-        resp = lobby_info(build_request(route_params={"lobby_id": "not-an-id"}))
+        client = get_client()
+        resp = client.get(
+            "/lobby/not-an-id",
+            headers={"authorization": "Bearer id"},
+        )
         self.assertEqual(400, resp.status_code)
 
     def test_lobby_info(self):
         """Invalid lobby ID returns 400"""
-        lobby: WaitingGame = lobby_game()
-        resp = lobby_info(build_request(route_params={"lobby_id": lobby["id"]}))
+        client = get_client()
+        lobby = lobby_game()
+        resp = client.get(
+            f"/lobby/{lobby['id']}",
+            headers={"authorization": "Bearer id"},
+        )
 
-        retrieved_lobby_info: WaitingGame = read_response_body(resp.get_body())
+        retrieved_lobby_info = resp.json()
 
         self.assertIsNotNone(retrieved_lobby_info["id"])
         self.assertIsNotNone(retrieved_lobby_info["name"])
@@ -57,14 +37,14 @@ class TestLobby(TestCase):
 
     def test_create_lobby(self):
         """New lobby can be created"""
+        client = get_client()
         organizer = "organizer"
-        resp = create_lobby(
-            build_request(
-                headers={"authorization": f"Bearer {organizer}"},
-                body={"name": "create test"},
-            )
+        resp = client.post(
+            "/create",
+            json={"name": "create test"},
+            headers={"authorization": f"Bearer {organizer}"},
         )
-        lobby: WaitingGame = read_response_body(resp.get_body())
+        lobby = resp.json()
 
         self.assertEqual(organizer, lobby["organizer"]["identifier"])
         self.assertEqual(0, len(lobby["players"]))
@@ -73,20 +53,19 @@ class TestLobby(TestCase):
 
     def test_organizer_invite_to_lobby(self):
         """Organizer can invite players to a lobby"""
+        client = get_client()
         invitee = "invitee"
 
-        created_lobby: WaitingGame = lobby_game()
+        created_lobby = lobby_game()
 
-        resp = invite_to_lobby(
-            build_request(
-                route_params={"lobby_id": created_lobby["id"]},
-                headers={
-                    "authorization": f"Bearer {created_lobby["organizer"]["identifier"]}"
-                },
-                body={"invitees": [invitee]},
-            )
+        resp = client.post(
+            f"/invite/{created_lobby['id']}",
+            json={"invitees": [invitee]},
+            headers={
+                "authorization": f"Bearer {created_lobby['organizer']['identifier']}"
+            },
         )
-        invited_lobby: WaitingGame = read_response_body(resp.get_body())
+        invited_lobby = resp.json()
 
         self.assertEqual(created_lobby["id"], invited_lobby["id"])
         self.assertEqual(0, len(invited_lobby["players"]))
@@ -96,56 +75,50 @@ class TestLobby(TestCase):
 
     def test_invitee_invite_to_lobby(self):
         """Invited players cannot invite players to a lobby"""
+        client = get_client()
         invitee = "invitee"
         second_invitee = "second"
 
-        created_lobby: WaitingGame = lobby_game()
+        created_lobby = lobby_game()
 
         # invite the original
-        invite_to_lobby(
-            build_request(
-                route_params={"lobby_id": created_lobby["id"]},
-                headers={
-                    "authorization": f"Bearer {created_lobby["organizer"]["identifier"]}"
-                },
-                body={"invitees": [invitee]},
-            )
+        client.post(
+            f"/invite/{created_lobby['id']}",
+            json={"invitees": [invitee]},
+            headers={
+                "authorization": f"Bearer {created_lobby['organizer']['identifier']}"
+            },
         )
 
         # new invitee cannot invite
-        failed_invite = invite_to_lobby(
-            build_request(
-                route_params={"lobby_id": created_lobby["id"]},
-                headers={"authorization": f"Bearer {invitee}"},
-                body={"invitees": [second_invitee]},
-            )
+        failed_invite = client.post(
+            f"/invite/{created_lobby['id']}",
+            json={"invitees": [second_invitee]},
+            headers={"authorization": f"Bearer {invitee}"},
         )
         self.assertEqual(400, failed_invite.status_code)
 
     def test_player_invite_to_lobby(self):
         """Players can invite other players to a lobby"""
+        client = get_client()
         invitee = "invitee"
         player = "player"
 
-        created_lobby: WaitingGame = lobby_game()
+        created_lobby = lobby_game()
 
         # join as player
-        join_lobby(
-            build_request(
-                route_params={"lobby_id": created_lobby["id"]},
-                headers={"authorization": f"Bearer {player}"},
-            )
+        client.post(
+            f"/join/{created_lobby['id']}",
+            headers={"authorization": f"Bearer {player}"},
         )
 
         # new player can invite
-        invite = invite_to_lobby(
-            build_request(
-                route_params={"lobby_id": created_lobby["id"]},
-                headers={"authorization": f"Bearer {player}"},
-                body={"invitees": [invitee]},
-            )
+        invite = client.post(
+            f"/invite/{created_lobby['id']}",
+            json={"invitees": [invitee]},
+            headers={"authorization": f"Bearer {player}"},
         )
-        invited_lobby: WaitingGame = read_response_body(invite.get_body())
+        invited_lobby = invite.json()
 
         self.assertEqual(created_lobby["id"], invited_lobby["id"])
         self.assertEqual(1, len(invited_lobby["players"]))
@@ -156,17 +129,16 @@ class TestLobby(TestCase):
 
     def test_join_public_lobby(self):
         """Any player can join a public lobby"""
+        client = get_client()
         player = "player"
 
-        created_lobby: WaitingGame = lobby_game()
+        created_lobby = lobby_game()
 
-        resp = join_lobby(
-            build_request(
-                route_params={"lobby_id": created_lobby["id"]},
-                headers={"authorization": f"Bearer {player}"},
-            )
+        resp = client.post(
+            f"/join/{created_lobby['id']}",
+            headers={"authorization": f"Bearer {player}"},
         )
-        joined_lobby: WaitingGame = read_response_body(resp.get_body())
+        joined_lobby = resp.json()
 
         self.assertEqual(created_lobby["id"], joined_lobby["id"])
         self.assertEqual(1, len(joined_lobby["players"]))
@@ -176,52 +148,50 @@ class TestLobby(TestCase):
 
     def test_join_private_lobby_uninvited(self):
         """Uninvited players cannot join a private lobby"""
+        client = get_client()
+        organizer = "organizer"
         player = "player"
 
-        resp = create_lobby(
-            build_request(
-                body={"name": "private uninvited join test", "accessibility": "PRIVATE"}
-            )
+        resp = client.post(
+            "/create",
+            json={"name": "private uninvited join test", "accessibility": "PRIVATE"},
+            headers={"authorization": f"Bearer {organizer}"},
         )
-        created_lobby: WaitingGame = read_response_body(resp.get_body())
+        created_lobby = resp.json()
 
-        resp = join_lobby(
-            build_request(
-                route_params={"lobby_id": created_lobby["id"]},
-                headers={"authorization": f"Bearer {player}"},
-            )
+        resp = client.post(
+            f"/join/{created_lobby['id']}",
+            headers={"authorization": f"Bearer {player}"},
         )
         self.assertEqual(400, resp.status_code)
 
     def test_join_private_lobby_invited(self):
         """Invited players can join a private lobby"""
+        client = get_client()
+        organizer = "organizer"
         player = "player"
 
-        resp = create_lobby(
-            build_request(
-                body={"name": "private invite join test", "accessibility": "PRIVATE"}
-            )
+        resp = client.post(
+            "/create",
+            json={"name": "private invite join test", "accessibility": "PRIVATE"},
+            headers={"authorization": f"Bearer {organizer}"},
         )
-        created_lobby: WaitingGame = read_response_body(resp.get_body())
+        created_lobby = resp.json()
 
-        invite_to_lobby(
-            build_request(
-                route_params={"lobby_id": created_lobby["id"]},
-                headers={
-                    "authorization": f"Bearer {created_lobby["organizer"]["identifier"]}"
-                },
-                body={"invitees": [player]},
-            )
+        client.post(
+            f"/invite/{created_lobby['id']}",
+            json={"invitees": [player]},
+            headers={
+                "authorization": f"Bearer {created_lobby['organizer']['identifier']}"
+            },
         )
 
-        resp = join_lobby(
-            build_request(
-                route_params={"lobby_id": created_lobby["id"]},
-                headers={"authorization": f"Bearer {player}"},
-            )
+        resp = client.post(
+            f"/join/{created_lobby['id']}",
+            headers={"authorization": f"Bearer {player}"},
         )
 
-        joined_lobby: WaitingGame = read_response_body(resp.get_body())
+        joined_lobby = resp.json()
 
         self.assertEqual(created_lobby["id"], joined_lobby["id"])
         self.assertEqual(1, len(joined_lobby["players"]))
@@ -231,30 +201,27 @@ class TestLobby(TestCase):
 
     def test_leave_lobby(self):
         """Any player can join a public lobby"""
+        client = get_client()
         player = "player"
 
-        created_lobby: WaitingGame = lobby_game()
+        created_lobby = lobby_game()
 
-        resp = join_lobby(
-            build_request(
-                route_params={"lobby_id": created_lobby["id"]},
-                headers={"authorization": f"Bearer {player}"},
-            )
+        resp = client.post(
+            f"/join/{created_lobby['id']}",
+            headers={"authorization": f"Bearer {player}"},
         )
-        joined_lobby: WaitingGame = read_response_body(resp.get_body())
+        joined_lobby = resp.json()
 
         self.assertEqual(created_lobby["id"], joined_lobby["id"])
         self.assertEqual(1, len(joined_lobby["players"]))
         self.assertEqual(player, joined_lobby["players"][0]["identifier"])
 
-        resp = leave_lobby(
-            build_request(
-                route_params={"lobby_id": created_lobby["id"]},
-                headers={"authorization": f"Bearer {player}"},
-            )
+        resp = client.post(
+            f"/leave/lobby/{created_lobby['id']}",
+            headers={"authorization": f"Bearer {player}"},
         )
 
-        left_lobby: WaitingGame = read_response_body(resp.get_body())
+        left_lobby = resp.json()
 
         self.assertEqual(created_lobby["id"], left_lobby["id"])
         self.assertEqual(
@@ -266,39 +233,35 @@ class TestLobby(TestCase):
 
     def test_player_start_game(self):
         """Players cannot start the game"""
+        client = get_client()
         player = "player"
 
-        created_lobby: WaitingGame = lobby_game()
+        created_lobby = lobby_game()
 
-        join_lobby(
-            build_request(
-                route_params={"lobby_id": created_lobby["id"]},
-                headers={"authorization": f"Bearer {player}"},
-            )
+        client.post(
+            f"/join/{created_lobby['id']}",
+            headers={"authorization": f"Bearer {player}"},
         )
 
-        resp = start_game(
-            build_request(
-                route_params={"lobby_id": created_lobby["id"]},
-                headers={"authorization": f"Bearer {player}"},
-            )
+        resp = client.post(
+            f"/start/{created_lobby['id']}",
+            headers={"authorization": f"Bearer {player}"},
         )
         self.assertEqual(400, resp.status_code)
 
     def test_start_game(self):
         """The organizer can start the game"""
-        created_lobby: WaitingGame = lobby_game()
+        client = get_client()
+        created_lobby = lobby_game()
 
-        resp = start_game(
-            build_request(
-                headers={
-                    "authorization": f"Bearer {created_lobby["organizer"]["identifier"]}"
-                },
-                route_params={"lobby_id": created_lobby["id"]},
-            )
+        resp = client.post(
+            f"/start/{created_lobby['id']}",
+            headers={
+                "authorization": f"Bearer {created_lobby['organizer']['identifier']}"
+            },
         )
 
-        game: StartedGame = read_response_body(resp.get_body())
+        game = resp.json()
 
         self.assertEqual(created_lobby["id"], game["id"])
         self.assertEqual(4, len(game["round"]["players"]))
@@ -306,59 +269,54 @@ class TestLobby(TestCase):
 
     def test_unknown_user_cannot_invite(self):
         """A user not in the lobby cannot invite others"""
+        client = get_client()
         unknown_user = "unknown_user"
         invitee = "invitee"
 
-        created_lobby: WaitingGame = lobby_game()
+        created_lobby = lobby_game()
 
         # Unknown user tries to invite - should fail because they're not in the lobby
-        resp = invite_to_lobby(
-            build_request(
-                route_params={"lobby_id": created_lobby["id"]},
-                headers={"authorization": f"Bearer {unknown_user}"},
-                body={"invitees": [invitee]},
-            )
+        resp = client.post(
+            f"/invite/{created_lobby['id']}",
+            json={"invitees": [invitee]},
+            headers={"authorization": f"Bearer {unknown_user}"},
         )
         self.assertEqual(400, resp.status_code)
 
     def test_unknown_player_leaves_fails(self):
         """When an unknown player leaves, return 400 because they're not in the lobby"""
+        client = get_client()
         player = "player"
 
-        created_lobby: WaitingGame = lobby_game()
+        created_lobby = lobby_game()
 
         # Unrecognized player attempts to leave
-        resp = leave_lobby(
-            build_request(
-                route_params={"lobby_id": created_lobby["id"]},
-                headers={"authorization": f"Bearer {player}"},
-            )
+        resp = client.post(
+            f"/leave/lobby/{created_lobby['id']}",
+            headers={"authorization": f"Bearer {player}"},
         )
 
         self.assertEqual(400, resp.status_code)
 
     def test_organizer_leaves_fails(self):
         """When organizer attempts to leave, prevent it"""
+        client = get_client()
         player = "player"
 
-        created_lobby: WaitingGame = lobby_game()
+        created_lobby = lobby_game()
 
         # Another player joins
-        join_lobby(
-            build_request(
-                route_params={"lobby_id": created_lobby["id"]},
-                headers={"authorization": f"Bearer {player}"},
-            )
+        client.post(
+            f"/join/{created_lobby['id']}",
+            headers={"authorization": f"Bearer {player}"},
         )
 
         # Organizer attempts to leave
-        resp = leave_lobby(
-            build_request(
-                route_params={"lobby_id": created_lobby["id"]},
-                headers={
-                    "authorization": f"Bearer {created_lobby["organizer"]["identifier"]}"
-                },
-            )
+        resp = client.post(
+            f"/leave/lobby/{created_lobby['id']}",
+            headers={
+                "authorization": f"Bearer {created_lobby['organizer']['identifier']}"
+            },
         )
 
         # Organizer cannot leave. Needs to delete lobby.
@@ -366,17 +324,16 @@ class TestLobby(TestCase):
 
     def test_search_lobbies(self):
         """Can search for lobbies"""
-        created_lobby: WaitingGame = lobby_game()
+        client = get_client()
+        created_lobby = lobby_game()
 
-        resp = search_lobbies(
-            build_request(
-                method="GET",
-                headers={
-                    "authorization": f"Bearer {created_lobby["organizer"]["identifier"]}"
-                },
-                body={"searchText": "test"},
-            )
+        resp = client.post(
+            "/lobbies",
+            json={"searchText": "test"},
+            headers={
+                "authorization": f"Bearer {created_lobby['organizer']['identifier']}"
+            },
         )
 
-        lobbies = read_response_body(resp.get_body())
+        lobbies = resp.json()
         self.assertGreaterEqual(len(lobbies), 1)

@@ -2,7 +2,6 @@
 
 from utils import models
 from utils.dtos import db
-from utils.mappers.shared.deserialize import card as __card
 from utils.models.game import PersonGroup
 
 
@@ -75,3 +74,22 @@ def __move(db_move: db.Move) -> models.Action:
             )
         case _:  # type: ignore[unreachable]
             raise ValueError(f"Unknown move type: {db_move['type']}")
+
+
+def __card(db_card: db.Card) -> models.Card:
+    """Convert a card from the DB to its model"""
+    suit = None
+
+    try:
+        suit = models.SelectableSuit[db_card["suit"]]
+    except KeyError:
+        pass
+
+    try:
+        suit = models.UnselectableSuit[db_card["suit"]]
+    except KeyError:
+        pass
+
+    assert suit
+
+    return models.Card(suit=suit, number=models.CardNumber[db_card["number"]])
