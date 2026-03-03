@@ -35,11 +35,9 @@ class Card(BaseModel):
     number: CardNumberName
 
 
-class Self(BaseModel):
+class Self(Person):
     """A class to model the client format of the logged in Hundred and Ten player"""
 
-    identifier: str
-    automate: bool
     hand: list[Card]
     prepassed: bool
 
