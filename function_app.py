@@ -3,10 +3,10 @@ The entrypoint for azure functions, wrapping a FastAPI app via AsgiFunctionApp
 """
 
 import logging
-from typing import Optional, Union
+from typing import Union
 
 import azure.functions as func
-from fastapi import Depends, FastAPI, Query, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from utils.auth import Identity, get_identity
@@ -20,7 +20,6 @@ from utils.dtos.requests import (
     SearchGamesRequest,
     SearchLobbiesRequest,
     SelectTrumpRequest,
-    UpdateUserRequest,
 )
 from utils.dtos.responses import (
     CompletedGame,
@@ -44,6 +43,7 @@ from utils.models import (
     SelectTrump,
     Unpass,
 )
+from utils.routers import users
 from utils.services import GameService, LobbyService, UserService
 
 MIN_PLAYERS = 4
@@ -343,34 +343,7 @@ def start_game(lobby_id: str, identity: Identity = Depends(get_identity)):
 # User endpoints
 # =============================================================================
 
-
-@fastapi_app.get("/users", response_model=list[User])
-def search_users(
-    search_text: Optional[str] = Query(default="", alias="searchText"),
-    _identity: Identity = Depends(get_identity),
-):
-    """Get users"""
-    return [serialize.user(u) for u in UserService.search(search_text or "")]
-
-
-@fastapi_app.put("/self", response_model=User)
-def put_self(body: UpdateUserRequest, identity: Identity = Depends(get_identity)):
-    """Update the user (overwrite)"""
-    provided_user = deserialize.user(identity.id, body)
-
-    return serialize.user(UserService.save(provided_user))
-
-
-@fastapi_app.post("/self", response_model=User)
-def post_self(body: UpdateUserRequest, identity: Identity = Depends(get_identity)):
-    """Create the user (only if not exists)"""
-    existing_user = UserService.by_identifier(identity.id)
-    provided_user = deserialize.user(identity.id, body)
-
-    save_user = provided_user if not existing_user else existing_user
-
-    return serialize.user(UserService.save(save_user))
-
+fastapi_app.include_router(users)
 
 # =============================================================================
 # Azure Functions ASGI wrapper

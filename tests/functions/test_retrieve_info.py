@@ -115,7 +115,7 @@ class TestRetrieveInfo(TestCase):
 
         # get users
         resp = client.get(
-            "/users",
+            "/players/users",
             params={"searchText": "aaa"},
             headers={"authorization": f"Bearer {DEFAULT_ID}"},
         )

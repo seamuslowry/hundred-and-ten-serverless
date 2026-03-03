@@ -43,7 +43,7 @@ def __user(method: str, user: models.User) -> dict[str, Any]:
     client = get_client()
     resp = client.request(
         method,
-        "/self",
+        "/players/self",
         json={"name": user.name, "picture_url": user.picture_url},
         headers={"authorization": f"Bearer {user.identifier}"},
     )
