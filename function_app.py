@@ -3,16 +3,17 @@ The entrypoint for azure functions, wrapping a FastAPI app via AsgiFunctionApp
 """
 
 import azure.functions as func
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 
+from utils.auth.depends import get_identity
 from utils.errors import AuthenticationError, AuthorizationError
 from utils.models import (
     HundredAndTenError,
 )
 from utils.routers import games, lobbies, users
 
-fastapi_app = FastAPI()
+fastapi_app = FastAPI(dependencies=[Depends(get_identity)])
 
 
 # =============================================================================

@@ -18,7 +18,6 @@ router = APIRouter(prefix="/players", tags=["Players"])
 @router.get("/search", response_model=list[User])
 def search_users(
     search_text: Optional[str] = Query(default="", alias="searchText"),
-    _identity: Identity = Depends(get_identity),
 ):
     """Get users"""
     return [serialize.user(u) for u in UserService.search(search_text or "")]

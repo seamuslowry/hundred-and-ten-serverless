@@ -48,7 +48,7 @@ def game_info(game_id: str, identity: Identity = Depends(get_identity)):
 
 
 @router.get("/{game_id}/players", response_model=list[User])
-def game_players(game_id: str, _identity: Identity = Depends(get_identity)):
+def game_players(game_id: str):
     """Retrieve players in a 110 game."""
     game = GameService.get(game_id)
 

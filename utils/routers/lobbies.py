@@ -25,7 +25,7 @@ router = APIRouter(prefix="/lobbies", tags=["Lobbies"])
 
 
 @router.get("/{lobby_id}", response_model=WaitingGame)
-def lobby_info(lobby_id: str, _identity: Identity = Depends(get_identity)):
+def lobby_info(lobby_id: str):
     """Retrieve 110 lobby."""
     lobby = LobbyService.get(lobby_id)
 
@@ -33,7 +33,7 @@ def lobby_info(lobby_id: str, _identity: Identity = Depends(get_identity)):
 
 
 @router.get("/{lobby_id}/players", response_model=list[User])
-def lobby_players(lobby_id: str, _identity: Identity = Depends(get_identity)):
+def lobby_players(lobby_id: str):
     """Retrieve players in a 110 lobby."""
     lobby = LobbyService.get(lobby_id)
 
