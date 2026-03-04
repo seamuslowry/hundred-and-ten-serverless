@@ -15,7 +15,7 @@ from utils.services import UserService
 router = APIRouter(prefix="/players", tags=["Players"])
 
 
-@router.get("/users", response_model=list[User])
+@router.get("/search", response_model=list[User])
 def search_users(
     search_text: Optional[str] = Query(default="", alias="searchText"),
     _identity: Identity = Depends(get_identity),
