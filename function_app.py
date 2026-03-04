@@ -49,9 +49,9 @@ def value_error_handler(_: Request, exc: ValueError) -> JSONResponse:
 # Routers
 # =============================================================================
 
-fastapi_app.include_router(games)
-fastapi_app.include_router(lobbies)
 fastapi_app.include_router(players)
+fastapi_app.include_router(lobbies)
+fastapi_app.include_router(games)
 
 # =============================================================================
 # Azure Functions ASGI wrapper
