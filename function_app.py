@@ -11,7 +11,7 @@ from utils.errors import AuthenticationError, AuthorizationError
 from utils.models import (
     HundredAndTenError,
 )
-from utils.routers import games, lobbies, users
+from utils.routers import games, lobbies, players
 
 fastapi_app = FastAPI(dependencies=[Depends(get_identity)])
 
@@ -51,7 +51,7 @@ def value_error_handler(_: Request, exc: ValueError) -> JSONResponse:
 
 fastapi_app.include_router(games)
 fastapi_app.include_router(lobbies)
-fastapi_app.include_router(users)
+fastapi_app.include_router(players)
 
 # =============================================================================
 # Azure Functions ASGI wrapper
