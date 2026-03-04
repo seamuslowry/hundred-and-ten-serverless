@@ -26,7 +26,7 @@ class TestPlayingGame(TestCase):
 
         # bid
         resp = client.post(
-            f"/bid/{created_game['id']}",
+            f"/games/bid/{created_game['id']}",
             json={"amount": BidAmount.SHOOT_THE_MOON},
             headers={"authorization": f"Bearer {DEFAULT_ID}"},
         )
@@ -40,7 +40,7 @@ class TestPlayingGame(TestCase):
 
         # select trump
         resp = client.post(
-            f"/select/{created_game['id']}",
+            f"/games/select/{created_game['id']}",
             json={"suit": SelectableSuit.CLUBS.name},
             headers={"authorization": f"Bearer {DEFAULT_ID}"},
         )
@@ -56,7 +56,7 @@ class TestPlayingGame(TestCase):
 
         # discard
         resp = client.post(
-            f"/discard/{created_game['id']}",
+            f"/games/discard/{created_game['id']}",
             json={"cards": []},
             headers={"authorization": f"Bearer {DEFAULT_ID}"},
         )
@@ -70,7 +70,7 @@ class TestPlayingGame(TestCase):
 
         # play
         resp = client.post(
-            f"/play/{created_game['id']}",
+            f"/games/play/{created_game['id']}",
             json={"card": suggested_play["card"]},  # type: ignore
             headers={"authorization": f"Bearer {DEFAULT_ID}"},
         )
@@ -93,7 +93,7 @@ class TestPlayingGame(TestCase):
 
         # prepass
         resp = client.post(
-            f"/bid/{game['id']}",
+            f"/games/bid/{game['id']}",
             json={"amount": BidAmount.PASS},
             headers={"authorization": f"Bearer {non_active_player['identifier']}"},
         )
@@ -109,7 +109,7 @@ class TestPlayingGame(TestCase):
 
         # rescind prepass
         resp = client.post(
-            f"/unpass/{game['id']}",
+            f"/games/unpass/{game['id']}",
             headers={"authorization": f"Bearer {non_active_player['identifier']}"},
         )
         game = resp.json()
@@ -133,7 +133,7 @@ class TestPlayingGame(TestCase):
 
         # leave
         resp = client.post(
-            f"/leave/game/{original_game['id']}",
+            f"/games/leave/game/{original_game['id']}",
             headers={"authorization": f"Bearer {active_player['identifier']}"},
         )
         game = resp.json()

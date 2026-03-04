@@ -70,7 +70,7 @@ def completed_game() -> dict[str, Any]:
     assert active_player
 
     resp = client.post(
-        f"/leave/game/{game['id']}",
+        f"/games/leave/game/{game['id']}",
         headers={"authorization": f"Bearer {active_player['identifier']}"},
     )
     return resp.json()
@@ -80,7 +80,7 @@ def request_suggestion(game_id: str, user: str = DEFAULT_ID):
     """get the suggestion for the game"""
     client = get_client()
     return client.get(
-        f"/suggestion/{game_id}",
+        f"/games/suggestion/{game_id}",
         headers={"authorization": f"Bearer {user}"},
     )
 
