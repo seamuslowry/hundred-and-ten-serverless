@@ -84,13 +84,13 @@ class TestRetrieveInfo(TestCase):
 
         for player in other_players:
             client.post(
-                f"/lobbies/join/{original_lobby['id']}",
+                f"/lobbies/{original_lobby['id']}/join",
                 headers={"authorization": f"Bearer {player['identifier']}"},
             )
 
         # get that lobby's players
         resp = client.get(
-            f"/lobbies/players/lobby/{original_lobby['id']}",
+            f"/lobbies/{original_lobby['id']}/players",
             headers={"authorization": f"Bearer {DEFAULT_ID}"},
         )
         retrieved_users = resp.json()

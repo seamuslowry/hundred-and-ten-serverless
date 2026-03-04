@@ -44,7 +44,7 @@ def create_lobby(body: CreateLobbyRequest, identity: Identity = Depends(get_iden
     return serialize.lobby(lobby)
 
 
-@router.post("/invite/{lobby_id}", response_model=WaitingGame)
+@router.post("/{lobby_id}/invite", response_model=WaitingGame)
 def invite_to_lobby(
     lobby_id: str, body: InviteRequest, identity: Identity = Depends(get_identity)
 ):
@@ -58,7 +58,7 @@ def invite_to_lobby(
     return serialize.lobby(lobby)
 
 
-@router.post("/join/{lobby_id}", response_model=WaitingGame)
+@router.post("/{lobby_id}/join", response_model=WaitingGame)
 def join_lobby(lobby_id: str, identity: Identity = Depends(get_identity)):
     """Join a 110 lobby"""
     lobby = LobbyService.get(lobby_id)
@@ -68,7 +68,7 @@ def join_lobby(lobby_id: str, identity: Identity = Depends(get_identity)):
     return serialize.lobby(lobby)
 
 
-@router.post("/leave/lobby/{lobby_id}", response_model=WaitingGame)
+@router.post("/{lobby_id}/leave", response_model=WaitingGame)
 def leave_lobby(lobby_id: str, identity: Identity = Depends(get_identity)):
     """Leave a 110 lobby"""
     lobby = LobbyService.get(lobby_id)
@@ -78,7 +78,7 @@ def leave_lobby(lobby_id: str, identity: Identity = Depends(get_identity)):
     return serialize.lobby(lobby)
 
 
-@router.get("/lobby/{lobby_id}", response_model=WaitingGame)
+@router.get("/{lobby_id}", response_model=WaitingGame)
 def lobby_info(lobby_id: str, _identity: Identity = Depends(get_identity)):
     """Retrieve 110 lobby."""
     lobby = LobbyService.get(lobby_id)
@@ -86,7 +86,7 @@ def lobby_info(lobby_id: str, _identity: Identity = Depends(get_identity)):
     return serialize.lobby(lobby)
 
 
-@router.get("/players/lobby/{lobby_id}", response_model=list[User])
+@router.get("/{lobby_id}/players", response_model=list[User])
 def lobby_players(lobby_id: str, _identity: Identity = Depends(get_identity)):
     """Retrieve players in a 110 lobby."""
     lobby = LobbyService.get(lobby_id)
@@ -96,7 +96,7 @@ def lobby_players(lobby_id: str, _identity: Identity = Depends(get_identity)):
     return [serialize.user(u) for u in UserService.by_identifiers(people_ids)]
 
 
-@router.post("/lobbies", response_model=list[WaitingGame])
+@router.post("/search", response_model=list[WaitingGame])
 def search_lobbies(
     body: SearchLobbiesRequest, identity: Identity = Depends(get_identity)
 ):
@@ -113,7 +113,7 @@ def search_lobbies(
     ]
 
 
-@router.post("/start/{lobby_id}", response_model=StartedGame)
+@router.post("/{lobby_id}/start", response_model=StartedGame)
 def start_game(lobby_id: str, identity: Identity = Depends(get_identity)):
     """Start a 110 game from a lobby"""
     lobby = LobbyService.get(lobby_id)
