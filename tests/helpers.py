@@ -21,7 +21,7 @@ def lobby_game(
     """Get a lobby waiting for the players"""
     client = get_client()
     resp = client.post(
-        "/create",
+        "/lobbies/create",
         json={"name": "test game"},
         headers={"authorization": f"Bearer {organizer}"},
     )
@@ -43,7 +43,7 @@ def __user(method: str, user: models.User) -> dict[str, Any]:
     client = get_client()
     resp = client.request(
         method,
-        "/self",
+        "/players/self",
         json={"name": user.name, "picture_url": user.picture_url},
         headers={"authorization": f"Bearer {user.identifier}"},
     )
@@ -55,7 +55,7 @@ def started_game() -> dict[str, Any]:
     client = get_client()
     created_lobby = lobby_game()
     resp = client.post(
-        f"/start/{created_lobby['id']}",
+        f"/lobbies/{created_lobby['id']}/start",
         headers={"authorization": f"Bearer {created_lobby['organizer']['identifier']}"},
     )
     return resp.json()
@@ -70,7 +70,7 @@ def completed_game() -> dict[str, Any]:
     assert active_player
 
     resp = client.post(
-        f"/leave/game/{game['id']}",
+        f"/games/{game['id']}/leave",
         headers={"authorization": f"Bearer {active_player['identifier']}"},
     )
     return resp.json()
@@ -80,7 +80,7 @@ def request_suggestion(game_id: str, user: str = DEFAULT_ID):
     """get the suggestion for the game"""
     client = get_client()
     return client.get(
-        f"/suggestion/{game_id}",
+        f"/games/{game_id}/suggestion",
         headers={"authorization": f"Bearer {user}"},
     )
 

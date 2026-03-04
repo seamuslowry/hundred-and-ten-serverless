@@ -13,7 +13,7 @@ class TestLobby(TestCase):
         """Invalid lobby ID returns 400"""
         client = get_client()
         resp = client.get(
-            "/lobby/not-an-id",
+            "/lobbies/not-an-id",
             headers={"authorization": "Bearer id"},
         )
         self.assertEqual(400, resp.status_code)
@@ -23,7 +23,7 @@ class TestLobby(TestCase):
         client = get_client()
         lobby = lobby_game()
         resp = client.get(
-            f"/lobby/{lobby['id']}",
+            f"/lobbies/{lobby['id']}",
             headers={"authorization": "Bearer id"},
         )
 
@@ -40,7 +40,7 @@ class TestLobby(TestCase):
         client = get_client()
         organizer = "organizer"
         resp = client.post(
-            "/create",
+            "/lobbies/create",
             json={"name": "create test"},
             headers={"authorization": f"Bearer {organizer}"},
         )
@@ -59,7 +59,7 @@ class TestLobby(TestCase):
         created_lobby = lobby_game()
 
         resp = client.post(
-            f"/invite/{created_lobby['id']}",
+            f"/lobbies/{created_lobby['id']}/invite",
             json={"invitees": [invitee]},
             headers={
                 "authorization": f"Bearer {created_lobby['organizer']['identifier']}"
@@ -83,7 +83,7 @@ class TestLobby(TestCase):
 
         # invite the original
         client.post(
-            f"/invite/{created_lobby['id']}",
+            f"/lobbies/{created_lobby['id']}/invite",
             json={"invitees": [invitee]},
             headers={
                 "authorization": f"Bearer {created_lobby['organizer']['identifier']}"
@@ -92,7 +92,7 @@ class TestLobby(TestCase):
 
         # new invitee cannot invite
         failed_invite = client.post(
-            f"/invite/{created_lobby['id']}",
+            f"/lobbies/{created_lobby['id']}/invite",
             json={"invitees": [second_invitee]},
             headers={"authorization": f"Bearer {invitee}"},
         )
@@ -108,13 +108,13 @@ class TestLobby(TestCase):
 
         # join as player
         client.post(
-            f"/join/{created_lobby['id']}",
+            f"/lobbies/{created_lobby['id']}/join",
             headers={"authorization": f"Bearer {player}"},
         )
 
         # new player can invite
         invite = client.post(
-            f"/invite/{created_lobby['id']}",
+            f"/lobbies/{created_lobby['id']}/invite",
             json={"invitees": [invitee]},
             headers={"authorization": f"Bearer {player}"},
         )
@@ -135,7 +135,7 @@ class TestLobby(TestCase):
         created_lobby = lobby_game()
 
         resp = client.post(
-            f"/join/{created_lobby['id']}",
+            f"/lobbies/{created_lobby['id']}/join",
             headers={"authorization": f"Bearer {player}"},
         )
         joined_lobby = resp.json()
@@ -153,14 +153,14 @@ class TestLobby(TestCase):
         player = "player"
 
         resp = client.post(
-            "/create",
+            "/lobbies/create",
             json={"name": "private uninvited join test", "accessibility": "PRIVATE"},
             headers={"authorization": f"Bearer {organizer}"},
         )
         created_lobby = resp.json()
 
         resp = client.post(
-            f"/join/{created_lobby['id']}",
+            f"/lobbies/{created_lobby['id']}/join",
             headers={"authorization": f"Bearer {player}"},
         )
         self.assertEqual(400, resp.status_code)
@@ -172,14 +172,14 @@ class TestLobby(TestCase):
         player = "player"
 
         resp = client.post(
-            "/create",
+            "/lobbies/create",
             json={"name": "private invite join test", "accessibility": "PRIVATE"},
             headers={"authorization": f"Bearer {organizer}"},
         )
         created_lobby = resp.json()
 
         client.post(
-            f"/invite/{created_lobby['id']}",
+            f"/lobbies/{created_lobby['id']}/invite",
             json={"invitees": [player]},
             headers={
                 "authorization": f"Bearer {created_lobby['organizer']['identifier']}"
@@ -187,7 +187,7 @@ class TestLobby(TestCase):
         )
 
         resp = client.post(
-            f"/join/{created_lobby['id']}",
+            f"/lobbies/{created_lobby['id']}/join",
             headers={"authorization": f"Bearer {player}"},
         )
 
@@ -200,14 +200,14 @@ class TestLobby(TestCase):
         self.assertEqual(GameStatus.WAITING_FOR_PLAYERS.name, joined_lobby["status"])
 
     def test_leave_lobby(self):
-        """Any player can join a public lobby"""
+        """A player can leave a lobby themselves"""
         client = get_client()
         player = "player"
 
         created_lobby = lobby_game()
 
         resp = client.post(
-            f"/join/{created_lobby['id']}",
+            f"/lobbies/{created_lobby['id']}/join",
             headers={"authorization": f"Bearer {player}"},
         )
         joined_lobby = resp.json()
@@ -217,7 +217,7 @@ class TestLobby(TestCase):
         self.assertEqual(player, joined_lobby["players"][0]["identifier"])
 
         resp = client.post(
-            f"/leave/lobby/{created_lobby['id']}",
+            f"/lobbies/{created_lobby['id']}/leave",
             headers={"authorization": f"Bearer {player}"},
         )
 
@@ -239,12 +239,12 @@ class TestLobby(TestCase):
         created_lobby = lobby_game()
 
         client.post(
-            f"/join/{created_lobby['id']}",
+            f"/lobbies/{created_lobby['id']}/join",
             headers={"authorization": f"Bearer {player}"},
         )
 
         resp = client.post(
-            f"/start/{created_lobby['id']}",
+            f"/lobbies/{created_lobby['id']}/start",
             headers={"authorization": f"Bearer {player}"},
         )
         self.assertEqual(400, resp.status_code)
@@ -255,7 +255,7 @@ class TestLobby(TestCase):
         created_lobby = lobby_game()
 
         resp = client.post(
-            f"/start/{created_lobby['id']}",
+            f"/lobbies/{created_lobby['id']}/start",
             headers={
                 "authorization": f"Bearer {created_lobby['organizer']['identifier']}"
             },
@@ -277,7 +277,7 @@ class TestLobby(TestCase):
 
         # Unknown user tries to invite - should fail because they're not in the lobby
         resp = client.post(
-            f"/invite/{created_lobby['id']}",
+            f"/lobbies/{created_lobby['id']}/invite",
             json={"invitees": [invitee]},
             headers={"authorization": f"Bearer {unknown_user}"},
         )
@@ -292,7 +292,7 @@ class TestLobby(TestCase):
 
         # Unrecognized player attempts to leave
         resp = client.post(
-            f"/leave/lobby/{created_lobby['id']}",
+            f"/lobbies/{created_lobby['id']}/leave",
             headers={"authorization": f"Bearer {player}"},
         )
 
@@ -307,13 +307,13 @@ class TestLobby(TestCase):
 
         # Another player joins
         client.post(
-            f"/join/{created_lobby['id']}",
+            f"/lobbies/{created_lobby['id']}/join",
             headers={"authorization": f"Bearer {player}"},
         )
 
         # Organizer attempts to leave
         resp = client.post(
-            f"/leave/lobby/{created_lobby['id']}",
+            f"/lobbies/{created_lobby['id']}/leave",
             headers={
                 "authorization": f"Bearer {created_lobby['organizer']['identifier']}"
             },
@@ -328,7 +328,7 @@ class TestLobby(TestCase):
         created_lobby = lobby_game()
 
         resp = client.post(
-            "/lobbies",
+            "/lobbies/search",
             json={"searchText": "test"},
             headers={
                 "authorization": f"Bearer {created_lobby['organizer']['identifier']}"
