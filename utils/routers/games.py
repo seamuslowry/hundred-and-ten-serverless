@@ -39,7 +39,7 @@ GameResponse = Union[StartedGame, CompletedGame]
 router = APIRouter(prefix="/games", tags=["Games"])
 
 
-@router.post("/bid/{game_id}", response_model=GameResponse)
+@router.post("/{game_id}/bid", response_model=GameResponse)
 def bid(game_id: str, body: BidRequest, identity: Identity = Depends(get_identity)):
     """Bid in a 110 game"""
     game = GameService.get(game_id)
@@ -52,7 +52,7 @@ def bid(game_id: str, body: BidRequest, identity: Identity = Depends(get_identit
     return serialize.game(game, identity.id, initial_event_knowledge)
 
 
-@router.post("/discard/{game_id}", response_model=GameResponse)
+@router.post("/{game_id}/discard", response_model=GameResponse)
 def discard(
     game_id: str, body: DiscardRequest, identity: Identity = Depends(get_identity)
 ):
@@ -72,7 +72,7 @@ def discard(
     return serialize.game(game, identity.id, initial_event_knowledge)
 
 
-@router.get("/info/{game_id}", response_model=GameResponse)
+@router.get("/{game_id}", response_model=GameResponse)
 def game_info(game_id: str, identity: Identity = Depends(get_identity)):
     """Retrieve 110 game."""
     game = GameService.get(game_id)
@@ -80,7 +80,7 @@ def game_info(game_id: str, identity: Identity = Depends(get_identity)):
     return serialize.game(game, identity.id)
 
 
-@router.get("/players/game/{game_id}", response_model=list[User])
+@router.get("/{game_id}/players", response_model=list[User])
 def game_players(game_id: str, _identity: Identity = Depends(get_identity)):
     """Retrieve players in a 110 game."""
     game = GameService.get(game_id)
@@ -90,7 +90,7 @@ def game_players(game_id: str, _identity: Identity = Depends(get_identity)):
     return [serialize.user(u) for u in UserService.by_identifiers(people_ids)]
 
 
-@router.post("/leave/game/{game_id}", response_model=GameResponse)
+@router.post("/{game_id}/leave", response_model=GameResponse)
 def leave_game(game_id: str, identity: Identity = Depends(get_identity)):
     """Leave a 110 game (automates the player)"""
     game = GameService.get(game_id)
@@ -102,7 +102,7 @@ def leave_game(game_id: str, identity: Identity = Depends(get_identity)):
     return serialize.game(game, identity.id, initial_event_knowledge)
 
 
-@router.post("/play/{game_id}", response_model=GameResponse)
+@router.post("/{game_id}/play", response_model=GameResponse)
 def play(game_id: str, body: PlayRequest, identity: Identity = Depends(get_identity)):
     """Play a card in a 110 game"""
     game = GameService.get(game_id)
@@ -120,7 +120,7 @@ def play(game_id: str, body: PlayRequest, identity: Identity = Depends(get_ident
     return serialize.game(game, identity.id, initial_event_knowledge)
 
 
-@router.post("/unpass/{game_id}", response_model=GameResponse)
+@router.post("/{game_id}/unpass", response_model=GameResponse)
 def rescind_prepass(game_id: str, identity: Identity = Depends(get_identity)):
     """Unpass in a 110 game"""
     game = GameService.get(game_id)
@@ -133,7 +133,7 @@ def rescind_prepass(game_id: str, identity: Identity = Depends(get_identity)):
     return serialize.game(game, identity.id, initial_event_knowledge)
 
 
-@router.post("/games", response_model=list[GameResponse])
+@router.post("/search", response_model=list[GameResponse])
 def search_games(body: SearchGamesRequest, identity: Identity = Depends(get_identity)):
     """Search for games"""
     return [
@@ -151,7 +151,7 @@ def search_games(body: SearchGamesRequest, identity: Identity = Depends(get_iden
     ]
 
 
-@router.post("/select/{game_id}", response_model=GameResponse)
+@router.post("/{game_id}/select", response_model=GameResponse)
 def select_trump(
     game_id: str,
     body: SelectTrumpRequest,
@@ -168,7 +168,7 @@ def select_trump(
     return serialize.game(game, identity.id, initial_event_knowledge)
 
 
-@router.get("/suggestion/{game_id}", response_model=SuggestionResponse)
+@router.get("/{game_id}/suggestion", response_model=SuggestionResponse)
 def suggestion(game_id: str, identity: Identity = Depends(get_identity)):
     """Ask for a suggestion in a 110 game"""
     game = GameService.get(game_id)
