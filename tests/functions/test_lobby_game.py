@@ -249,17 +249,17 @@ class TestLobby(TestCase):
     def test_start_game(self):
         """The organizer can start the game"""
         client = get_client()
-        created_lobby = lobby_game()
-        organizer = created_lobby["organizer"]["identifier"]
+        lobby = lobby_game()
+        organizer = lobby["organizer"]["identifier"]
 
         resp = client.post(
-            f"/players/{organizer}/lobbies/{created_lobby['id']}/start",
+            f"/players/{organizer}/lobbies/{lobby['id']}/start",
             headers={"authorization": f"Bearer {organizer}"},
         )
 
         game = resp.json()
 
-        self.assertEqual(created_lobby["id"], game["id"])
+        self.assertEqual(lobby["id"], game["id"])
         self.assertEqual(4, len(game["round"]["players"]))
         self.assertEqual(RoundStatus.BIDDING.name, game["status"])
 
