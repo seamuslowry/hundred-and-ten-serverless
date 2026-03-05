@@ -26,7 +26,7 @@ class TestPlayingGame(TestCase):
 
         # bid
         resp = client.post(
-            f"/games/{created_game['id']}/bid",
+            f"/players/{DEFAULT_ID}/games/{created_game['id']}/bid",
             json={"amount": BidAmount.SHOOT_THE_MOON},
             headers={"authorization": f"Bearer {DEFAULT_ID}"},
         )
@@ -40,7 +40,7 @@ class TestPlayingGame(TestCase):
 
         # select trump
         resp = client.post(
-            f"/games/{created_game['id']}/select",
+            f"/players/{DEFAULT_ID}/games/{created_game['id']}/select",
             json={"suit": SelectableSuit.CLUBS.name},
             headers={"authorization": f"Bearer {DEFAULT_ID}"},
         )
@@ -56,7 +56,7 @@ class TestPlayingGame(TestCase):
 
         # discard
         resp = client.post(
-            f"/games/{created_game['id']}/discard",
+            f"/players/{DEFAULT_ID}/games/{created_game['id']}/discard",
             json={"cards": []},
             headers={"authorization": f"Bearer {DEFAULT_ID}"},
         )
@@ -70,7 +70,7 @@ class TestPlayingGame(TestCase):
 
         # play
         resp = client.post(
-            f"/games/{created_game['id']}/play",
+            f"/players/{DEFAULT_ID}/games/{created_game['id']}/play",
             json={"card": suggested_play["card"]},
             headers={"authorization": f"Bearer {DEFAULT_ID}"},
         )
@@ -93,7 +93,7 @@ class TestPlayingGame(TestCase):
 
         # prepass
         resp = client.post(
-            f"/games/{game['id']}/bid",
+            f"/players/{non_active_player['identifier']}/games/{game['id']}/bid",
             json={"amount": BidAmount.PASS},
             headers={"authorization": f"Bearer {non_active_player['identifier']}"},
         )
@@ -109,7 +109,7 @@ class TestPlayingGame(TestCase):
 
         # rescind prepass
         resp = client.post(
-            f"/games/{game['id']}/unpass",
+            f"/players/{non_active_player['identifier']}/games/{game['id']}/unpass",
             headers={"authorization": f"Bearer {non_active_player['identifier']}"},
         )
         game = resp.json()
@@ -133,7 +133,7 @@ class TestPlayingGame(TestCase):
 
         # leave
         resp = client.post(
-            f"/games/{original_game['id']}/leave",
+            f"/players/{DEFAULT_ID}/games/{original_game['id']}/leave",
             headers={"authorization": f"Bearer {active_player['identifier']}"},
         )
         game = resp.json()

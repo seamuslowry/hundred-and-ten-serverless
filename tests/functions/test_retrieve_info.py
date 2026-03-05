@@ -24,7 +24,7 @@ class TestRetrieveInfo(TestCase):
 
         # search games
         resp = client.post(
-            "/games/search",
+            f"/players/{DEFAULT_ID}/games/search",
             json={"winner": game["winner"]["identifier"]},
             headers={"authorization": f"Bearer {DEFAULT_ID}"},
         )
@@ -35,7 +35,7 @@ class TestRetrieveInfo(TestCase):
         """Invalid game ID returns 400"""
         client = get_client()
         resp = client.get(
-            "/games/not-an-id",
+            f"/players/{DEFAULT_ID}/games/not-an-id",
             headers={"authorization": f"Bearer {DEFAULT_ID}"},
         )
         self.assertEqual(400, resp.status_code)
@@ -47,7 +47,7 @@ class TestRetrieveInfo(TestCase):
 
         # get that game's info
         resp = client.get(
-            f"/games/{original_game['id']}",
+            f"/players/{DEFAULT_ID}/games/{original_game['id']}",
             headers={"authorization": f"Bearer {DEFAULT_ID}"},
         )
         game = resp.json()
@@ -64,7 +64,7 @@ class TestRetrieveInfo(TestCase):
 
         # get that game's players
         resp = client.get(
-            f"/games/{original_game['id']}/players",
+            f"/players/{DEFAULT_ID}/games/{original_game['id']}/players",
             headers={"authorization": f"Bearer {DEFAULT_ID}"},
         )
         retrieved_users = resp.json()
