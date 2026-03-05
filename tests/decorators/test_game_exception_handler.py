@@ -120,3 +120,16 @@ class TestAuthentication(TestCase):
             headers={"authorization": "Bearer bad.token"},
         )
         self.assertEqual(401, resp.status_code)
+
+    @patch(
+        "utils.auth.depends.verify_google_token",
+        return_value=Identity(id="user-123", name="Test User"),
+    )
+    def test_raises_authorization_error_when_wrong_idenity(self, _):
+        """Missing Bearer token returns 403"""
+        client = get_client()
+        resp = client.get(
+            "/players/some-id/search",
+            headers={"authorization": "Bearer unknown"},
+        )
+        self.assertEqual(403, resp.status_code)
