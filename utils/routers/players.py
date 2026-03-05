@@ -26,7 +26,7 @@ def search_users(
 
 
 @router.put("", response_model=User)
-def put_self(player_id: str, body: UpdateUserRequest):
+def put_user(player_id: str, body: UpdateUserRequest):
     """Update the user (overwrite)"""
     provided_user = deserialize.user(player_id, body)
 
@@ -34,7 +34,7 @@ def put_self(player_id: str, body: UpdateUserRequest):
 
 
 @router.post("", response_model=User)
-def post_self(player_id, body: UpdateUserRequest):
+def post_user(player_id, body: UpdateUserRequest):
     """Create the user (only if not exists)"""
     existing_user = UserService.by_identifier(player_id)
     provided_user = deserialize.user(player_id, body)
