@@ -4,9 +4,8 @@ The router for lobby operations.
 
 import logging
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
-from utils.auth import get_authorized_identity
 from utils.dtos.db import SearchLobby
 from utils.dtos.requests import (
     CreateLobbyRequest,
@@ -24,7 +23,6 @@ MIN_PLAYERS = 4
 router = APIRouter(
     prefix="/players/{player_id}/lobbies",
     tags=["Lobbies"],
-    dependencies=[Depends(get_authorized_identity)],
 )
 
 

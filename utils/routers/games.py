@@ -4,9 +4,8 @@ The router for game operations.
 
 from typing import Union
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
-from utils.auth import get_authorized_identity
 from utils.dtos.db import SearchGame
 from utils.dtos.requests import (
     BidRequest,
@@ -39,7 +38,6 @@ GameResponse = Union[StartedGame, CompletedGame]
 router = APIRouter(
     prefix="/players/{player_id}/games",
     tags=["Games"],
-    dependencies=[Depends(get_authorized_identity)],
 )
 
 

@@ -4,9 +4,8 @@ The router for user operations.
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Query
 
-from utils.auth import get_authorized_identity
 from utils.dtos.requests import UpdateUserRequest
 from utils.dtos.responses import User
 from utils.mappers.client import deserialize, serialize
@@ -15,7 +14,6 @@ from utils.services import UserService
 router = APIRouter(
     prefix="/players/{player_id}",
     tags=["Players"],
-    dependencies=[Depends(get_authorized_identity)],
 )
 
 
