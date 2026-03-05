@@ -6,14 +6,14 @@ import azure.functions as func
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from utils.auth.depends import get_identity
+from utils.auth import get_authorized_identity
 from utils.errors import AuthenticationError, AuthorizationError
 from utils.models import (
     HundredAndTenError,
 )
 from utils.routers import games, lobbies, players
 
-fastapi_app = FastAPI(dependencies=[Depends(get_identity)])
+fastapi_app = FastAPI(dependencies=[Depends(get_authorized_identity)])
 
 
 # =============================================================================
