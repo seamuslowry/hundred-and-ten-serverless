@@ -20,6 +20,7 @@ dependencies = [
     "fastapi==0.115.8",
     "google-auth==2.48.0",
     "hundredandten==2.1.1",
+    "pydantic>=2.0",
     "pymongo==4.16.0",
     "requests==2.32.5",
 ]

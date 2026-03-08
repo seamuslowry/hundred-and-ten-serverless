@@ -5,7 +5,7 @@ import os
 from pymongo import MongoClient
 from pymongo.collection import Collection
 
-from utils.dtos import db
+from utils.models import db
 
 connection_string = os.environ.get(
     "MongoDb", "mongodb://root:rootpassword@localhost:27017"

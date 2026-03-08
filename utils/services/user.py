@@ -12,7 +12,9 @@ MAX = 20
 def save(user: User) -> User:
     """Save the provided user to the DB"""
     user_client.update_one(
-        {"identifier": user.identifier}, {"$set": serialize.user(user)}, upsert=True
+        {"identifier": user.identifier},
+        {"$set": serialize.user(user).model_dump(by_alias=True, exclude_none=True)},
+        upsert=True,
     )
     return user
 

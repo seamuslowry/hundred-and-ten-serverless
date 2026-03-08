@@ -1,15 +1,14 @@
 """A module to convert models to DB DTOs"""
 
-from bson import ObjectId
-
 from utils import models
-from utils.dtos import db
+from utils.models import db
 
 
 def lobby(m_lobby: models.Lobby) -> db.Lobby:
     """Convert a Lobby model to its DB DTO"""
-    result = db.Lobby(
+    return db.Lobby(
         type="lobby",
+        id=m_lobby.id,
         name=m_lobby.name,
         seed=m_lobby.seed,
         accessibility=m_lobby.accessibility.name,
@@ -17,11 +16,6 @@ def lobby(m_lobby: models.Lobby) -> db.Lobby:
         players=list(map(__person, m_lobby.players)),
         invitees=list(map(__person, m_lobby.invitees)),
     )
-
-    if m_lobby.id is not None:
-        result["_id"] = ObjectId(m_lobby.id)
-
-    return result
 
 
 def game(m_game: models.Game) -> db.Game:
@@ -32,7 +26,7 @@ def game(m_game: models.Game) -> db.Game:
 
     return db.Game(
         type="game",
-        _id=ObjectId(m_game.id),
+        id=m_game.id,
         name=m_game.name,
         seed=m_game.seed,
         accessibility=m_game.accessibility.name,
@@ -67,25 +61,21 @@ def __move(move: models.Action) -> db.Move:
     """Convert a game action to a DB move"""
     if isinstance(move, models.Bid):
         return db.BidMove(
-            type="bid",
             identifier=move.identifier,
             amount=move.amount.value,
         )
     if isinstance(move, models.SelectTrump):
         return db.SelectTrumpMove(
-            type="select_trump",
             identifier=move.identifier,
             suit=move.suit.name,
         )
     if isinstance(move, models.Discard):
         return db.DiscardMove(
-            type="discard",
             identifier=move.identifier,
             cards=list(map(__card, move.cards)),
         )
     if isinstance(move, models.Play):
         return db.PlayMove(
-            type="play",
             identifier=move.identifier,
             card=__card(move.card),
         )
