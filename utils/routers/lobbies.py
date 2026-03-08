@@ -6,6 +6,7 @@ import logging
 
 from fastapi import APIRouter
 
+from src.main.mappers.client import serialize
 from src.main.models.client.requests import (
     CreateLobbyRequest,
     InviteRequest,
@@ -13,9 +14,13 @@ from src.main.models.client.requests import (
 )
 from src.main.models.client.responses import StartedGame, User, WaitingGame
 from src.main.models.db.db import SearchLobby
-from src.main.mappers.client import serialize
-from utils.models import Accessibility, HundredAndTenError, Lobby
-from utils.models.person import Human, NaiveCpu
+from src.main.models.internal import (
+    Accessibility,
+    Human,
+    HundredAndTenError,
+    Lobby,
+    NaiveCpu,
+)
 from utils.services import LobbyService, UserService
 
 MIN_PLAYERS = 4

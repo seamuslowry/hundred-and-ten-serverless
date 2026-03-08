@@ -7,10 +7,10 @@ from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from src.main.auth import get_authorized_identity
-from utils.errors import AuthenticationError, AuthorizationError
-from utils.models import (
+from src.main.models.internal import (
     HundredAndTenError,
 )
+from utils.errors import AuthenticationError, AuthorizationError
 from utils.routers import games, lobbies, players
 
 fastapi_app = FastAPI(dependencies=[Depends(get_authorized_identity)])

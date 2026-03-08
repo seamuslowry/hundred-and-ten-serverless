@@ -11,8 +11,8 @@ from hundredandten.constants import RoundStatus
 from hundredandten.round import Round
 from hundredandten.state import GameState
 
-from utils.constants import Accessibility, GameStatus
-from utils.models.person import NaiveCpu, Person
+from .constants import Accessibility, GameStatus
+from .person import NaiveCpu, Person
 
 
 class PersonGroup(list[Person]):

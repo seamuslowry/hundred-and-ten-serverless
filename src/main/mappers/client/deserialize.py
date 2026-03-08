@@ -1,32 +1,38 @@
 """A module to convert client objects to models"""
 
 from src.main.models.client import requests
-from utils import models
+from src.main.models.internal import (
+    Card,
+    CardNumber,
+    SelectableSuit,
+    UnselectableSuit,
+    User,
+)
 
 
-def user(identifier: str, c_user: requests.UpdateUserRequest) -> models.User:
+def user(identifier: str, c_user: requests.UpdateUserRequest) -> User:
     """Convert a User model from a passed client request and user"""
-    return models.User(
+    return User(
         identifier=identifier,
         name=c_user.name,
         picture_url=c_user.picture_url,
     )
 
 
-def card(c_card: requests.CardRequest) -> models.Card:
+def card(c_card: requests.CardRequest) -> Card:
     """Create a card object from a passed client card"""
     suit = None
 
     try:
-        suit = models.SelectableSuit[c_card.suit.value]
+        suit = SelectableSuit[c_card.suit.value]
     except KeyError:
         pass
 
     try:
-        suit = models.UnselectableSuit[c_card.suit.value]
+        suit = UnselectableSuit[c_card.suit.value]
     except KeyError:
         pass
 
     assert suit
 
-    return models.Card(suit=suit, number=models.CardNumber[c_card.number.value])
+    return Card(suit=suit, number=CardNumber[c_card.number.value])

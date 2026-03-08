@@ -36,10 +36,10 @@ from hundredandten.round import Round
 from hundredandten.state import GameState
 from hundredandten.trick import Trick
 
-from utils.constants import Accessibility, GameStatus
-from utils.models.game import Game, Lobby, PersonGroup
-from utils.models.person import Human, NaiveCpu, Person
-from utils.models.user import User
+from .constants import Accessibility, GameStatus
+from .game import Game, Lobby, PersonGroup
+from .person import Human, NaiveCpu, Person
+from .user import User
 
 __all__ = [
     # Engine

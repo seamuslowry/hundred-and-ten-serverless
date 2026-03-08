@@ -4,14 +4,14 @@ from unittest import TestCase
 
 from hundredandten.events import Event
 
+from src.main.mappers.client import deserialize as client_deserialize
+from src.main.mappers.client import serialize as client_serialize
+from src.main.mappers.db import deserialize as db_deserialize
 from src.main.models.client.constants import CardNumberName, Suit
 from src.main.models.client.requests import CardRequest
 from src.main.models.db.db import Game as DbGame
 from src.main.models.db.db import Person as DbPerson
-from src.main.mappers.client import deserialize as client_deserialize
-from src.main.mappers.client import serialize as client_serialize
-from src.main.mappers.db import deserialize as db_deserialize
-from utils.models import Action, Card, CardNumber, UnselectableSuit
+from src.main.models.internal import Action, Card, CardNumber, UnselectableSuit
 
 
 class TestMapperEdgeCases(TestCase):

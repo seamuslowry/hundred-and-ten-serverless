@@ -2,8 +2,8 @@
 
 from unittest import TestCase
 
+from src.main.models.internal import GameStatus, RoundStatus
 from src.tests.helpers import get_client, lobby_game
-from utils.models import GameStatus, RoundStatus
 
 
 class TestLobby(TestCase):

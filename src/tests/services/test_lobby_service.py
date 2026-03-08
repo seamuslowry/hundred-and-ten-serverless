@@ -5,7 +5,7 @@ from unittest import TestCase
 from bson import ObjectId
 
 from src.main.models.db.db import SearchLobby
-from utils.models import Human, Lobby
+from src.main.models.internal import Human, Lobby
 from utils.services import LobbyService
 
 

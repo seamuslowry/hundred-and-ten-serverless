@@ -2,6 +2,7 @@
 
 from unittest import TestCase
 
+from src.main.models.internal import BidAmount, RoundStatus, SelectableSuit
 from src.tests.helpers import (
     DEFAULT_ID,
     get_client,
@@ -9,7 +10,6 @@ from src.tests.helpers import (
     lobby_game,
     started_game,
 )
-from utils.models import BidAmount, RoundStatus, SelectableSuit
 
 
 class TestPlayingGame(TestCase):

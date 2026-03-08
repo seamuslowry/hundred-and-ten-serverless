@@ -5,7 +5,7 @@ from typing import Any
 from fastapi.testclient import TestClient
 
 from function_app import fastapi_app
-from utils import models
+from src.main.models.internal import User
 
 DEFAULT_ID = "id"
 
@@ -30,15 +30,15 @@ def lobby_game(
 
 def create_user(identifier: str, name: str = "") -> dict[str, Any]:
     """Attempt to create a user for the first time"""
-    return __user("POST", models.User(identifier=identifier, name=name))
+    return __user("POST", User(identifier=identifier, name=name))
 
 
 def update_user(identifier: str, name: str = "") -> dict[str, Any]:
     """Update an existing user if possible"""
-    return __user("PUT", models.User(identifier=identifier, name=name))
+    return __user("PUT", User(identifier=identifier, name=name))
 
 
-def __user(method: str, user: models.User) -> dict[str, Any]:
+def __user(method: str, user: User) -> dict[str, Any]:
     """Update an existing user if possible"""
     client = get_client()
     resp = client.request(

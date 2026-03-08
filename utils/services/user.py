@@ -3,7 +3,7 @@
 from typing import Optional
 
 from src.main.mappers.db import deserialize, serialize
-from utils.models import User
+from src.main.models.internal import User
 from utils.services.mongo import user_client
 
 MAX = 20

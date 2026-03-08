@@ -3,7 +3,7 @@
 from time import time
 from unittest import TestCase
 
-from utils.models import User
+from src.main.models.internal import User
 from utils.services import UserService
 
 

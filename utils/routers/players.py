@@ -6,9 +6,9 @@ from typing import Optional
 
 from fastapi import APIRouter, Query
 
+from src.main.mappers.client import deserialize, serialize
 from src.main.models.client.requests import UpdateUserRequest
 from src.main.models.client.responses import User
-from src.main.mappers.client import deserialize, serialize
 from utils.services import UserService
 
 router = APIRouter(

@@ -6,6 +6,7 @@ from typing import Union
 
 from fastapi import APIRouter
 
+from src.main.mappers.client import deserialize, serialize
 from src.main.models.client.requests import (
     BidRequest,
     DiscardRequest,
@@ -20,8 +21,7 @@ from src.main.models.client.responses import (
     User,
 )
 from src.main.models.db.db import SearchGame
-from src.main.mappers.client import deserialize, serialize
-from utils.models import (
+from src.main.models.internal import (
     Bid,
     BidAmount,
     Discard,
