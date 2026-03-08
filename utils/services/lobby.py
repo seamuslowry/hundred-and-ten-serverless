@@ -3,9 +3,9 @@
 from bson import ObjectId
 from bson.errors import InvalidId
 
-from utils.dtos.db import SearchLobby
 from utils.mappers.db import deserialize, serialize
 from utils.models import Accessibility, Game, Lobby
+from utils.models.db import SearchLobby
 from utils.services.game import save as save_game
 from utils.services.mongo import lobby_client
 
@@ -13,12 +13,14 @@ from utils.services.mongo import lobby_client
 def save(lobby: Lobby) -> Lobby:
     """Save the provided lobby to the DB"""
     if lobby.id is None:
-        result = lobby_client.insert_one(serialize.lobby(lobby))
+        result = lobby_client.insert_one(
+            serialize.lobby(lobby).model_dump(by_alias=True, exclude_none=True)
+        )
         lobby.id = str(result.inserted_id)
     else:
         lobby_client.update_one(
             {"_id": ObjectId(lobby.id), "type": "lobby"},
-            {"$set": serialize.lobby(lobby)},
+            {"$set": serialize.lobby(lobby).model_dump(by_alias=True, exclude={"id"})},
         )
     return lobby
 
@@ -46,13 +48,13 @@ def search(search_lobby: SearchLobby, max_count: int) -> list[Lobby]:
             lobby_client.find(
                 {
                     "type": "lobby",
-                    "name": {"$regex": search_lobby["name"], "$options": "i"},
+                    "name": {"$regex": search_lobby.name, "$options": "i"},
                     "$or": [
                         {"accessibility": Accessibility.PUBLIC.name},
                         {
                             "people": {
                                 "$elemMatch": {
-                                    "identifier": {"$eq": search_lobby["client"]}
+                                    "identifier": {"$eq": search_lobby.client}
                                 }
                             }
                         },

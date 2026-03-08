@@ -6,7 +6,7 @@ import logging
 
 from fastapi import APIRouter
 
-from utils.dtos.db import SearchLobby
+from utils.models.db import SearchLobby
 from utils.dtos.requests import (
     CreateLobbyRequest,
     InviteRequest,

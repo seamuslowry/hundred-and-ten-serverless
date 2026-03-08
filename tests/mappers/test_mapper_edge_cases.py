@@ -5,7 +5,6 @@ from unittest import TestCase
 from hundredandten.events import Event
 
 from utils.constants import CardNumberName, Suit
-from utils.dtos.db import Game as DbGame
 from utils.dtos.db import Person as DbPerson
 from utils.dtos.requests import CardRequest
 from utils.mappers.client import deserialize as client_deserialize
@@ -30,20 +29,19 @@ class TestMapperEdgeCases(TestCase):
         self.assertRaises(
             ValueError,
             db_deserialize.game,
-            DbGame(
-                type="game",
-                id="test",
-                name="test",
-                seed="test",
-                accessibility="PUBLIC",
-                organizer=DbPerson(identifier="dummy", automate=False),
-                players=[],
-                # ignoring type because this wants to test bad value
-                moves=[{"identifier": identifier, "type": "unknown"}],  # type: ignore
-                status="PLAYING",
-                winner=None,
-                active_player=None,
-            ),
+            {
+                "type": "game",
+                "name": "test",
+                "seed": "test",
+                "accessibility": "PUBLIC",
+                "organizer": DbPerson(identifier="dummy", automate=False).model_dump(),
+                "players": [],
+                # intentionally invalid move type to test error handling
+                "moves": [{"identifier": identifier, "type": "unknown"}],
+                "status": "PLAYING",
+                "winner": None,
+                "active_player": None,
+            },
         )
 
     def test_card_with_unselectable_suit(self):

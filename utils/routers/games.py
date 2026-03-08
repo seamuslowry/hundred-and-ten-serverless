@@ -6,7 +6,7 @@ from typing import Union
 
 from fastapi import APIRouter
 
-from utils.dtos.db import SearchGame
+from utils.models.db import SearchGame
 from utils.dtos.requests import (
     BidRequest,
     DiscardRequest,
