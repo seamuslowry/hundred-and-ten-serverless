@@ -10,7 +10,7 @@ from src.main.auth import get_authorized_identity
 from src.main.models.internal import (
     HundredAndTenError,
 )
-from utils.errors import AuthenticationError, AuthorizationError
+from src.main.models.internal.errors import AuthenticationError, AuthorizationError
 from src.main.routers import games, lobbies, players
 
 fastapi_app = FastAPI(dependencies=[Depends(get_authorized_identity)])

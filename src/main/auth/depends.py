@@ -3,7 +3,7 @@
 from fastapi import Depends, Path
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from utils.errors import AuthenticationError, AuthorizationError
+from src.main.models.internal.errors import AuthenticationError, AuthorizationError
 
 from .google import verify_google_token
 from .identity import Identity
