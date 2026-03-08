@@ -3,7 +3,7 @@
 from time import time
 from unittest import TestCase
 
-from _tests.helpers import (
+from src.tests.helpers import (
     DEFAULT_ID,
     completed_game,
     create_user,

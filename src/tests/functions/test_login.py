@@ -3,7 +3,7 @@
 from time import time
 from unittest import TestCase
 
-from _tests.helpers import create_user, update_user
+from src.tests.helpers import create_user, update_user
 
 
 class TestLogin(TestCase):

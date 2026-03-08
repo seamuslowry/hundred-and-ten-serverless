@@ -3,7 +3,7 @@
 from unittest import TestCase
 from unittest.mock import patch
 
-from _tests.helpers import DEFAULT_ID, get_client
+from src.tests.helpers import DEFAULT_ID, get_client
 from utils.auth import Identity
 from utils.errors import AuthorizationError
 

@@ -2,7 +2,7 @@
 
 from unittest import TestCase
 
-from _tests.helpers import get_client, lobby_game
+from src.tests.helpers import get_client, lobby_game
 from utils.models import GameStatus, RoundStatus
 
 
