@@ -18,7 +18,7 @@ dependencies = [
     "azure-functions==1.24.0",
     "cachecontrol==0.14.4",
     "fastapi==0.115.8",
-    "google-auth==2.48.0",
+    "google-auth==2.49.0",
     "hundredandten==2.1.1",
     "pymongo==4.16.0",
     "requests==2.32.5",
