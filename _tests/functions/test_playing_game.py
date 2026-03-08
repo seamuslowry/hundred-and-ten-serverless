@@ -2,7 +2,7 @@
 
 from unittest import TestCase
 
-from tests.helpers import (
+from _tests.helpers import (
     DEFAULT_ID,
     get_client,
     get_suggestion,
