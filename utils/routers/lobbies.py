@@ -11,8 +11,8 @@ from src.main.models.client.requests import (
     InviteRequest,
     SearchLobbiesRequest,
 )
+from src.main.models.client.responses import StartedGame, User, WaitingGame
 from utils.dtos.db import SearchLobby
-from utils.dtos.responses import StartedGame, User, WaitingGame
 from utils.mappers.client import serialize
 from utils.models import Accessibility, HundredAndTenError, Lobby
 from utils.models.person import Human, NaiveCpu

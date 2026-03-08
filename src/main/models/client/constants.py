@@ -1,6 +1,5 @@
 """Constant values used in the public API"""
 
-
 from enum import Enum
 
 

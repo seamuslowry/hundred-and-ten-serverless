@@ -7,7 +7,7 @@ from typing import Optional
 from fastapi import APIRouter, Query
 
 from src.main.models.client.requests import UpdateUserRequest
-from utils.dtos.responses import User
+from src.main.models.client.responses import User
 from utils.mappers.client import deserialize, serialize
 from utils.services import UserService
 

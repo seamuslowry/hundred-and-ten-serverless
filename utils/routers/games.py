@@ -13,13 +13,13 @@ from src.main.models.client.requests import (
     SearchGamesRequest,
     SelectTrumpRequest,
 )
-from utils.dtos.db import SearchGame
-from utils.dtos.responses import (
+from src.main.models.client.responses import (
     CompletedGame,
     StartedGame,
     SuggestionResponse,
     User,
 )
+from utils.dtos.db import SearchGame
 from utils.mappers.client import deserialize, serialize
 from utils.models import (
     Bid,

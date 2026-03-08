@@ -2,9 +2,9 @@
 
 from typing import Optional
 
+from src.main.models.client import responses
 from src.main.models.client.constants import CardNumberName, SelectableSuit, Suit
 from utils import models
-from utils.dtos import responses
 
 
 def user(m_user: models.User) -> responses.User:
