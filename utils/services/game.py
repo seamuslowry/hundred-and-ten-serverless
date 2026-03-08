@@ -4,7 +4,7 @@ from bson import ObjectId
 from bson.errors import InvalidId
 
 from src.main.models.db.db import SearchGame
-from utils.mappers.db import deserialize, serialize
+from src.main.mappers.db import deserialize, serialize
 from utils.models import Accessibility, Game
 from utils.services.mongo import game_client
 

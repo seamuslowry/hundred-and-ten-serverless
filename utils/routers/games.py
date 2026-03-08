@@ -20,7 +20,7 @@ from src.main.models.client.responses import (
     User,
 )
 from src.main.models.db.db import SearchGame
-from utils.mappers.client import deserialize, serialize
+from src.main.mappers.client import deserialize, serialize
 from utils.models import (
     Bid,
     BidAmount,

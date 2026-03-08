@@ -13,7 +13,7 @@ from src.main.models.client.requests import (
 )
 from src.main.models.client.responses import StartedGame, User, WaitingGame
 from src.main.models.db.db import SearchLobby
-from utils.mappers.client import serialize
+from src.main.mappers.client import serialize
 from utils.models import Accessibility, HundredAndTenError, Lobby
 from utils.models.person import Human, NaiveCpu
 from utils.services import LobbyService, UserService

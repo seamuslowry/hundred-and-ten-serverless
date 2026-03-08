@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from utils.mappers.db import deserialize, serialize
+from src.main.mappers.db import deserialize, serialize
 from utils.models import User
 from utils.services.mongo import user_client
 
