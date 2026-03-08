@@ -1,7 +1,7 @@
 """A module to convert DB DTOs to models"""
 
+from src.main.models.db import db
 from utils import models
-from utils.dtos import db
 from utils.models.game import PersonGroup
 
 

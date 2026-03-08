@@ -3,7 +3,7 @@
 from bson import ObjectId
 from bson.errors import InvalidId
 
-from utils.dtos.db import SearchLobby
+from src.main.models.db.db import SearchLobby
 from utils.mappers.db import deserialize, serialize
 from utils.models import Accessibility, Game, Lobby
 from utils.services.game import save as save_game

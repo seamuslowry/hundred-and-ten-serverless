@@ -2,8 +2,8 @@
 
 from bson import ObjectId
 
+from src.main.models.db import db
 from utils import models
-from utils.dtos import db
 from utils.models.person import NaiveCpu
 
 

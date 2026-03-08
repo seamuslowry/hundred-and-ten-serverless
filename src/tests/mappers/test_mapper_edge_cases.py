@@ -6,8 +6,8 @@ from hundredandten.events import Event
 
 from src.main.models.client.constants import CardNumberName, Suit
 from src.main.models.client.requests import CardRequest
-from utils.dtos.db import Game as DbGame
-from utils.dtos.db import Person as DbPerson
+from src.main.models.db.db import Game as DbGame
+from src.main.models.db.db import Person as DbPerson
 from utils.mappers.client import deserialize as client_deserialize
 from utils.mappers.client import serialize as client_serialize
 from utils.mappers.db import deserialize as db_deserialize
