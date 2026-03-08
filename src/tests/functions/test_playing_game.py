@@ -1,0 +1,190 @@
+"""Playing Game unit tests"""
+
+from unittest import TestCase
+
+from src.main.models.internal import BidAmount, RoundStatus, SelectableSuit
+from src.tests.helpers import (
+    DEFAULT_ID,
+    get_client,
+    get_suggestion,
+    lobby_game,
+    started_game,
+)
+
+
+class TestPlayingGame(TestCase):
+    """Unit tests to ensure games that are in progress behave as expected"""
+
+    def test_perform_round_actions(self):
+        """A round of the game can be played"""
+        client = get_client()
+        created_game = started_game()
+        self.assertEqual(RoundStatus.BIDDING.name, created_game["status"])
+
+        # assert that current suggestion is a bid
+        suggested_bid = get_suggestion(created_game["id"])
+        assert "amount" in suggested_bid
+
+        # bid
+        resp = client.post(
+            f"/players/{DEFAULT_ID}/games/{created_game['id']}/bid",
+            json={"amount": BidAmount.SHOOT_THE_MOON},
+            headers={"authorization": f"Bearer {DEFAULT_ID}"},
+        )
+        game = resp.json()
+
+        self.assertEqual(RoundStatus.TRUMP_SELECTION.name, game["status"])
+
+        # assert that current suggestion is a trump selection
+        suggested_trump = get_suggestion(created_game["id"])
+        assert "suit" in suggested_trump
+
+        # select trump
+        resp = client.post(
+            f"/players/{DEFAULT_ID}/games/{created_game['id']}/select",
+            json={"suit": SelectableSuit.CLUBS.name},
+            headers={"authorization": f"Bearer {DEFAULT_ID}"},
+        )
+        game = resp.json()
+
+        print(game)
+
+        self.assertEqual(RoundStatus.DISCARD.name, game["status"])
+
+        # assert that current suggestion is a discard
+        suggested_discard = get_suggestion(created_game["id"])
+        assert "cards" in suggested_discard
+
+        # discard
+        resp = client.post(
+            f"/players/{DEFAULT_ID}/games/{created_game['id']}/discard",
+            json={"cards": []},
+            headers={"authorization": f"Bearer {DEFAULT_ID}"},
+        )
+        game = resp.json()
+
+        self.assertEqual(RoundStatus.TRICKS.name, game["status"])
+
+        # ask for a suggestion so we know what card we can play
+        suggested_play = get_suggestion(created_game["id"])
+        assert "card" in suggested_play
+
+        # play
+        resp = client.post(
+            f"/players/{DEFAULT_ID}/games/{created_game['id']}/play",
+            json={"card": suggested_play["card"]},
+            headers={"authorization": f"Bearer {DEFAULT_ID}"},
+        )
+        game = resp.json()
+
+        self.assertEqual(RoundStatus.TRICKS.name, game["status"])
+        self.assertEqual(2, len(game["round"]["tricks"]))
+
+    def test_prepass_and_rescind_prepass(self):
+        """A non-active player can prepass and rescind that prepass"""
+        client = get_client()
+        game = started_game()
+
+        non_active_player = next(
+            p
+            for p in game["round"]["players"]
+            if game["round"]["active_player"]
+            and p["identifier"] != game["round"]["active_player"]["identifier"]
+        )
+
+        # prepass
+        resp = client.post(
+            f"/players/{non_active_player['identifier']}/games/{game['id']}/bid",
+            json={"amount": BidAmount.PASS},
+            headers={"authorization": f"Bearer {non_active_player['identifier']}"},
+        )
+        game = resp.json()
+        non_active_player = next(
+            p
+            for p in game["round"]["players"]
+            if p["identifier"] == non_active_player["identifier"]
+        )
+        self.assertTrue(
+            "prepassed" in non_active_player and non_active_player["prepassed"]
+        )
+
+        # rescind prepass
+        resp = client.post(
+            f"/players/{non_active_player['identifier']}/games/{game['id']}/unpass",
+            headers={"authorization": f"Bearer {non_active_player['identifier']}"},
+        )
+        game = resp.json()
+        non_active_player = next(
+            p
+            for p in game["round"]["players"]
+            if p["identifier"] == non_active_player["identifier"]
+        )
+        self.assertTrue("prepassed" in non_active_player)
+        self.assertFalse(
+            "prepassed" in non_active_player and non_active_player["prepassed"]
+        )
+
+    def test_leave_playing_game_as_organizer(self):
+        """A player can leave an active game by automating themselves"""
+        client = get_client()
+        original_game = started_game()
+        active_round_player = original_game["round"]["active_player"]
+        active_player = next(
+            p
+            for p in original_game["players"]
+            if p["identifier"] == active_round_player["identifier"]
+        )
+        assert active_player
+        self.assertFalse(active_player["automate"])
+
+        # leave
+        resp = client.post(
+            f"/players/{DEFAULT_ID}/games/{original_game['id']}/leave",
+            headers={"authorization": f"Bearer {active_player['identifier']}"},
+        )
+        game = resp.json()
+        active_player = next(
+            p for p in game["players"] if p["identifier"] == active_player["identifier"]
+        )
+
+        self.assertTrue(active_player["automate"])
+
+    def test_leave_playing_game_as_player(self):
+        """A player can leave an active game by automating themselves"""
+        client = get_client()
+        lobby = lobby_game()
+        player = "player"
+
+        # join as player
+        client.post(
+            f"/players/{player}/lobbies/{lobby['id']}/join",
+            headers={"authorization": f"Bearer {player}"},
+        )
+
+        # start the game
+        resp = client.post(
+            f"/players/{lobby['organizer']['identifier']}/lobbies/{lobby['id']}/start",
+            headers={"authorization": f"Bearer {lobby['organizer']['identifier']}"},
+        )
+
+        game = resp.json()
+
+        non_active_player = next(
+            p for p in game["players"] if p["identifier"] == player
+        )
+        assert non_active_player
+        self.assertFalse(non_active_player["automate"])
+
+        # leave
+        resp = client.post(
+            f"/players/{non_active_player['identifier']}/games/{game['id']}/leave",
+            headers={"authorization": f"Bearer {non_active_player['identifier']}"},
+        )
+        game = resp.json()
+        non_active_player = next(
+            p
+            for p in game["players"]
+            if p["identifier"] == non_active_player["identifier"]
+        )
+
+        self.assertTrue(non_active_player["automate"])

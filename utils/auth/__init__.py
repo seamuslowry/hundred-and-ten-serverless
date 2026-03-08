@@ -1,7 +1,0 @@
-"""Init the auth module"""
-
-from utils.auth.depends import get_authorized_identity, get_identity
-from utils.auth.google import verify_google_token
-from utils.auth.identity import Identity
-
-__all__ = ["Identity", "verify_google_token", "get_identity", "get_authorized_identity"]
