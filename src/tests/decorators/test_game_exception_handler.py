@@ -30,7 +30,7 @@ class TestErrorHandler(TestCase):
         side_effect=lambda token: Identity(id=token),
     )
     @patch(
-        "utils.routers.games.GameService.get",
+        "src.main.routers.games.GameService.get",
         side_effect=AuthorizationError("forbidden"),
     )
     def test_returns_403_for_authorization_error(self, _mock_get, _mock_auth):
