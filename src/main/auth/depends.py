@@ -3,9 +3,10 @@
 from fastapi import Depends, Path
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from utils.auth.google import verify_google_token
-from utils.auth.identity import Identity
 from utils.errors import AuthenticationError, AuthorizationError
+
+from .google import verify_google_token
+from .identity import Identity
 
 # =============================================================================
 # Authentication dependency

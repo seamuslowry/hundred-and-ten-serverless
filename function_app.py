@@ -6,7 +6,7 @@ import azure.functions as func
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from utils.auth import get_authorized_identity
+from src.main.auth import get_authorized_identity
 from utils.errors import AuthenticationError, AuthorizationError
 from utils.models import (
     HundredAndTenError,

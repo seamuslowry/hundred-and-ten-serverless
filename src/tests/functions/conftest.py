@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from utils.auth import Identity
+from src.main.auth import Identity
 
 
 @pytest.fixture(autouse=True)
@@ -15,7 +15,7 @@ def _mock_google_auth():
     so ``Authorization: Bearer some-user`` resolves to Identity(id="some-user").
     """
     with patch(
-        "utils.auth.depends.verify_google_token",
+        "src.main.auth.depends.verify_google_token",
         side_effect=lambda token: Identity(id=token),
     ):
         yield

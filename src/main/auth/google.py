@@ -6,7 +6,7 @@ import requests
 from google.auth.exceptions import GoogleAuthError
 from google.oauth2 import id_token
 
-from utils.auth.identity import Identity
+from .identity import Identity
 
 # Module-level cached session for Google's public key fetches.
 # CacheControl respects Cache-Control headers from Google's cert endpoint,
