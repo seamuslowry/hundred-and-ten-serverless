@@ -1,7 +1,7 @@
 """A module to convert client objects to models"""
 
+from models.client import requests
 from utils import models
-from utils.dtos import requests
 
 
 def user(identifier: str, c_user: requests.UpdateUserRequest) -> models.User:

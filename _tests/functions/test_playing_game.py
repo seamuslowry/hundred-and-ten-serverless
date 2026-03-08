@@ -6,8 +6,8 @@ from _tests.helpers import (
     DEFAULT_ID,
     get_client,
     get_suggestion,
+    lobby_game,
     started_game,
-    lobby_game
 )
 from utils.models import BidAmount, RoundStatus, SelectableSuit
 
@@ -153,7 +153,7 @@ class TestPlayingGame(TestCase):
         """A player can leave an active game by automating themselves"""
         client = get_client()
         lobby = lobby_game()
-        player = 'player'
+        player = "player"
 
         # join as player
         client.post(
@@ -170,9 +170,7 @@ class TestPlayingGame(TestCase):
         game = resp.json()
 
         non_active_player = next(
-            p
-            for p in game["players"]
-            if p["identifier"] == player
+            p for p in game["players"] if p["identifier"] == player
         )
         assert non_active_player
         self.assertFalse(non_active_player["automate"])
@@ -184,7 +182,9 @@ class TestPlayingGame(TestCase):
         )
         game = resp.json()
         non_active_player = next(
-            p for p in game["players"] if p["identifier"] == non_active_player["identifier"]
+            p
+            for p in game["players"]
+            if p["identifier"] == non_active_player["identifier"]
         )
 
         self.assertTrue(non_active_player["automate"])

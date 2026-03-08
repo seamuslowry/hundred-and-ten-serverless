@@ -31,10 +31,10 @@ from hundredandten.events import (
     TrickStart,
 )
 from hundredandten.hundred_and_ten_error import HundredAndTenError
-from hundredandten.player import Player, RoundPlayer, NaiveAutomatedPlayer
+from hundredandten.player import NaiveAutomatedPlayer, Player, RoundPlayer
 from hundredandten.round import Round
-from hundredandten.trick import Trick
 from hundredandten.state import GameState
+from hundredandten.trick import Trick
 
 from utils.constants import Accessibility, GameStatus
 from utils.models.game import Game, Lobby, PersonGroup

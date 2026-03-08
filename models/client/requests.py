@@ -4,7 +4,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from utils.constants import CardNumberName, SelectableSuit, Suit
+from models.client.constants import CardNumberName, SelectableSuit, Suit
 
 
 class BidRequest(BaseModel):

@@ -2,8 +2,8 @@
 
 from typing import Optional
 
+from models.client.constants import CardNumberName, SelectableSuit, Suit
 from utils import models
-from utils.constants import CardNumberName, SelectableSuit, Suit
 from utils.dtos import responses
 
 
@@ -75,9 +75,7 @@ def events(
     return [__event(e, client_identifier) for e in m_events]
 
 
-def suggestion(
-    m_suggestion: models.Action
-) -> responses.Suggestion:
+def suggestion(m_suggestion: models.Action) -> responses.Suggestion:
     """Return a suggested action as it can be provided to the client"""
     if isinstance(m_suggestion, models.Bid):
         return responses.BidSuggestion(amount=m_suggestion.amount)

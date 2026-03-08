@@ -6,12 +6,12 @@ import logging
 
 from fastapi import APIRouter
 
-from utils.dtos.db import SearchLobby
-from utils.dtos.requests import (
+from models.client.requests import (
     CreateLobbyRequest,
     InviteRequest,
     SearchLobbiesRequest,
 )
+from utils.dtos.db import SearchLobby
 from utils.dtos.responses import StartedGame, User, WaitingGame
 from utils.mappers.client import serialize
 from utils.models import Accessibility, HundredAndTenError, Lobby

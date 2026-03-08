@@ -4,7 +4,7 @@ from typing import Literal, Optional, Union
 
 from pydantic import BaseModel
 
-from utils.constants import CardNumberName, SelectableSuit, Suit
+from models.client.constants import CardNumberName, SelectableSuit, Suit
 
 
 class User(BaseModel):
