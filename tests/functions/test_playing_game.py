@@ -7,6 +7,7 @@ from tests.helpers import (
     get_client,
     get_suggestion,
     started_game,
+    lobby_game
 )
 from utils.models import BidAmount, RoundStatus, SelectableSuit
 
@@ -123,11 +124,16 @@ class TestPlayingGame(TestCase):
             "prepassed" in non_active_player and non_active_player["prepassed"]
         )
 
-    def test_leave_playing_game(self):
+    def test_leave_playing_game_as_organizer(self):
         """A player can leave an active game by automating themselves"""
         client = get_client()
         original_game = started_game()
-        active_player = original_game["round"]["active_player"]
+        active_round_player = original_game["round"]["active_player"]
+        active_player = next(
+            p
+            for p in original_game["players"]
+            if p["identifier"] == active_round_player["identifier"]
+        )
         assert active_player
         self.assertFalse(active_player["automate"])
 
@@ -142,3 +148,43 @@ class TestPlayingGame(TestCase):
         )
 
         self.assertTrue(active_player["automate"])
+
+    def test_leave_playing_game_as_player(self):
+        """A player can leave an active game by automating themselves"""
+        client = get_client()
+        lobby = lobby_game()
+        player = 'player'
+
+        # join as player
+        client.post(
+            f"/players/{player}/lobbies/{lobby['id']}/join",
+            headers={"authorization": f"Bearer {player}"},
+        )
+
+        # start the game
+        resp = client.post(
+            f"/players/{lobby['organizer']['identifier']}/lobbies/{lobby['id']}/start",
+            headers={"authorization": f"Bearer {lobby['organizer']['identifier']}"},
+        )
+
+        game = resp.json()
+
+        non_active_player = next(
+            p
+            for p in game["players"]
+            if p["identifier"] == player
+        )
+        assert non_active_player
+        self.assertFalse(non_active_player["automate"])
+
+        # leave
+        resp = client.post(
+            f"/players/{non_active_player['identifier']}/games/{game['id']}/leave",
+            headers={"authorization": f"Bearer {non_active_player['identifier']}"},
+        )
+        game = resp.json()
+        non_active_player = next(
+            p for p in game["players"] if p["identifier"] == non_active_player["identifier"]
+        )
+
+        self.assertTrue(non_active_player["automate"])

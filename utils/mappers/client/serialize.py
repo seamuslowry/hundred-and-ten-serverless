@@ -64,6 +64,7 @@ def game(
         round=__round(m_game.active_round, client_identifier),
         scores=m_game.scores,
         results=client_events,
+        players=[__person(p) for p in m_game.ordered_players],
     )
 
 
@@ -75,12 +76,9 @@ def events(
 
 
 def suggestion(
-    m_suggestion: models.Action, client_identifier: str
+    m_suggestion: models.Action
 ) -> responses.Suggestion:
     """Return a suggested action as it can be provided to the client"""
-    if client_identifier != m_suggestion.identifier:
-        raise ValueError("You can only ask for a suggestion on your turn")
-
     if isinstance(m_suggestion, models.Bid):
         return responses.BidSuggestion(amount=m_suggestion.amount)
     if isinstance(m_suggestion, models.SelectTrump):
@@ -113,7 +111,7 @@ def __round(m_round: models.Round, client_identifier: str) -> responses.Round:
     current_bid = (
         non_zero_bids[-1] if non_zero_bids else models.Bid("", models.BidAmount.PASS)
     )
-    bidder = m_round.players.by_identifier(current_bid.identifier)
+    bidder = m_round.active_bidder
 
     return responses.Round(
         players=[__player(p, client_identifier) for p in m_round.players],
@@ -130,22 +128,22 @@ def __round(m_round: models.Round, client_identifier: str) -> responses.Round:
     )
 
 
-def __person(person: models.Person) -> responses.Person:
-    return responses.Person(identifier=person.identifier, automate=person.automate)
+def __person(person: models.Person) -> responses.GamePerson:
+    return responses.GamePerson(
+        identifier=person.identifier, automate=isinstance(person, models.NaiveCpu)
+    )
 
 
 def __player(player: models.RoundPlayer, client_identifier: str) -> responses.Player:
     if player.identifier == client_identifier:
         return responses.Self(
             identifier=player.identifier,
-            automate=player.automate,
             prepassed=models.RoundRole.PRE_PASSED in player.roles,
             hand=[__card(c) for c in player.hand],
         )
 
     return responses.OtherPlayer(
         identifier=player.identifier,
-        automate=player.automate,
         hand_size=len(player.hand),
     )
 

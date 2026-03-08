@@ -15,15 +15,20 @@ class User(BaseModel):
     picture_url: Optional[str] = None
 
 
-class Person(BaseModel):
+class BasePerson(BaseModel):
     """A class to model the client format of a Hundred and Ten person"""
 
     identifier: str
+
+
+class GamePerson(BasePerson):
+    """A class to model the client format of a Hundred and Ten person at the game level"""
+
     automate: bool
 
 
-class OtherPlayer(Person):
-    """A class to model the client format of a Hundred and Ten player"""
+class OtherPlayer(BasePerson):
+    """A class to model the client format of another Hundred and Ten player"""
 
     hand_size: int
 
@@ -35,15 +40,14 @@ class Card(BaseModel):
     number: CardNumberName
 
 
-class Self(Person):
+class Self(BasePerson):
     """A class to model the client format of the logged in Hundred and Ten player"""
 
     hand: list[Card]
     prepassed: bool
 
 
-Player = Union[Self, OtherPlayer]
-
+type Player = Union[Self, OtherPlayer]
 
 # =============================================================================
 # Event types
@@ -188,9 +192,9 @@ class WaitingGame(Game):
     """A class to model the client format of a waiting Hundred and Ten game"""
 
     accessibility: str
-    organizer: Person
-    players: list[Person]
-    invitees: list[Person]
+    organizer: GamePerson
+    players: list[GamePerson]
+    invitees: list[GamePerson]
 
 
 class StartedGame(Game):
@@ -198,15 +202,16 @@ class StartedGame(Game):
 
     round: Optional[Round] = None
     scores: dict[str, int]
+    players: list[GamePerson]
     results: list[GameEvent]
 
 
 class CompletedGame(Game):
     """A class to model the client format of a completed Hundred and Ten game"""
 
-    winner: Person
-    organizer: Person
-    players: list[Person]
+    winner: GamePerson
+    organizer: GamePerson
+    players: list[GamePerson]
     scores: dict[str, int]
     results: list[GameEvent]
 

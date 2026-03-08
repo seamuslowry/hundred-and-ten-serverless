@@ -4,6 +4,7 @@ from bson import ObjectId
 
 from utils import models
 from utils.dtos import db
+from utils.models.person import NaiveCpu
 
 
 def lobby(m_lobby: models.Lobby) -> db.Lobby:
@@ -59,7 +60,7 @@ def __card(card: models.Card) -> db.Card:
 def __person(person: models.Person) -> db.Person:
     return db.Person(
         identifier=person.identifier,
-        automate=person.automate,
+        automate=isinstance(person, NaiveCpu),
     )
 
 

@@ -14,7 +14,8 @@ from utils.dtos.requests import (
 )
 from utils.dtos.responses import StartedGame, User, WaitingGame
 from utils.mappers.client import serialize
-from utils.models import Accessibility, HundredAndTenError, Lobby, Person
+from utils.models import Accessibility, HundredAndTenError, Lobby
+from utils.models.person import Human, NaiveCpu
 from utils.services import LobbyService, UserService
 
 MIN_PLAYERS = 4
@@ -67,7 +68,7 @@ def create_lobby(player_id: str, body: CreateLobbyRequest):
     logging.debug("Creating lobby for %s", player_id)
 
     lobby = Lobby(
-        organizer=Person(identifier=player_id),
+        organizer=Human(identifier=player_id),
         name=body.name,
         accessibility=Accessibility[body.accessibility],
     )
@@ -85,7 +86,7 @@ def invite_to_lobby(player_id: str, lobby_id: str, body: InviteRequest):
     lobby = LobbyService.get(lobby_id)
 
     for invitee in body.invitees:
-        lobby.invite(player_id, Person(identifier=invitee))
+        lobby.invite(player_id, Human(identifier=invitee))
     lobby = LobbyService.save(lobby)
 
     return serialize.lobby(lobby)
@@ -95,7 +96,7 @@ def invite_to_lobby(player_id: str, lobby_id: str, body: InviteRequest):
 def join_lobby(player_id: str, lobby_id: str):
     """Join a 110 lobby"""
     lobby = LobbyService.get(lobby_id)
-    lobby.join(Person(player_id))
+    lobby.join(Human(player_id))
     lobby = LobbyService.save(lobby)
 
     return serialize.lobby(lobby)
@@ -122,8 +123,8 @@ def start_game(player_id: str, lobby_id: str):
     # Add CPU players if needed
     for num in range(len(lobby.ordered_players), MIN_PLAYERS):
         cpu_identifier = str(num + 1)
-        lobby.invite(player_id, Person(cpu_identifier, automate=True))
-        lobby.join(Person(cpu_identifier, automate=True))
+        lobby.invite(player_id, NaiveCpu(cpu_identifier))
+        lobby.join(NaiveCpu(cpu_identifier))
 
     # Start the game (converts lobby record to game record)
     game = LobbyService.start_game(lobby)

@@ -21,7 +21,7 @@ class TestMapperEdgeCases(TestCase):
         """Attempting to serialize an invalid suggestion results in an error"""
         identifier = "identifier"
         self.assertRaises(
-            ValueError, client_serialize.suggestion, Action(identifier), identifier
+            ValueError, client_serialize.suggestion, Action(identifier)
         )
 
     def test_bad_action_from_db(self):

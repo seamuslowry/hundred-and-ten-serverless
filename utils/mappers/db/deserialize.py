@@ -41,9 +41,10 @@ def game(db_game: db.Game) -> models.Game:
 
 
 def __person(person: db.Person) -> models.Person:
-    return models.Person(
-        identifier=person["identifier"],
-        automate=person["automate"],
+    return (
+        models.NaiveCpu(identifier=person["identifier"])
+        if person["automate"]
+        else models.Human(identifier=person["identifier"])
     )
 
 
