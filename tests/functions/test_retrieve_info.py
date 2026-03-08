@@ -126,7 +126,7 @@ class TestRetrieveInfo(TestCase):
         self.assertNotIn(user_three[0], retrieved_user_ids)
 
     def test_get_suggestion_on_other_turn(self):
-        """The game will not provide a suggestion on another player's turn"""
+        """The game will provide a suggestion on another player's turn"""
         game = started_game()
         active_player = game["round"]["active_player"]
         assert active_player
@@ -137,4 +137,4 @@ class TestRetrieveInfo(TestCase):
         )
         resp = request_suggestion(game["id"], non_active_player["identifier"])
 
-        self.assertEqual(400, resp.status_code)
+        self.assertEqual(200, resp.status_code)

@@ -8,11 +8,11 @@ from uuid import uuid4
 from hundredandten import HundredAndTen
 from hundredandten.actions import Action
 from hundredandten.constants import RoundStatus
-from hundredandten.group import Group, Player
 from hundredandten.round import Round
+from hundredandten.state import GameState
 
 from utils.constants import Accessibility, GameStatus
-from utils.models.person import Person
+from utils.models.person import NaiveCpu, Person
 
 
 class PersonGroup(list[Person]):
@@ -151,25 +151,27 @@ class Game(BaseGame):
     def leave(self, identifier: str) -> None:
         """Automate a player (used when leaving an active game)"""
 
-        self.ordered_players.find_or_throw(identifier).automate = True
+        original_player = self.ordered_players.find_or_throw(identifier)
+
+        if original_player == self.organizer:
+            self.organizer = NaiveCpu(original_player.identifier)
+        else:
+            self.players[self.players.index(original_player)] = NaiveCpu(
+                original_player.identifier
+            )
         self._game = self._initialize_game(self.moves)
 
     def act(self, action: Action) -> None:
         """Perform a game action"""
         self._game.act(action)
 
-    def suggestion(self) -> Action:
-        """Get a suggested action"""
-        return self._game.suggestion()
+    def game_state_for(self, player_id: str) -> GameState:
+        """Return the game state known for a particular player"""
+        return self._game.game_state_for(player_id)
 
     def _initialize_game(self, moves: list[Action]) -> HundredAndTen:
         return HundredAndTen(
-            players=Group(
-                [
-                    Player(identifier=p.identifier, automate=p.automate)
-                    for p in self.ordered_players
-                ]
-            ),
+            players=[p.as_player() for p in self.ordered_players],
             seed=self.seed,
             initial_moves=moves,
         )

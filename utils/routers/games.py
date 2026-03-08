@@ -29,6 +29,7 @@ from utils.models import (
     SelectableSuit,
     SelectTrump,
     Unpass,
+    NaiveAutomatedPlayer
 )
 from utils.services import GameService, UserService
 
@@ -82,7 +83,8 @@ def suggestion(player_id: str, game_id: str):
     """Ask for a suggestion in a 110 game"""
     game = GameService.get(game_id)
 
-    return serialize.suggestion(game.suggestion(), player_id)
+    return serialize.suggestion(NaiveAutomatedPlayer(player_id).act(
+        game.game_state_for(player_id)))
 
 
 @router.post("/{game_id}/bid", response_model=GameResponse)

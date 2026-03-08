@@ -5,13 +5,13 @@ from unittest import TestCase
 from bson import ObjectId
 
 from utils.dtos.db import SearchLobby
-from utils.models import Lobby, Person
+from utils.models import Human, Lobby
 from utils.services import LobbyService
 
 
 def _make_lobby(name: str = "") -> Lobby:
     """Create a valid Lobby with an organizer"""
-    return Lobby(name=name, organizer=Person("p1"))
+    return Lobby(name=name, organizer=Human("p1"))
 
 
 class TestLobbyService(TestCase):
@@ -54,7 +54,7 @@ class TestLobbyService(TestCase):
     def test_start_game(self):
         """Lobby can be converted to a game"""
         lobby = _make_lobby()
-        lobby.join(Person("p2"))
+        lobby.join(Human("p2"))
         LobbyService.save(lobby)
 
         game = LobbyService.start_game(lobby)
