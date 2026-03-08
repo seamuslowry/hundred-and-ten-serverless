@@ -17,5 +17,5 @@ jobs:
           readarray -t py_files < <(git ls-files '*.py')
           pylint "${py_files[@]}"
       - run: pyright
-      - run: black --check
+      - run: black . --check
       - run: ruff check
