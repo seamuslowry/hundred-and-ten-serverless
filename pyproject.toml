@@ -40,8 +40,12 @@ test = [
 
 [tool.coverage.run]
 omit = [
-    "tests/*"
+    "src/tests/*"
 ]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+exclude = ["tests", "tests.*"]
 
 [tool.pyright]
 useLibraryCodeForTypes = true
