@@ -50,6 +50,12 @@ useLibraryCodeForTypes = true
 sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
 
 
+[tool.pylint.design]
+# Beanie's Document class has 9 ancestors due to mixin interfaces
+max-parents = 10
+# Allow Settings/Config classes to have no methods (framework pattern)
+min-public-methods = 0
+
 [tool.ruff]
 target-version = "py313"
 line-length = 100
