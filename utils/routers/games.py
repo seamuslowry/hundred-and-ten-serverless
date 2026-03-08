@@ -6,7 +6,7 @@ from typing import Union
 
 from fastapi import APIRouter
 
-from models.client.requests import (
+from src.main.models.client.requests import (
     BidRequest,
     DiscardRequest,
     PlayRequest,

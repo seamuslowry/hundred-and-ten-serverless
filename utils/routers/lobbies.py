@@ -6,7 +6,7 @@ import logging
 
 from fastapi import APIRouter
 
-from models.client.requests import (
+from src.main.models.client.requests import (
     CreateLobbyRequest,
     InviteRequest,
     SearchLobbiesRequest,

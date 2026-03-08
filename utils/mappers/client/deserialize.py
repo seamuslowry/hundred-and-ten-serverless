@@ -1,6 +1,6 @@
 """A module to convert client objects to models"""
 
-from models.client import requests
+from src.main.models.client import requests
 from utils import models
 
 

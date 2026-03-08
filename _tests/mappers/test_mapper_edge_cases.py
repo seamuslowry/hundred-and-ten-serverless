@@ -4,8 +4,8 @@ from unittest import TestCase
 
 from hundredandten.events import Event
 
-from models.client.constants import CardNumberName, Suit
-from models.client.requests import CardRequest
+from src.main.models.client.constants import CardNumberName, Suit
+from src.main.models.client.requests import CardRequest
 from utils.dtos.db import Game as DbGame
 from utils.dtos.db import Person as DbPerson
 from utils.mappers.client import deserialize as client_deserialize

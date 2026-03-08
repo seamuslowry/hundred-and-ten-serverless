@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from models.client.constants import CardNumberName, SelectableSuit, Suit
+from src.main.models.client.constants import CardNumberName, SelectableSuit, Suit
 from utils import models
 from utils.dtos import responses
 
