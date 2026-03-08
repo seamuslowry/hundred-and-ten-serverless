@@ -6,8 +6,8 @@ from bson.errors import InvalidId
 from src.main.mappers.db import deserialize, serialize
 from src.main.models.db.db import SearchLobby
 from src.main.models.internal import Accessibility, Game, Lobby
+from src.main.repos import lobby_client
 from utils.services.game import save as save_game
-from utils.services.mongo import lobby_client
 
 
 def save(lobby: Lobby) -> Lobby:

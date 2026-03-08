@@ -6,7 +6,7 @@ from bson.errors import InvalidId
 from src.main.mappers.db import deserialize, serialize
 from src.main.models.db.db import SearchGame
 from src.main.models.internal import Accessibility, Game
-from utils.services.mongo import game_client
+from src.main.repos import game_client
 
 
 def save(game: Game) -> Game:

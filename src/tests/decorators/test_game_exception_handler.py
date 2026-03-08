@@ -4,8 +4,8 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from src.main.auth import Identity
-from src.tests.helpers import DEFAULT_ID, get_client
 from src.main.models.internal.errors import AuthorizationError
+from src.tests.helpers import DEFAULT_ID, get_client
 
 
 class TestErrorHandler(TestCase):
