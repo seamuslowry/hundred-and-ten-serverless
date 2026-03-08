@@ -6,7 +6,7 @@ from bson import ObjectId
 
 from src.main.models.db.db import SearchLobby
 from src.main.models.internal import Human, Lobby
-from utils.services import LobbyService
+from src.main.services import LobbyService
 
 
 def _make_lobby(name: str = "") -> Lobby:

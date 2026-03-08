@@ -21,7 +21,7 @@ from src.main.models.internal import (
     Lobby,
     NaiveCpu,
 )
-from utils.services import LobbyService, UserService
+from src.main.services import LobbyService, UserService
 
 MIN_PLAYERS = 4
 

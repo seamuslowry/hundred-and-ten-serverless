@@ -4,7 +4,7 @@ from time import time
 from unittest import TestCase
 
 from src.main.models.internal import User
-from utils.services import UserService
+from src.main.services import UserService
 
 
 class TestUserService(TestCase):

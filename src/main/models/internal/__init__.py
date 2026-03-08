@@ -83,10 +83,10 @@ __all__ = [
     "Round",
     # Trick
     "Trick",
-    # Utils constants
+    # Constants
     "Accessibility",
     "GameStatus",
-    # Utils models
+    # Models
     "Game",
     "Lobby",
     "PersonGroup",

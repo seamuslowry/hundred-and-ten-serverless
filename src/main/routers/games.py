@@ -31,7 +31,7 @@ from src.main.models.internal import (
     SelectTrump,
     Unpass,
 )
-from utils.services import GameService, UserService
+from src.main.services import GameService, UserService
 
 # Type alias for game responses (can be started or completed)
 GameResponse = Union[StartedGame, CompletedGame]

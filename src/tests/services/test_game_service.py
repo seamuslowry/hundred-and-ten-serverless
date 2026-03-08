@@ -6,7 +6,7 @@ from bson import ObjectId
 
 from src.main.models.db.db import SearchGame
 from src.main.models.internal import Game, Human, Lobby, PersonGroup
-from utils.services import GameService, LobbyService
+from src.main.services import GameService, LobbyService
 
 
 def _make_game(name: str = "") -> Game:
