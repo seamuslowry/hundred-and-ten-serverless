@@ -85,7 +85,7 @@ async def bid(player_id: str, game_id: str, body: BidRequest):
 
     game.act(Bid(player_id, BidAmount(body.amount)))
 
-    game = await GameService.save(game)
+    await GameService.save(game)
 
     return serialize.game(game, player_id, initial_event_knowledge)
 
@@ -98,7 +98,7 @@ async def rescind_prepass(player_id: str, game_id: str):
 
     game.act(Unpass(player_id))
 
-    game = await GameService.save(game)
+    await GameService.save(game)
 
     return serialize.game(game, player_id, initial_event_knowledge)
 

@@ -21,6 +21,12 @@ def lobby(m_lobby: internal.Lobby) -> db.Lobby:
 
 def game(m_game: internal.Game) -> db.Game:
     """Convert a Game model to its DB DTO"""
+    winner = m_game.winner.identifier if m_game.winner else None
+    active_player = (
+        m_game.active_round.active_player.identifier
+        if m_game.status != internal.GameStatus.WON
+        else winner or m_game.organizer.identifier
+    )
 
     return db.GameV0(
         id=PydanticObjectId(m_game.id),
@@ -29,8 +35,8 @@ def game(m_game: internal.Game) -> db.Game:
         accessibility=db.Accessibility[m_game.accessibility.name],
         organizer=__person(m_game.organizer),
         players=list(map(__person, m_game.players)),
-        winner=m_game.winner.identifier if m_game.winner else None,
-        active_player=m_game.active_round.active_player.identifier,
+        winner=winner,
+        active_player=active_player,
         moves=list(map(__move, m_game.moves)),
         status=db.Status[m_game.status.name],
     )

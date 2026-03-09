@@ -1,14 +1,13 @@
 """Facilitate interaction with the lobby DB"""
 
-from beanie.operators import ElemMatch, Or, RegEx
 from typing import Any, cast
+
+from beanie.operators import ElemMatch, Or, RegEx
 
 from src.main.mappers.db import deserialize, serialize
 from src.main.models.client.requests import SearchLobbiesRequest
 from src.main.models.db import Lobby as DbLobby
 from src.main.models.internal import Accessibility, Game, Lobby
-
-from .game import GameService
 
 
 class LobbyService:

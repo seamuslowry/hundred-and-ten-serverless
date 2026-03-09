@@ -1,0 +1,32 @@
+TASK 4: Fix ElemMatch Queries in LobbyService
+COMPLETED: March 9, 2026
+
+CHANGES MADE:
+1. Line 3: Added ElemMatch to imports from beanie.operators
+   FROM: from beanie.operators import Or, RegEx
+   TO:   from beanie.operators import ElemMatch, Or, RegEx
+
+2. Line 41: Fixed players query using ElemMatch
+   FROM: DbLobby.players.identifier == player_id
+   TO:   ElemMatch(DbLobby.players, {"identifier": player_id})
+
+3. Line 42: Fixed invitees query using ElemMatch
+   FROM: DbLobby.invitees.identifier == player_id
+   TO:   ElemMatch(DbLobby.invitees, {"identifier": player_id})
+
+4. Line 43: Kept organizer query unchanged (single document, not list)
+   UNCHANGED: DbLobby.organizer.identifier == player_id
+
+VERIFICATION:
+✓ grep -n 'ElemMatch' shows usage on lines 3, 41, 42
+✓ head -5 confirms ElemMatch in imports
+✓ pyright diagnostics: No errors
+✓ Or wrapper structure preserved around all four conditions
+✓ organizer.identifier comparison remains as equality check
+✓ get, save, start_game methods untouched
+
+RATIONALE:
+- DbLobby.players and DbLobby.invitees are list[Player] types
+- Dot-notation equality checks on lists generate incorrect MongoDB queries
+- ElemMatch operator correctly queries array elements
+- organizer is a single Player document, so dot-notation equality is correct

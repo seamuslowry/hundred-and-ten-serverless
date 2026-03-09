@@ -1,6 +1,8 @@
 """Helpers to perform common functions during testing"""
 
-from typing import Any
+import atexit
+from contextlib import ExitStack
+from typing import Any, cast
 
 from fastapi.testclient import TestClient
 
@@ -8,11 +10,28 @@ from function_app import fastapi_app
 from src.main.models.internal import User
 
 DEFAULT_ID = "id"
+_STATE: dict[str, Any] = {"stack": ExitStack(), "client": None}
 
 
 def get_client() -> TestClient:
     """Get a TestClient for the FastAPI app"""
-    return TestClient(fastapi_app)
+    client = _STATE["client"]
+    if client is None:
+        _STATE["client"] = _STATE["stack"].enter_context(TestClient(fastapi_app))
+        client = _STATE["client"]
+
+    return cast(TestClient, client)
+
+
+def _reset_client() -> None:
+    _STATE["stack"].close()
+    _STATE["stack"] = ExitStack()
+    _STATE["client"] = None
+
+
+@atexit.register
+def _close_client() -> None:
+    _STATE["stack"].close()
 
 
 def lobby_game(

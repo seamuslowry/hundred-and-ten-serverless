@@ -30,6 +30,7 @@ class GameService:
     async def search(player_id: str, search_game: SearchGamesRequest) -> list[Game]:
         """Search for games matching the provided criteria"""
 
+
         filters = [
             RegEx(DbGame.name, search_game.searchText, "i"),
             Or(
@@ -54,3 +55,4 @@ class GameService:
                 .to_list(),
             )
         )
+

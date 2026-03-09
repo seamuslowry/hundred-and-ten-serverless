@@ -1,7 +1,5 @@
 """Lobby Service unit tests"""
 
-import asyncio
-
 import pytest
 from bson import ObjectId
 
