@@ -228,9 +228,9 @@ Max Concurrent: 4 (Wave 2)
   - `docker-compose.test.yml` — This is the ONLY file to modify. The current config has no `command:` override and no init service. Transaction support in MongoDB requires a replica set; without this change, Tasks 6 and 8+ will fail with "Transaction numbers are only allowed on a replica set member" errors.
 
   **Acceptance Criteria**:
-  - [ ] `docker compose -f docker-compose.test.yml config` — valid YAML, no errors
-  - [ ] `docker compose -f docker-compose.test.yml up -d` — both services start
-  - [ ] After startup, `mongosh --host localhost --username root --password rootpassword --authenticationDatabase admin --eval "rs.status().ok"` returns `1`
+  - [x] `docker compose -f docker-compose.test.yml config` — valid YAML, no errors
+  - [x] `docker compose -f docker-compose.test.yml up -d` — both services start
+  - [x] After startup, `mongosh --host localhost --username root --password rootpassword --authenticationDatabase admin --eval "rs.status().ok"` returns `1`
 
   **QA Scenarios:**
 
@@ -301,9 +301,9 @@ Max Concurrent: 4 (Wave 2)
   - The `[tool.pytest.ini_options]` section doesn't exist yet — must be created between existing `[tool.*]` sections.
 
   **Acceptance Criteria**:
-  - [ ] `pip install -e ".[test]"` succeeds and `pytest-asyncio` is importable
-  - [ ] `python -c "import pytest_asyncio; print(pytest_asyncio.__version__)"` prints a version
-  - [ ] `pyproject.toml` contains `asyncio_mode = "auto"` under `[tool.pytest.ini_options]`
+  - [x] `pip install -e ".[test]"` succeeds and `pytest-asyncio` is importable
+  - [x] `python -c "import pytest_asyncio; print(pytest_asyncio.__version__)"` prints a version
+  - [x] `pyproject.toml` contains `asyncio_mode = "auto"` under `[tool.pytest.ini_options]`
 
   **QA Scenarios:**
 
@@ -381,10 +381,10 @@ Max Concurrent: 4 (Wave 2)
   - Model files confirm the inheritance chain is already correct; only serialize + exports need fixing
 
   **Acceptance Criteria**:
-  - [ ] `python -c "from src.main.models.db import LobbyV0, GameV0, UserV0; print('OK')"` — prints OK
-  - [ ] `python -c "from src.main.mappers.db.serialize import lobby; from src.main.models.internal import Lobby, Human; lobby(Lobby(name='test', organizer=Human('p1')))"` — no TypeError
-  - [ ] `pyright src/main/mappers/db/serialize.py` — 0 errors
-  - [ ] `pylint src/main/mappers/db/serialize.py src/main/models/db/__init__.py` — 0 errors
+  - [x] `python -c "from src.main.models.db import LobbyV0, GameV0, UserV0; print('OK')"` — prints OK
+  - [x] `python -c "from src.main.mappers.db.serialize import lobby; from src.main.models.internal import Lobby, Human; lobby(Lobby(name='test', organizer=Human('p1')))"` — no TypeError
+  - [x] `pyright src/main/mappers/db/serialize.py` — 0 errors
+  - [x] `pylint src/main/mappers/db/serialize.py src/main/models/db/__init__.py` — 0 errors
 
   **QA Scenarios:**
 
@@ -456,9 +456,9 @@ Max Concurrent: 4 (Wave 2)
   - `player.py:12` — Confirms the field is called `identifier` (not `id` or `player_id`)
 
   **Acceptance Criteria**:
-  - [ ] `pyright src/main/services/lobby.py` — 0 errors
-  - [ ] `ElemMatch` appears in imports and is used for `players` and `invitees` queries
-  - [ ] `organizer.identifier` comparison is NOT wrapped in ElemMatch (it's a single doc, not a list)
+  - [x] `pyright src/main/services/lobby.py` — 0 errors
+  - [x] `ElemMatch` appears in imports and is used for `players` and `invitees` queries
+  - [x] `organizer.identifier` comparison is NOT wrapped in ElemMatch (it's a single doc, not a list)
 
   **QA Scenarios:**
 
@@ -566,11 +566,11 @@ Max Concurrent: 4 (Wave 2)
   - After understanding the old logic, delete the commented code — it's served its purpose as a reference.
 
   **Acceptance Criteria**:
-  - [ ] `pyright src/main/services/game.py` — 0 errors
-  - [ ] No commented-out code remains in game.py
-  - [ ] `ElemMatch` used for players query, NOT for organizer
-  - [ ] `active_player`, `winner`, `statuses` filters are conditional (only when not None)
-  - [ ] `In` import present for statuses filter
+  - [x] `pyright src/main/services/game.py` — 0 errors
+  - [x] No commented-out code remains in game.py
+  - [x] `ElemMatch` used for players query, NOT for organizer
+  - [x] `active_player`, `winner`, `statuses` filters are conditional (only when not None)
+  - [x] `In` import present for statuses filter
 
   **QA Scenarios:**
 
@@ -672,10 +672,10 @@ Max Concurrent: 4 (Wave 2)
   - `serialize.py:8-19` — Confirms `serialize.lobby(lobby)` returns a Document instance that has `.delete()` method
 
   **Acceptance Criteria**:
-  - [ ] `start_game` uses `start_session()` + `start_transaction()`
-  - [ ] `delete()` is properly `await`ed
-  - [ ] Both save and delete happen within the same transaction context
-  - [ ] `pyright src/main/services/lobby.py` — 0 errors
+  - [x] `start_game` uses `start_session()` + `start_transaction()`
+  - [x] `delete()` is properly `await`ed
+  - [x] Both save and delete happen within the same transaction context
+  - [x] `pyright src/main/services/lobby.py` — 0 errors
 
   **QA Scenarios:**
 
@@ -744,9 +744,9 @@ Max Concurrent: 4 (Wave 2)
   - Test files show the TESTS are broken (sync calling async) — that's Task 11, not this task. This task just confirms the service itself is sound.
 
   **Acceptance Criteria**:
-  - [ ] All methods in `user.py` are `async` and `await` their beanie calls
-  - [ ] `pyright src/main/services/user.py` — 0 errors
-  - [ ] No changes needed (or minimal fixes if issues found)
+  - [x] All methods in `user.py` are `async` and `await` their beanie calls
+  - [x] `pyright src/main/services/user.py` — 0 errors
+  - [x] No changes needed (or minimal fixes if issues found)
 
   **QA Scenarios:**
 
@@ -842,11 +842,11 @@ Max Concurrent: 4 (Wave 2)
   - Service test files — These have NO setup/teardown. After conversion from unittest.TestCase (Tasks 9-11), they'll need beanie init from conftest.
 
   **Acceptance Criteria**:
-  - [ ] `src/tests/services/conftest.py` exists (or `src/tests/conftest.py`) with async beanie init fixture
-  - [ ] Fixture uses `autouse=True`
-  - [ ] Fixture connects to `mongodb://root:rootpassword@localhost:27017`
-  - [ ] Fixture cleans up after tests (drops collections or database)
-  - [ ] Does NOT conflict with function tests' FastAPI lifespan beanie init
+  - [x] `src/tests/services/conftest.py` exists (or `src/tests/conftest.py`) with async beanie init fixture
+  - [x] Fixture uses `autouse=True`
+  - [x] Fixture connects to `mongodb://root:rootpassword@localhost:27017`
+  - [x] Fixture cleans up after tests (drops collections or database)
+  - [x] Does NOT conflict with function tests' FastAPI lifespan beanie init
 
   **QA Scenarios:**
 
@@ -929,10 +929,10 @@ Max Concurrent: 4 (Wave 2)
   - Lines 38-40 and 65-70 are the trickiest — `assertRaises` with an async function that returns a coroutine.
 
   **Acceptance Criteria**:
-  - [ ] No `unittest.TestCase` or `self.assert*` in the file
-  - [ ] All test methods are `async def`
-  - [ ] All service calls are `await`ed
-  - [ ] `pytest src/tests/services/test_lobby_service.py -v` — all 6 tests PASS
+  - [x] No `unittest.TestCase` or `self.assert*` in the file
+  - [x] All test methods are `async def`
+  - [x] All service calls are `await`ed
+  - [x] `pytest src/tests/services/test_lobby_service.py -v` — all 6 tests PASS
 
   **QA Scenarios:**
 
@@ -1004,10 +1004,10 @@ Max Concurrent: 4 (Wave 2)
   - Same as Task 9 rationale. Each line points to a specific async/await bug that must be fixed.
 
   **Acceptance Criteria**:
-  - [ ] No `unittest.TestCase` or `self.assert*` in the file
-  - [ ] All test methods are `async def`
-  - [ ] All service calls are `await`ed
-  - [ ] `pytest src/tests/services/test_game_service.py -v` — all 4 tests PASS
+  - [x] No `unittest.TestCase` or `self.assert*` in the file
+  - [x] All test methods are `async def`
+  - [x] All service calls are `await`ed
+  - [x] `pytest src/tests/services/test_game_service.py -v` — all 4 tests PASS
 
   **QA Scenarios:**
 
@@ -1072,10 +1072,10 @@ Max Concurrent: 4 (Wave 2)
   - Each line maps to a sync→async conversion needed. Lines 17, 23, 27 are the unawaited calls.
 
   **Acceptance Criteria**:
-  - [ ] No `unittest.TestCase` or `self.assert*` in the file
-  - [ ] All test methods are `async def`
-  - [ ] All service calls are `await`ed
-  - [ ] `pytest src/tests/services/test_user_service.py -v` — all 3 tests PASS
+  - [x] No `unittest.TestCase` or `self.assert*` in the file
+  - [x] All test methods are `async def`
+  - [x] All service calls are `await`ed
+  - [x] `pytest src/tests/services/test_user_service.py -v` — all 3 tests PASS
 
   **QA Scenarios:**
 
@@ -1140,12 +1140,12 @@ Max Concurrent: 4 (Wave 2)
   - `pyproject.toml` lint config — Shows what linters expect. `max-parents=15` and `min-public-methods=0` are already configured for beanie's deep inheritance chain.
 
   **Acceptance Criteria**:
-  - [ ] `pytest src/tests/ -v` — ALL tests pass (service + function + mapper + auth)
-  - [ ] `coverage report --fail-under=100` — 100% coverage
-  - [ ] `pylint src/main src/tests` — 0 errors/warnings
-  - [ ] `pyright src/main src/tests` — 0 errors
-  - [ ] `ruff check src/` — 0 issues
-  - [ ] `black --check src/` — no changes needed
+  - [x] `pytest src/tests/ -v` — ALL tests pass (service + function + mapper + auth)
+  - [x] `coverage report --fail-under=100` — 100% coverage
+  - [x] `pylint src/main src/tests` — 0 errors/warnings
+  - [x] `pyright src/main src/tests` — 0 errors
+  - [x] `ruff check src/` — 0 issues
+  - [x] `black --check src/` — no changes needed
 
   **QA Scenarios:**
 
