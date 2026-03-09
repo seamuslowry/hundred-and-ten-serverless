@@ -1,11 +1,4 @@
-************* Module src.tests.helpers
-src/tests/helpers.py:27:0: C0116: Missing function or method docstring (missing-function-docstring)
-************* Module src.tests.mappers.test_mapper_edge_cases
-src/tests/mappers/test_mapper_edge_cases.py:38:4: C0116: Missing function or method docstring (missing-function-docstring)
-src/tests/mappers/test_mapper_edge_cases.py:41:4: C0116: Missing function or method docstring (missing-function-docstring)
-src/tests/mappers/test_mapper_edge_cases.py:47:4: C0116: Missing function or method docstring (missing-function-docstring)
-src/tests/mappers/test_mapper_edge_cases.py:48:8: C0115: Missing class docstring (missing-class-docstring)
 
-------------------------------------------------------------------
-Your code has been rated at 9.96/10 (previous run: 9.84/10, +0.12)
+--------------------------------------------------------------------
+Your code has been rated at 10.00/10 (previous run: 10.00/10, +0.00)
 

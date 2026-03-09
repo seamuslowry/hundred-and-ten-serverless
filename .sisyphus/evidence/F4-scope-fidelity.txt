@@ -1,0 +1,77 @@
+Tasks [11/12 compliant] | Contamination [3 issues] | Unaccounted [4 files] | VERDICT: REJECT
+
+Scope Fidelity Audit (Task F4)
+Base reviewed:
+- Plan: .sisyphus/plans/beanie-migration.md (Tasks 1-12 + guardrails)
+- Diff source: git diff main...HEAD and focused mapping via git diff ac5b989..HEAD
+
+Approved scope changes applied during audit:
+1) Transaction requirement removed (commit 377e6ba): sequential start_game is correct.
+2) Replica set requirement removed (commit 377e6ba): standalone MongoDB is correct.
+
+Task-by-task mapping (What-to-do -> implemented)
+- T1 Docker replica set: COMPLIANT under approved scope change (replica set removed from required scope).
+- T2 pytest-asyncio setup: COMPLIANT
+  - pyproject.toml includes pytest-asyncio and asyncio_mode=auto.
+- T3 model hierarchy/serialization: COMPLIANT
+  - src/main/mappers/db/serialize.py uses LobbyV0/GameV0/UserV0.
+  - src/main/models/db/__init__.py exports V0 classes.
+- T4 Lobby ElemMatch: COMPLIANT
+  - src/main/services/lobby.py players/invitees queries use ElemMatch.
+- T5 Game ElemMatch + optional filters: COMPLIANT
+  - src/main/services/game.py uses ElemMatch/In and conditional filter construction.
+- T6 start_game behavior: COMPLIANT under approved scope change
+  - src/main/services/lobby.py saves game then deletes lobby (sequential).
+- T7 UserService async correctness: COMPLIANT
+  - no service mismatch introduced.
+- T8 service-test Beanie fixture: COMPLIANT
+  - src/tests/services/conftest.py added with AsyncMongoClient + init_beanie + cleanup.
+- T9 Lobby tests async conversion: COMPLIANT
+  - src/tests/services/test_lobby_service.py converted to async pytest.
+- T10 Game tests async conversion: COMPLIANT
+  - src/tests/services/test_game_service.py converted to async pytest.
+- T11 User tests async conversion: COMPLIANT
+  - src/tests/services/test_user_service.py converted to async pytest.
+- T12 verification-only gate: NON-COMPLIANT (scope spill)
+  - Task 12 permits fixes only if needed; router logic changes introduced and are outside explicit migration task list/guardrail intent.
+
+Guardrail checks (plan lines 88-97)
+1. No new features beyond main: FAIL (potential behavior change in lobby players ordering/dedup path).
+2. No mongomock/in-memory mock: PASS (no matches).
+3. ABC mixin not removed: PASS (Lobby/Game/User remain class ...(ABC, Document)).
+4. hundredandten library untouched: PASS (no library file changes).
+5. Router logic unchanged except async correctness: FAIL
+   - src/main/routers/games.py
+   - src/main/routers/lobbies.py
+6. No excessive comments/docs added: PASS (no code-doc bloat found in changed source files).
+7. No style refactor beyond migration needs: PASS (no broad cosmetic-only refactor).
+8. FastAPI lifespan unchanged except beanie init: PASS (function_app change is beanie-init lifecycle wiring).
+9. No new test patterns introduced: PASS (no factory libraries/mongomock patterns detected).
+
+Contamination findings (3 issues)
+1) Router modification beyond allowed exception in src/main/routers/lobbies.py.
+2) Router modification beyond allowed exception in src/main/routers/games.py.
+3) Plan file changed in branch (.sisyphus/plans/beanie-migration.md), violating read-only plan rule for execution flow.
+
+Unaccounted file check (4 files)
+Files changed but not mapped to Tasks 1-12 'What to do' or allowed additional-file list:
+1) src/main/routers/games.py
+2) src/main/routers/lobbies.py
+3) .sisyphus/plans/beanie-migration.md
+4) .sisyphus/boulder.json
+
+Files accounted as legitimate:
+- Expected task files: pyproject.toml, serialize.py, db/__init__.py, services/lobby.py, services/game.py,
+  tests/services/conftest.py, tests/services/test_lobby_service.py, tests/services/test_game_service.py,
+  tests/services/test_user_service.py
+- Legitimate additional files from context: src/tests/helpers.py, src/tests/functions/conftest.py,
+  src/main/models/internal/game.py, src/tests/mappers/test_mapper_edge_cases.py
+- Evidence/notepad artifacts under .sisyphus/evidence and .sisyphus/notepads are process outputs.
+
+Verification executed
+- lsp_diagnostics: clean on changed implementation files.
+- Build/test gate: pytest src/tests/ -q => 64 passed.
+
+Final determination
+- Because guardrail #5 is violated and unaccounted files remain, branch does not satisfy strict 1:1 scope fidelity.
+- VERDICT: REJECT

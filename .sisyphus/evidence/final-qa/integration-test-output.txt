@@ -1,0 +1,41 @@
+================================================================================
+INTEGRATION TEST: Lobby → Game Workflow
+================================================================================
+[1] Connecting to MongoDB...
+[2] Initializing Beanie...
+[3] Cleaning up existing data...
+    - Deleted all lobbies and games
+
+[4] Creating test lobby...
+    ✓ Lobby created: 69af429fdfefceb18d43d62e
+
+[5] Verifying lobby retrieval...
+    ✓ Lobby retrieval works
+    ✓ Players count: 2
+
+[6] Starting game (sequential: create game, then delete lobby)...
+    ✓ Game created: 69af429fdfefceb18d43d62e
+
+[7] Verifying lobby deletion...
+    ✓ Lobby deleted after game start (ValueError: No lobby found with id 69af429fdfefceb18d43d62e)
+
+[8] Verifying game exists with correct ID...
+    ✓ Game ID matches lobby ID: 69af429fdfefceb18d43d62e
+
+[9] Verifying player data preservation...
+    ✓ Player data preserved in game
+    ✓ Players: ['user1', 'user2']
+
+[10] Testing ElemMatch query (search by player)...
+    ✓ ElemMatch query found game by player ID
+    ✓ Games found: 1
+
+[11] Testing search with different player...
+    ✓ Search works for both players
+
+[12] Testing search with text filter...
+    ✓ Text search works: 1 games found
+
+================================================================================
+✅ INTEGRATION TEST PASSED - All verifications successful
+================================================================================

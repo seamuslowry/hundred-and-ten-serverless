@@ -72,4 +72,4 @@ src/tests/services/test_user_service.py::test_save_unknown_user PASSED   [ 96%]
 src/tests/services/test_user_service.py::test_search_user PASSED         [ 98%]
 src/tests/services/test_user_service.py::test_get_users_by_identifiers PASSED [100%]
 
-============================== 64 passed in 2.65s ==============================
+============================== 64 passed in 4.05s ==============================
