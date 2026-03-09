@@ -36,6 +36,7 @@ test = [
     "coverage==7.13.4",
     "httpx==0.28.1",
     "pytest==9.0.2",
+    "pytest-asyncio>=0.24.0",
 ]
 
 [tool.coverage.run]
@@ -64,3 +65,6 @@ min-public-methods = 0
 target-version = "py313"
 line-length = 100
 lint.extend-select = ["I"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
