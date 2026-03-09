@@ -1,7 +1,7 @@
 """Init the DB module"""
 
-from .game import Game, Status
-from .lobby import Accessibility, Lobby
+from .game import Game, GameV0, Status
+from .lobby import Accessibility, Lobby, LobbyV0
 from .move import (
     BidMove,
     Card,
@@ -14,14 +14,17 @@ from .move import (
     Suit,
 )
 from .player import HumanPlayer, NaiveCpuPlayer, Player
-from .user import User
+from .user import User, UserV0
 
 __all__ = [
     "Game",
+    "GameV0",
     "Lobby",
+    "LobbyV0",
     "Accessibility",
     "Status",
     "User",
+    "UserV0",
     "Player",
     "Move",
     "NaiveCpuPlayer",
