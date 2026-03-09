@@ -1,0 +1,47 @@
+Traceback (most recent call last):
+  File "<string>", line 10, in <module>
+    Lobby()
+    ~~~~~^^
+  File "/home/seamus/git/hundred-and-ten-serverless/venv/lib/python3.13/site-packages/beanie/odm/documents.py", line 208, in __init__
+    super(Document, self).__init__(*args, **kwargs)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/seamus/git/hundred-and-ten-serverless/venv/lib/python3.13/site-packages/pydantic/main.py", line 250, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 5 validation errors for Lobby
+name
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+accessibility
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+organizer
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+players
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+invitees
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+=== Testing that abstract classes CANNOT be instantiated ===
+
+=== Verifying ABC configuration ===
+
+Lobby abstract methods: frozenset()
+LobbyV0 abstract methods: frozenset()
+
+Game abstract methods: frozenset()
+GameV0 abstract methods: frozenset()
+
+User abstract methods: frozenset()
+UserV0 abstract methods: frozenset()
+
+=== Verifying ABC in inheritance chain ===
+Lobby has ABC: True
+Game has ABC: True
+User has ABC: True
+
+=== Verifying serialize.py uses V0 classes ===
+lobby() function uses: LobbyV0
+game() function uses: GameV0
+user() function uses: UserV0

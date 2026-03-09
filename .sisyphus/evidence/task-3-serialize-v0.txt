@@ -1,0 +1,22 @@
+Import test: OK
+LobbyV0: <class 'src.main.models.db.lobby.LobbyV0'>
+GameV0: <class 'src.main.models.db.game.GameV0'>
+UserV0: <class 'src.main.models.db.user.UserV0'>
+Traceback (most recent call last):
+  File "<string>", line 14, in <module>
+    result = lobby(test_lobby)
+  File "/home/seamus/git/hundred-and-ten-serverless/src/main/mappers/db/serialize.py", line 10, in lobby
+    result = db.LobbyV0(
+        id=PydanticObjectId(m_lobby.id),
+    ...<4 lines>...
+        invitees=list(map(__person, m_lobby.invitees)),
+    )
+  File "/home/seamus/git/hundred-and-ten-serverless/venv/lib/python3.13/site-packages/beanie/odm/documents.py", line 209, in __init__
+    self.get_pymongo_collection()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/seamus/git/hundred-and-ten-serverless/venv/lib/python3.13/site-packages/beanie/odm/interfaces/getters.py", line 16, in get_pymongo_collection
+    return cls.get_settings().pymongo_collection
+           ~~~~~~~~~~~~~~~~^^
+  File "/home/seamus/git/hundred-and-ten-serverless/venv/lib/python3.13/site-packages/beanie/odm/documents.py", line 1110, in get_settings
+    raise CollectionWasNotInitialized
+beanie.exceptions.CollectionWasNotInitialized
