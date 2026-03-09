@@ -104,6 +104,7 @@ class Game(BaseGame):
             raise ValueError("Need at least 2 players to start")
 
         return Game(
+            id=lobby.id,
             name=lobby.name,
             seed=lobby.seed,
             accessibility=lobby.accessibility,

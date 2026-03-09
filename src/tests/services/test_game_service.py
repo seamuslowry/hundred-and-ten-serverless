@@ -1,6 +1,6 @@
 """Game Service unit tests"""
 
-from unittest import TestCase
+import pytest
 
 from bson import ObjectId
 
@@ -25,45 +25,47 @@ async def _make_game(name: str = "") -> Game:
     return Game.from_lobby(lobby)
 
 
-class TestGameService(TestCase):
-    """Unit tests to ensure game service works as expected"""
+async def test_save_game():
+    """Game can be saved to the DB"""
+    game = await _make_game()
 
-    async def test_save_game(self):
-        """Game can be saved to the DB"""
-        game = await _make_game()
+    assert await GameService.save(game) is not None
 
-        self.assertIsNotNone(GameService.save(game))
 
-    async def test_get_game(self):
-        """Game can be retrieved from the DB"""
-        original_game = await _make_game()
-        await GameService.save(original_game)
-        assert original_game.id
-        game = await GameService.get(original_game.id)
+async def test_get_game():
+    """Game can be retrieved from the DB"""
+    original_game = await _make_game()
+    saved_game = await GameService.save(original_game)
+    assert saved_game.id
+    game = await GameService.get(saved_game.id)
 
-        self.assertIsNotNone(game)
-        self.assertEqual(game.id, original_game.id)
+    assert game is not None
+    assert game.id == saved_game.id
 
-    def test_get_non_existent_game(self):
-        """Unknown game cannot be retrieved from the DB"""
-        self.assertRaises(ValueError, GameService.get, str(ObjectId()))
 
-    async def test_search_game(self):
-        """Games can be searched in the DB"""
-        text = f"search_test{ObjectId()}"
-        games = [
-            GameService.save(await _make_game(name=f"{text} {i}")) for i in range(5)
-        ]
+async def test_get_non_existent_game():
+    """Unknown game cannot be retrieved from the DB"""
+    with pytest.raises(ValueError):
+        await GameService.get(str(ObjectId()))
 
-        found_games = await GameService.search(
-            "p1",
-            SearchGamesRequest(
-                searchText=text,
-                statuses=None,
-                activePlayer=None,
-                winner=None,
-                limit=len(games) + 1,
-            ),
-        )
 
-        self.assertEqual(len(found_games), len(games))
+async def test_search_game():
+    """Games can be searched in the DB"""
+    text = f"search_test{ObjectId()}"
+    games = []
+    for i in range(5):
+        game = await _make_game(name=f"{text} {i}")
+        games.append(await GameService.save(game))
+
+    found_games = await GameService.search(
+        "p1",
+        SearchGamesRequest(
+            searchText=text,
+            statuses=None,
+            activePlayer=None,
+            winner=None,
+            limit=len(games) + 1,
+        ),
+    )
+
+    assert len(found_games) == len(games)

@@ -53,11 +53,11 @@ class LobbyService:
     @staticmethod
     async def start_game(lobby: Lobby) -> Game:
         """Convert a lobby to a game (starts the game)"""
-        client = cast(Any, DbLobby).get_motor_collection().database.client
+        client = cast(Any, DbLobby).get_pymongo_collection().database.client
         game = Game.from_lobby(lobby)
 
-        async with await client.start_session() as session:
-            async with session.start_transaction():
+        async with client.start_session() as session:
+            async with await session.start_transaction():
                 saved_game = await serialize.game(game).save(session=session)
                 await serialize.lobby(lobby).delete(session=session)
                 return deserialize.game(saved_game)
