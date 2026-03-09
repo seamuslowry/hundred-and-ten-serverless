@@ -1,6 +1,7 @@
 """Facilitate interaction with the lobby DB"""
 
-from beanie.operators import Or, RegEx
+from beanie.operators import ElemMatch, Or, RegEx
+from typing import Any, cast
 
 from src.main.mappers.db import deserialize, serialize
 from src.main.models.client.requests import SearchLobbiesRequest
@@ -38,8 +39,8 @@ class LobbyService:
                     RegEx(DbLobby.name, search_lobby.searchText, "i"),
                     Or(
                         DbLobby.accessibility == Accessibility.PUBLIC,
-                        DbLobby.players.identifier == player_id,
-                        DbLobby.invitees.identifier == player_id,
+                        ElemMatch(DbLobby.players, {"identifier": player_id}),
+                        ElemMatch(DbLobby.invitees, {"identifier": player_id}),
                         DbLobby.organizer.identifier == player_id,
                     ),
                 )
@@ -52,8 +53,11 @@ class LobbyService:
     @staticmethod
     async def start_game(lobby: Lobby) -> Game:
         """Convert a lobby to a game (starts the game)"""
-        # Update the same record in DB (change type from lobby to game)
-        # TODO make this transactional
-        game = await GameService.save(Game.from_lobby(lobby))
-        serialize.lobby(lobby).delete()
-        return game
+        client = cast(Any, DbLobby).get_motor_collection().database.client
+        game = Game.from_lobby(lobby)
+
+        async with await client.start_session() as session:
+            async with session.start_transaction():
+                saved_game = await serialize.game(game).save(session=session)
+                await serialize.lobby(lobby).delete(session=session)
+                return deserialize.game(saved_game)

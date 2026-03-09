@@ -1,6 +1,6 @@
 """Facilitate interaction with the game DB"""
 
-from beanie.operators import Or, RegEx
+from beanie.operators import ElemMatch, In, Or, RegEx
 
 from src.main.mappers.db import deserialize, serialize
 from src.main.models.client.requests import SearchGamesRequest
@@ -30,58 +30,29 @@ class GameService:
     async def search(player_id: str, search_game: SearchGamesRequest) -> list[Game]:
         """Search for games matching the provided criteria"""
 
-        # active_player = search_game.get("active_player", None)
-        # winner = search_game.get("winner", None)
-        # statuses = search_game.get("statuses", None)
+
+        filters = [
+            RegEx(DbGame.name, search_game.searchText, "i"),
+            Or(
+                DbGame.accessibility == Accessibility.PUBLIC,
+                ElemMatch(DbGame.players, {"identifier": player_id}),
+                DbGame.organizer.identifier == player_id,
+            ),
+        ]
+        if search_game.activePlayer is not None:
+            filters.append(DbGame.active_player == search_game.activePlayer)
+        if search_game.winner is not None:
+            filters.append(DbGame.winner == search_game.winner)
+        if search_game.statuses is not None:
+            filters.append(In(DbGame.status, search_game.statuses))
 
         return list(
             map(
                 deserialize.game,
-                await DbGame.find(
-                    RegEx(DbGame.name, search_game.searchText, "i"),
-                    Or(
-                        DbGame.accessibility == Accessibility.PUBLIC,
-                        DbGame.players.identifier == player_id,
-                        DbGame.organizer.identifier == player_id,
-                    ),
-                    DbGame.active_player == search_game.activePlayer,
-                    DbGame.winner == search_game.winner,
-                )
+                await DbGame.find(*filters)
                 .limit(search_game.limit)
                 .skip(search_game.offset)
                 .to_list(),
             )
         )
 
-        # return list(
-        #     map(
-        #         deserialize.game,
-        #         game_client.find(
-        #             {
-        #                 "type": "game",
-        #                 "name": {"$regex": search_game["name"], "$options": "i"},
-        #                 "$or": [
-        #                     {"accessibility": Accessibility.PUBLIC.name},
-        #                     {
-        #                         "people": {
-        #                             "$elemMatch": {
-        #                                 "identifier": {"$eq": search_game["client"]}
-        #                             }
-        #                         }
-        #                     },
-        #                 ],
-        #                 **(
-        #                     {"active_player": active_player}
-        #                     if active_player is not None
-        #                     else {}
-        #                 ),
-        #                 **({"winner": winner} if winner is not None else {}),
-        #                 **(
-        #                     {"status": {"$in": statuses}}
-        #                     if statuses is not None
-        #                     else {}
-        #                 ),
-        #             }
-        #         ).limit(max_count),
-        #     )
-        # )
