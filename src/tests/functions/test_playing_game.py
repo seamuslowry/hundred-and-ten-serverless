@@ -1,28 +1,26 @@
 """Playing Game unit tests"""
 
-from unittest import TestCase
+from fastapi.testclient import TestClient
 
 from src.main.models.internal import BidAmount, RoundStatus, SelectableSuit
 from src.tests.helpers import (
     DEFAULT_ID,
-    get_client,
     get_suggestion,
     lobby_game,
     started_game,
 )
 
 
-class TestPlayingGame(TestCase):
+class TestPlayingGame:
     """Unit tests to ensure games that are in progress behave as expected"""
 
-    def test_perform_round_actions(self):
+    def test_perform_round_actions(self, client: TestClient):
         """A round of the game can be played"""
-        client = get_client()
-        created_game = started_game()
-        self.assertEqual(RoundStatus.BIDDING.name, created_game["status"])
+        created_game = started_game(client)
+        assert RoundStatus.BIDDING.name == created_game["status"]
 
         # assert that current suggestion is a bid
-        suggested_bid = get_suggestion(created_game["id"])
+        suggested_bid = get_suggestion(client, created_game["id"])
         assert "amount" in suggested_bid
 
         # bid
@@ -33,10 +31,10 @@ class TestPlayingGame(TestCase):
         )
         game = resp.json()
 
-        self.assertEqual(RoundStatus.TRUMP_SELECTION.name, game["status"])
+        assert RoundStatus.TRUMP_SELECTION.name == game["status"]
 
         # assert that current suggestion is a trump selection
-        suggested_trump = get_suggestion(created_game["id"])
+        suggested_trump = get_suggestion(client, created_game["id"])
         assert "suit" in suggested_trump
 
         # select trump
@@ -49,10 +47,10 @@ class TestPlayingGame(TestCase):
 
         print(game)
 
-        self.assertEqual(RoundStatus.DISCARD.name, game["status"])
+        assert RoundStatus.DISCARD.name == game["status"]
 
         # assert that current suggestion is a discard
-        suggested_discard = get_suggestion(created_game["id"])
+        suggested_discard = get_suggestion(client, created_game["id"])
         assert "cards" in suggested_discard
 
         # discard
@@ -63,10 +61,10 @@ class TestPlayingGame(TestCase):
         )
         game = resp.json()
 
-        self.assertEqual(RoundStatus.TRICKS.name, game["status"])
+        assert RoundStatus.TRICKS.name == game["status"]
 
         # ask for a suggestion so we know what card we can play
-        suggested_play = get_suggestion(created_game["id"])
+        suggested_play = get_suggestion(client, created_game["id"])
         assert "card" in suggested_play
 
         # play
@@ -77,13 +75,12 @@ class TestPlayingGame(TestCase):
         )
         game = resp.json()
 
-        self.assertEqual(RoundStatus.TRICKS.name, game["status"])
-        self.assertEqual(2, len(game["round"]["tricks"]))
+        assert RoundStatus.TRICKS.name == game["status"]
+        assert 2 == len(game["round"]["tricks"])
 
-    def test_prepass_and_rescind_prepass(self):
+    def test_prepass_and_rescind_prepass(self, client: TestClient):
         """A non-active player can prepass and rescind that prepass"""
-        client = get_client()
-        game = started_game()
+        game = started_game(client)
 
         non_active_player = next(
             p
@@ -104,9 +101,7 @@ class TestPlayingGame(TestCase):
             for p in game["round"]["players"]
             if p["identifier"] == non_active_player["identifier"]
         )
-        self.assertTrue(
-            "prepassed" in non_active_player and non_active_player["prepassed"]
-        )
+        assert "prepassed" in non_active_player and non_active_player["prepassed"]
 
         # rescind prepass
         resp = client.post(
@@ -119,15 +114,11 @@ class TestPlayingGame(TestCase):
             for p in game["round"]["players"]
             if p["identifier"] == non_active_player["identifier"]
         )
-        self.assertTrue("prepassed" in non_active_player)
-        self.assertFalse(
-            "prepassed" in non_active_player and non_active_player["prepassed"]
-        )
+        assert "prepassed" in non_active_player and not non_active_player["prepassed"]
 
-    def test_leave_playing_game_as_organizer(self):
+    def test_leave_playing_game_as_organizer(self, client: TestClient):
         """A player can leave an active game by automating themselves"""
-        client = get_client()
-        original_game = started_game()
+        original_game = started_game(client)
         active_round_player = original_game["round"]["active_player"]
         active_player = next(
             p
@@ -135,7 +126,7 @@ class TestPlayingGame(TestCase):
             if p["identifier"] == active_round_player["identifier"]
         )
         assert active_player
-        self.assertFalse(active_player["automate"])
+        assert not active_player["automate"]
 
         # leave
         resp = client.post(
@@ -147,12 +138,11 @@ class TestPlayingGame(TestCase):
             p for p in game["players"] if p["identifier"] == active_player["identifier"]
         )
 
-        self.assertTrue(active_player["automate"])
+        assert active_player["automate"]
 
-    def test_leave_playing_game_as_player(self):
+    def test_leave_playing_game_as_player(self, client: TestClient):
         """A player can leave an active game by automating themselves"""
-        client = get_client()
-        lobby = lobby_game()
+        lobby = lobby_game(client)
         player = "player"
 
         # join as player
@@ -173,7 +163,7 @@ class TestPlayingGame(TestCase):
             p for p in game["players"] if p["identifier"] == player
         )
         assert non_active_player
-        self.assertFalse(non_active_player["automate"])
+        assert not non_active_player["automate"]
 
         # leave
         resp = client.post(
@@ -187,4 +177,4 @@ class TestPlayingGame(TestCase):
             if p["identifier"] == non_active_player["identifier"]
         )
 
-        self.assertTrue(non_active_player["automate"])
+        assert non_active_player["automate"]

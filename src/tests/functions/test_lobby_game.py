@@ -1,27 +1,25 @@
 """Lobby unit tests"""
 
-from unittest import TestCase
+from fastapi.testclient import TestClient
 
 from src.main.models.internal import GameStatus, RoundStatus
-from src.tests.helpers import get_client, lobby_game
+from src.tests.helpers import lobby_game
 
 
-class TestLobby(TestCase):
+class TestLobby:
     """Unit tests to ensure lobbies work as expected"""
 
-    def test_lobby_info_invalid_id(self):
+    def test_lobby_info_invalid_id(self, client: TestClient):
         """Invalid lobby ID returns 400"""
-        client = get_client()
         resp = client.get(
             "/players/id/lobbies/not-an-id",
             headers={"authorization": "Bearer id"},
         )
-        self.assertEqual(400, resp.status_code)
+        assert 400 == resp.status_code
 
-    def test_lobby_info(self):
+    def test_lobby_info(self, client: TestClient):
         """Invalid lobby ID returns 400"""
-        client = get_client()
-        lobby = lobby_game()
+        lobby = lobby_game(client)
         resp = client.get(
             f"/players/id/lobbies/{lobby['id']}",
             headers={"authorization": "Bearer id"},
@@ -29,15 +27,14 @@ class TestLobby(TestCase):
 
         retrieved_lobby_info = resp.json()
 
-        self.assertIsNotNone(retrieved_lobby_info["id"])
-        self.assertIsNotNone(retrieved_lobby_info["name"])
-        self.assertIsNotNone(retrieved_lobby_info["organizer"])
-        self.assertEqual([], retrieved_lobby_info["players"])
-        self.assertEqual([], retrieved_lobby_info["invitees"])
+        assert resp.json()["id"] is not None
+        assert resp.json()["name"] is not None
+        assert resp.json()["organizer"] is not None
+        assert [] == retrieved_lobby_info["players"]
+        assert [] == retrieved_lobby_info["invitees"]
 
-    def test_create_lobby(self):
+    def test_create_lobby(self, client: TestClient):
         """New lobby can be created"""
-        client = get_client()
         organizer = "organizer"
         resp = client.post(
             f"/players/{organizer}/lobbies/create",
@@ -46,17 +43,16 @@ class TestLobby(TestCase):
         )
         lobby = resp.json()
 
-        self.assertEqual(organizer, lobby["organizer"]["identifier"])
-        self.assertEqual(0, len(lobby["players"]))
-        self.assertEqual(0, len(lobby["invitees"]))
-        self.assertEqual(GameStatus.WAITING_FOR_PLAYERS.name, lobby["status"])
+        assert organizer == lobby["organizer"]["identifier"]
+        assert 0 == len(lobby["players"])
+        assert 0 == len(lobby["invitees"])
+        assert GameStatus.WAITING_FOR_PLAYERS.name == lobby["status"]
 
-    def test_organizer_invite_to_lobby(self):
+    def test_organizer_invite_to_lobby(self, client: TestClient):
         """Organizer can invite players to a lobby"""
-        client = get_client()
         invitee = "invitee"
 
-        created_lobby = lobby_game()
+        created_lobby = lobby_game(client)
         organizer = created_lobby["organizer"]["identifier"]
 
         resp = client.post(
@@ -66,19 +62,18 @@ class TestLobby(TestCase):
         )
         invited_lobby = resp.json()
 
-        self.assertEqual(created_lobby["id"], invited_lobby["id"])
-        self.assertEqual(0, len(invited_lobby["players"]))
-        self.assertEqual(1, len(invited_lobby["invitees"]))
-        self.assertEqual(invitee, invited_lobby["invitees"][0]["identifier"])
-        self.assertEqual(GameStatus.WAITING_FOR_PLAYERS.name, invited_lobby["status"])
+        assert created_lobby["id"] == invited_lobby["id"]
+        assert 0 == len(invited_lobby["players"])
+        assert 1 == len(invited_lobby["invitees"])
+        assert invitee == invited_lobby["invitees"][0]["identifier"]
+        assert GameStatus.WAITING_FOR_PLAYERS.name == invited_lobby["status"]
 
-    def test_invitee_invite_to_lobby(self):
+    def test_invitee_invite_to_lobby(self, client: TestClient):
         """Invited players cannot invite players to a lobby"""
-        client = get_client()
         invitee = "invitee"
         second_invitee = "second"
 
-        created_lobby = lobby_game()
+        created_lobby = lobby_game(client)
 
         organizer = created_lobby["organizer"]["identifier"]
 
@@ -95,15 +90,14 @@ class TestLobby(TestCase):
             json={"invitees": [second_invitee]},
             headers={"authorization": f"Bearer {invitee}"},
         )
-        self.assertEqual(400, failed_invite.status_code)
+        assert 400 == failed_invite.status_code
 
-    def test_player_invite_to_lobby(self):
+    def test_player_invite_to_lobby(self, client: TestClient):
         """Players can invite other players to a lobby"""
-        client = get_client()
         invitee = "invitee"
         player = "player"
 
-        created_lobby = lobby_game()
+        created_lobby = lobby_game(client)
 
         # join as player
         client.post(
@@ -119,19 +113,18 @@ class TestLobby(TestCase):
         )
         invited_lobby = invite.json()
 
-        self.assertEqual(created_lobby["id"], invited_lobby["id"])
-        self.assertEqual(1, len(invited_lobby["players"]))
-        self.assertEqual(player, invited_lobby["players"][0]["identifier"])
-        self.assertEqual(1, len(invited_lobby["invitees"]))
-        self.assertEqual(invitee, invited_lobby["invitees"][0]["identifier"])
-        self.assertEqual(GameStatus.WAITING_FOR_PLAYERS.name, invited_lobby["status"])
+        assert created_lobby["id"] == invited_lobby["id"]
+        assert 1 == len(invited_lobby["players"])
+        assert player == invited_lobby["players"][0]["identifier"]
+        assert 1 == len(invited_lobby["invitees"])
+        assert invitee == invited_lobby["invitees"][0]["identifier"]
+        assert GameStatus.WAITING_FOR_PLAYERS.name == invited_lobby["status"]
 
-    def test_join_public_lobby(self):
+    def test_join_public_lobby(self, client: TestClient):
         """Any player can join a public lobby"""
-        client = get_client()
         player = "player"
 
-        created_lobby = lobby_game()
+        created_lobby = lobby_game(client)
 
         resp = client.post(
             f"/players/{player}/lobbies/{created_lobby['id']}/join",
@@ -139,15 +132,14 @@ class TestLobby(TestCase):
         )
         joined_lobby = resp.json()
 
-        self.assertEqual(created_lobby["id"], joined_lobby["id"])
-        self.assertEqual(1, len(joined_lobby["players"]))
-        self.assertEqual(player, joined_lobby["players"][0]["identifier"])
-        self.assertEqual(0, len(joined_lobby["invitees"]))
-        self.assertEqual(GameStatus.WAITING_FOR_PLAYERS.name, joined_lobby["status"])
+        assert created_lobby["id"] == joined_lobby["id"]
+        assert 1 == len(joined_lobby["players"])
+        assert player == joined_lobby["players"][0]["identifier"]
+        assert 0 == len(joined_lobby["invitees"])
+        assert GameStatus.WAITING_FOR_PLAYERS.name == joined_lobby["status"]
 
-    def test_join_private_lobby_uninvited(self):
+    def test_join_private_lobby_uninvited(self, client: TestClient):
         """Uninvited players cannot join a private lobby"""
-        client = get_client()
         organizer = "organizer"
         player = "player"
 
@@ -162,11 +154,10 @@ class TestLobby(TestCase):
             f"/players/{player}/lobbies/{created_lobby['id']}/join",
             headers={"authorization": f"Bearer {player}"},
         )
-        self.assertEqual(400, resp.status_code)
+        assert 400 == resp.status_code
 
-    def test_join_private_lobby_invited(self):
+    def test_join_private_lobby_invited(self, client: TestClient):
         """Invited players can join a private lobby"""
-        client = get_client()
         organizer = "organizer"
         player = "player"
 
@@ -190,18 +181,17 @@ class TestLobby(TestCase):
 
         joined_lobby = resp.json()
 
-        self.assertEqual(created_lobby["id"], joined_lobby["id"])
-        self.assertEqual(1, len(joined_lobby["players"]))
-        self.assertEqual(player, joined_lobby["players"][0]["identifier"])
-        self.assertEqual(0, len(joined_lobby["invitees"]))
-        self.assertEqual(GameStatus.WAITING_FOR_PLAYERS.name, joined_lobby["status"])
+        assert created_lobby["id"] == joined_lobby["id"]
+        assert 1 == len(joined_lobby["players"])
+        assert player == joined_lobby["players"][0]["identifier"]
+        assert 0 == len(joined_lobby["invitees"])
+        assert GameStatus.WAITING_FOR_PLAYERS.name == joined_lobby["status"]
 
-    def test_leave_lobby(self):
+    def test_leave_lobby(self, client: TestClient):
         """A player can leave a lobby themselves"""
-        client = get_client()
         player = "player"
 
-        created_lobby = lobby_game()
+        created_lobby = lobby_game(client)
 
         resp = client.post(
             f"/players/{player}/lobbies/{created_lobby['id']}/join",
@@ -209,9 +199,9 @@ class TestLobby(TestCase):
         )
         joined_lobby = resp.json()
 
-        self.assertEqual(created_lobby["id"], joined_lobby["id"])
-        self.assertEqual(1, len(joined_lobby["players"]))
-        self.assertEqual(player, joined_lobby["players"][0]["identifier"])
+        assert created_lobby["id"] == joined_lobby["id"]
+        assert 1 == len(joined_lobby["players"])
+        assert player == joined_lobby["players"][0]["identifier"]
 
         resp = client.post(
             f"/players/{player}/lobbies/{created_lobby['id']}/leave",
@@ -220,20 +210,19 @@ class TestLobby(TestCase):
 
         left_lobby = resp.json()
 
-        self.assertEqual(created_lobby["id"], left_lobby["id"])
-        self.assertEqual(
-            created_lobby["organizer"]["identifier"],
-            left_lobby["organizer"]["identifier"],
+        assert created_lobby["id"] == left_lobby["id"]
+        assert (
+            created_lobby["organizer"]["identifier"]
+            == left_lobby["organizer"]["identifier"]
         )
-        self.assertEqual(0, len(left_lobby["players"]))
-        self.assertEqual(GameStatus.WAITING_FOR_PLAYERS.name, left_lobby["status"])
+        assert 0 == len(left_lobby["players"])
+        assert GameStatus.WAITING_FOR_PLAYERS.name == left_lobby["status"]
 
-    def test_player_start_game(self):
+    def test_player_start_game(self, client: TestClient):
         """Players cannot start the game"""
-        client = get_client()
         player = "player"
 
-        created_lobby = lobby_game()
+        created_lobby = lobby_game(client)
 
         client.post(
             f"/players/{player}/lobbies/{created_lobby['id']}/join",
@@ -244,12 +233,11 @@ class TestLobby(TestCase):
             f"/players/{player}/lobbies/{created_lobby['id']}/start",
             headers={"authorization": f"Bearer {player}"},
         )
-        self.assertEqual(400, resp.status_code)
+        assert 400 == resp.status_code
 
-    def test_start_game(self):
+    def test_start_game(self, client: TestClient):
         """The organizer can start the game"""
-        client = get_client()
-        lobby = lobby_game()
+        lobby = lobby_game(client)
         organizer = lobby["organizer"]["identifier"]
 
         resp = client.post(
@@ -259,17 +247,16 @@ class TestLobby(TestCase):
 
         game = resp.json()
 
-        self.assertEqual(lobby["id"], game["id"])
-        self.assertEqual(4, len(game["round"]["players"]))
-        self.assertEqual(RoundStatus.BIDDING.name, game["status"])
+        assert lobby["id"] == game["id"]
+        assert 4 == len(game["round"]["players"])
+        assert RoundStatus.BIDDING.name == game["status"]
 
-    def test_unknown_user_cannot_invite(self):
+    def test_unknown_user_cannot_invite(self, client: TestClient):
         """A user not in the lobby cannot invite others"""
-        client = get_client()
         unknown_user = "unknown_user"
         invitee = "invitee"
 
-        created_lobby = lobby_game()
+        created_lobby = lobby_game(client)
 
         # Unknown user tries to invite - should fail because they're not in the lobby
         resp = client.post(
@@ -277,14 +264,13 @@ class TestLobby(TestCase):
             json={"invitees": [invitee]},
             headers={"authorization": f"Bearer {unknown_user}"},
         )
-        self.assertEqual(400, resp.status_code)
+        assert 400 == resp.status_code
 
-    def test_unknown_player_leaves_fails(self):
+    def test_unknown_player_leaves_fails(self, client: TestClient):
         """When an unknown player leaves, return 400 because they're not in the lobby"""
-        client = get_client()
         player = "player"
 
-        created_lobby = lobby_game()
+        created_lobby = lobby_game(client)
 
         # Unrecognized player attempts to leave
         resp = client.post(
@@ -292,14 +278,13 @@ class TestLobby(TestCase):
             headers={"authorization": f"Bearer {player}"},
         )
 
-        self.assertEqual(400, resp.status_code)
+        assert 400 == resp.status_code
 
-    def test_organizer_leaves_fails(self):
+    def test_organizer_leaves_fails(self, client: TestClient):
         """When organizer attempts to leave, prevent it"""
-        client = get_client()
         player = "player"
 
-        created_lobby = lobby_game()
+        created_lobby = lobby_game(client)
 
         # Another player joins
         client.post(
@@ -315,12 +300,11 @@ class TestLobby(TestCase):
         )
 
         # Organizer cannot leave. Needs to delete lobby.
-        self.assertEqual(400, resp.status_code)
+        assert 400 == resp.status_code
 
-    def test_search_lobbies(self):
+    def test_search_lobbies(self, client: TestClient):
         """Can search for lobbies"""
-        client = get_client()
-        created_lobby = lobby_game()
+        created_lobby = lobby_game(client)
         organizer = created_lobby["organizer"]["identifier"]
 
         resp = client.post(
@@ -330,4 +314,4 @@ class TestLobby(TestCase):
         )
 
         lobbies = resp.json()
-        self.assertGreaterEqual(len(lobbies), 1)
+        assert len(lobbies) >= 1

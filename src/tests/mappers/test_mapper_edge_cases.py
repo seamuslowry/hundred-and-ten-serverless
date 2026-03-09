@@ -1,7 +1,6 @@
 """Ensure edge cases of mapping are unit tested"""
 
-from unittest import TestCase
-
+import pytest
 from hundredandten.events import Event
 from hundredandten.player import HumanPlayer
 
@@ -31,32 +30,35 @@ def _raise_unknown_internal_person_type() -> None:
     getattr(db_serialize, "__person")(_UnknownPerson("id"))
 
 
-class TestMapperEdgeCases(TestCase):
+class TestMapperEdgeCases:
     """Unit tests to ensure mapper edge cases behave as expected"""
 
     def test_bad_suggestion_error(self):
         """Attempting to serialize an invalid suggestion results in an error"""
         identifier = "identifier"
-        self.assertRaises(ValueError, client_serialize.suggestion, Action(identifier))
+        with pytest.raises(ValueError):
+            client_serialize.suggestion(Action(identifier))
 
     def test_card_with_unselectable_suit(self):
         """Deserializing a card with an UnselectableSuit should succeed"""
         result = client_deserialize.card(
             CardRequest(suit=Suit.JOKER, number=CardNumberName.JOKER)
         )
-        self.assertEqual(
-            result, Card(suit=UnselectableSuit.JOKER, number=CardNumber.JOKER)
-        )
+        assert result == Card(suit=UnselectableSuit.JOKER, number=CardNumber.JOKER)
 
     def test_unknown_event_type_error(self):
         """Serializing an unknown event type raises ValueError"""
-        self.assertRaises(ValueError, client_serialize.events, [Event()], "identifier")
+        with pytest.raises(ValueError):
+            client_serialize.events([Event()], "identifier")
 
     def test_unknown_db_player_type_error(self):
-        self.assertRaises(ValueError, _raise_unknown_db_player_type)
+        with pytest.raises(ValueError):
+            _raise_unknown_db_player_type()
 
     def test_unknown_db_move_type_error(self):
-        self.assertRaises(ValueError, _raise_unknown_db_move_type)
+        with pytest.raises(ValueError):
+            _raise_unknown_db_move_type()
 
     def test_unknown_internal_person_type_error(self):
-        self.assertRaises(ValueError, _raise_unknown_internal_person_type)
+        with pytest.raises(ValueError):
+            _raise_unknown_internal_person_type()
