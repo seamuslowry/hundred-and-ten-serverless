@@ -28,14 +28,14 @@ class TestUserService(TestCase):
 
         self.assertEqual(users, found_users)
 
-    def test_get_users_by_identifiers(self):
+    async def test_get_users_by_identifiers(self):
         """Users can be retrieved by identifier in the DB"""
         users = [
-            UserService.save(User(identifier=str(time()), name="search"))
+            await UserService.save(User(identifier=str(time()), name="search"))
             for _ in range(5)
         ]
 
-        found_users = UserService.by_identifiers(
+        found_users = await UserService.by_identifiers(
             list(map(lambda u: u.identifier, users))
         )
 

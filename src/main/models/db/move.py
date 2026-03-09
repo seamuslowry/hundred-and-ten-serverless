@@ -1,17 +1,55 @@
 """Format of a moves of Hundred and Ten in the DB"""
 
-
 from abc import ABC
+from enum import Enum
 from typing import Annotated, Literal, Union
 
 from pydantic import BaseModel, Field
 
 
+class Suit(str, Enum):
+    """All card suits (selectable + unselectable) as string names for DB"""
+
+    JOKER = "JOKER"
+    DIAMONDS = "DIAMONDS"
+    CLUBS = "CLUBS"
+    HEARTS = "HEARTS"
+    SPADES = "SPADES"
+
+
+class SelectableSuit(str, Enum):
+    """Selectable trump suits as string names for DB"""
+
+    DIAMONDS = "DIAMONDS"
+    SPADES = "SPADES"
+    CLUBS = "CLUBS"
+    HEARTS = "HEARTS"
+
+
+class CardNumber(str, Enum):
+    """Card number names for DB"""
+
+    JOKER = "JOKER"
+    ACE = "ACE"
+    KING = "KING"
+    QUEEN = "QUEEN"
+    JACK = "JACK"
+    TEN = "TEN"
+    NINE = "NINE"
+    EIGHT = "EIGHT"
+    SEVEN = "SEVEN"
+    SIX = "SIX"
+    FIVE = "FIVE"
+    FOUR = "FOUR"
+    THREE = "THREE"
+    TWO = "TWO"
+
+
 class Card(BaseModel):
     """A class to model the DB format of a card"""
 
-    suit: str
-    number: str
+    suit: Suit
+    number: CardNumber
 
 
 class AbstractMove(ABC, BaseModel):
@@ -31,7 +69,7 @@ class SelectTrumpMove(AbstractMove):
 
     type: Literal["select_trump"] = "select_trump"
     identifier: str
-    suit: str
+    suit: SelectableSuit
 
 
 class DiscardMove(AbstractMove):

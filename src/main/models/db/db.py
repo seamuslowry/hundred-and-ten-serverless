@@ -1,108 +1,108 @@
-"""Format of a game of Hundred and Ten in the DB"""
+# """Format of a game of Hundred and Ten in the DB"""
 
-from typing import Literal, NotRequired, Optional, TypedDict, Union
+# from typing import Literal, NotRequired, Optional, TypedDict, Union
 
-from bson import ObjectId
-
-
-class Person(TypedDict):
-    """A class to model the DB format of a person"""
-
-    identifier: str
-    automate: bool
+# from bson import ObjectId
 
 
-class Card(TypedDict):
-    """A class to model the DB format of a card"""
+# class Person(TypedDict):
+#     """A class to model the DB format of a person"""
 
-    suit: str
-    number: str
-
-
-class BidMove(TypedDict):
-    """A bid move"""
-
-    type: Literal["bid"]
-    identifier: str
-    amount: int
+#     identifier: str
+#     automate: bool
 
 
-class SelectTrumpMove(TypedDict):
-    """A select trump move"""
+# class Card(TypedDict):
+#     """A class to model the DB format of a card"""
 
-    type: Literal["select_trump"]
-    identifier: str
-    suit: str
-
-
-class DiscardMove(TypedDict):
-    """A discard move"""
-
-    type: Literal["discard"]
-    identifier: str
-    cards: list[Card]
+#     suit: str
+#     number: str
 
 
-class PlayMove(TypedDict):
-    """A play card move"""
+# class BidMove(TypedDict):
+#     """A bid move"""
 
-    type: Literal["play"]
-    identifier: str
-    card: Card
-
-
-Move = Union[BidMove, SelectTrumpMove, DiscardMove, PlayMove]
+# type: Literal["bid"]
+#     identifier: str
+#     amount: int
 
 
-class Lobby(TypedDict):
-    """A class to model the DB format of a Hundred and Ten lobby"""
+# class SelectTrumpMove(TypedDict):
+#     """A select trump move"""
 
-    type: Literal["lobby"]
-    _id: NotRequired[ObjectId]
-    name: str
-    seed: str
-    accessibility: str
-    organizer: Person
-    players: list[Person]
-    invitees: list[Person]
+# type: Literal["select_trump"]
+#     identifier: str
+#     suit: str
 
 
-class Game(TypedDict):
-    """A class to model the DB format of a Hundred and Ten game"""
+# class DiscardMove(TypedDict):
+#     """A discard move"""
 
-    type: Literal["game"]
-    _id: NotRequired[ObjectId]
-    name: str
-    seed: str
-    accessibility: str
-    organizer: Person
-    players: list[Person]
-    winner: Optional[str]
-    active_player: Optional[str]
-    moves: list[Move]
-    status: str
+# type: Literal["discard"]
+#     identifier: str
+#     cards: list[Card]
 
 
-class User(TypedDict):
-    """A class to model the DB format of a Hundred and Ten user"""
+# class PlayMove(TypedDict):
+#     """A play card move"""
 
-    identifier: str
-    name: str
-    picture_url: Optional[str]
-
-
-class SearchLobby(TypedDict):
-    """A class to model how the client will search for lobbies"""
-
-    name: str
-    client: str
+# type: Literal["play"]
+#     identifier: str
+#     card: Card
 
 
-class SearchGame(TypedDict):
-    """A class to model how the client will search for games"""
+# Move = Union[BidMove, SelectTrumpMove, DiscardMove, PlayMove]
 
-    name: str
-    client: str
-    statuses: Optional[list[str]]
-    active_player: Optional[str]
-    winner: Optional[str]
+
+# class Lobby(TypedDict):
+#     """A class to model the DB format of a Hundred and Ten lobby"""
+
+# type: Literal["lobby"]
+#     _id: NotRequired[ObjectId]
+#     name: str
+#     seed: str
+#     accessibility: str
+#     organizer: Person
+#     players: list[Person]
+#     invitees: list[Person]
+
+
+# class Game(TypedDict):
+#     """A class to model the DB format of a Hundred and Ten game"""
+
+# type: Literal["game"]
+#     _id: NotRequired[ObjectId]
+#     name: str
+#     seed: str
+#     accessibility: str
+#     organizer: Person
+#     players: list[Person]
+#     winner: Optional[str]
+#     active_player: Optional[str]
+#     moves: list[Move]
+#     status: str
+
+
+# class User(TypedDict):
+#     """A class to model the DB format of a Hundred and Ten user"""
+
+#     identifier: str
+#     name: str
+#     picture_url: Optional[str]
+
+
+# class SearchLobby(TypedDict):
+#     """A class to model how the client will search for lobbies"""
+
+#     name: str
+#     client: str
+
+
+# class SearchGame(TypedDict):
+#     """A class to model how the client will search for games"""
+
+#     name: str
+#     client: str
+#     statuses: Optional[list[str]]
+#     active_player: Optional[str]
+#     winner: Optional[str]

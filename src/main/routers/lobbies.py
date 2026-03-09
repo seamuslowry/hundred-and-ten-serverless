@@ -13,7 +13,6 @@ from src.main.models.client.requests import (
     SearchLobbiesRequest,
 )
 from src.main.models.client.responses import StartedGame, User, WaitingGame
-from src.main.models.db.db import SearchLobby
 from src.main.models.internal import (
     Accessibility,
     Human,
@@ -33,40 +32,37 @@ router = APIRouter(
 
 
 @router.get("/{lobby_id}", response_model=WaitingGame)
-def lobby_info(lobby_id: str):
+async def lobby_info(lobby_id: str):
     """Retrieve 110 lobby."""
-    lobby = LobbyService.get(lobby_id)
+    lobby = await LobbyService.get(lobby_id)
 
     return serialize.lobby(lobby)
 
 
 @router.get("/{lobby_id}/players", response_model=list[User])
-def lobby_players(lobby_id: str):
+async def lobby_players(lobby_id: str):
     """Retrieve players in a 110 lobby."""
-    lobby = LobbyService.get(lobby_id)
+    lobby = await LobbyService.get(lobby_id)
 
     people_ids = [p.identifier for p in lobby.ordered_players]
 
-    return [serialize.user(u) for u in UserService.by_identifiers(people_ids)]
+    return [serialize.user(u) for u in await UserService.by_identifiers(people_ids)]
 
 
 @router.post("/search", response_model=list[WaitingGame])
-def search_lobbies(player_id: str, body: SearchLobbiesRequest):
+async def search_lobbies(player_id: str, body: SearchLobbiesRequest):
     """Search for lobbies"""
     return [
         serialize.lobby(lobby)
-        for lobby in LobbyService.search(
-            SearchLobby(
-                name=body.searchText,
-                client=player_id,
-            ),
-            body.max,
+        for lobby in await LobbyService.search(
+            player_id,
+            body,
         )
     ]
 
 
 @router.post("/create", response_model=WaitingGame)
-def create_lobby(player_id: str, body: CreateLobbyRequest):
+async def create_lobby(player_id: str, body: CreateLobbyRequest):
     """Create a new 110 lobby."""
     logging.info("Initiating create lobby request.")
 
@@ -78,7 +74,7 @@ def create_lobby(player_id: str, body: CreateLobbyRequest):
         accessibility=Accessibility[body.accessibility],
     )
 
-    lobby = LobbyService.save(lobby)
+    lobby = await LobbyService.save(lobby)
 
     logging.debug("Lobby %s created successfully", lobby.seed)
 
@@ -86,41 +82,41 @@ def create_lobby(player_id: str, body: CreateLobbyRequest):
 
 
 @router.post("/{lobby_id}/invite", response_model=WaitingGame)
-def invite_to_lobby(player_id: str, lobby_id: str, body: InviteRequest):
+async def invite_to_lobby(player_id: str, lobby_id: str, body: InviteRequest):
     """Invite to join a 110 lobby"""
-    lobby = LobbyService.get(lobby_id)
+    lobby = await LobbyService.get(lobby_id)
 
     for invitee in body.invitees:
         lobby.invite(player_id, Human(identifier=invitee))
-    lobby = LobbyService.save(lobby)
+    lobby = await LobbyService.save(lobby)
 
     return serialize.lobby(lobby)
 
 
 @router.post("/{lobby_id}/join", response_model=WaitingGame)
-def join_lobby(player_id: str, lobby_id: str):
+async def join_lobby(player_id: str, lobby_id: str):
     """Join a 110 lobby"""
-    lobby = LobbyService.get(lobby_id)
+    lobby = await LobbyService.get(lobby_id)
     lobby.join(Human(player_id))
-    lobby = LobbyService.save(lobby)
+    lobby = await LobbyService.save(lobby)
 
     return serialize.lobby(lobby)
 
 
 @router.post("/{lobby_id}/leave", response_model=WaitingGame)
-def leave_lobby(player_id: str, lobby_id: str):
+async def leave_lobby(player_id: str, lobby_id: str):
     """Leave a 110 lobby"""
-    lobby = LobbyService.get(lobby_id)
+    lobby = await LobbyService.get(lobby_id)
     lobby.leave(player_id)
-    lobby = LobbyService.save(lobby)
+    lobby = await LobbyService.save(lobby)
 
     return serialize.lobby(lobby)
 
 
 @router.post("/{lobby_id}/start", response_model=StartedGame)
-def start_game(player_id: str, lobby_id: str):
+async def start_game(player_id: str, lobby_id: str):
     """Start a 110 game from a lobby"""
-    lobby = LobbyService.get(lobby_id)
+    lobby = await LobbyService.get(lobby_id)
 
     if player_id != lobby.organizer.identifier:
         raise HundredAndTenError("Only the organizer can start the game")
@@ -132,6 +128,6 @@ def start_game(player_id: str, lobby_id: str):
         lobby.join(NaiveCpu(cpu_identifier))
 
     # Start the game (converts lobby record to game record)
-    game = LobbyService.start_game(lobby)
+    game = await LobbyService.start_game(lobby)
 
     return serialize.game(game, player_id, 0)
