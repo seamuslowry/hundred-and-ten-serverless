@@ -1,3 +1,0 @@
-Verification: No old pymongo code remains
-$ grep -n 'game_client|$elemMatch|$regex' src/main/services/game.py || echo 'CLEAN'
-CLEAN

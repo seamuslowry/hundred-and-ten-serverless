@@ -1,4 +1,0 @@
-Scenarios [24/24 pass]
-Integration [5/5]
-Edge Cases [5 tested]
-VERDICT: APPROVE

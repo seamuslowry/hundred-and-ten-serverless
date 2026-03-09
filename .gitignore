@@ -140,3 +140,6 @@ references/
 # OpenTofu
 .terraform
 secret.locals.tf
+
+# Oh my OpenAgent
+.sisyphus
