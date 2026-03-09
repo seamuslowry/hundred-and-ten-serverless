@@ -1,22 +1,8 @@
 services:
   db:
     image: mongo:latest
-    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpassword
     ports:
       - 27017:27017
-    healthcheck:
-      test: mongosh --eval 'db.adminCommand("ping")'
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-  init-replica:
-    image: mongo:latest
-    depends_on:
-      db:
-        condition: service_healthy
-    entrypoint: /bin/sh
-    command:
-      - -c
-      - |
-        mongosh --host db --eval "rs.initiate()" || true

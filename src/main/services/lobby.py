@@ -1,7 +1,5 @@
 """Facilitate interaction with the lobby DB"""
 
-from typing import Any, cast
-
 from beanie.operators import ElemMatch, Or, RegEx
 
 from src.main.mappers.db import deserialize, serialize
@@ -52,11 +50,7 @@ class LobbyService:
     @staticmethod
     async def start_game(lobby: Lobby) -> Game:
         """Convert a lobby to a game (starts the game)"""
-        client = cast(Any, DbLobby).get_pymongo_collection().database.client
         game = Game.from_lobby(lobby)
-
-        async with client.start_session() as session:
-            async with await session.start_transaction():
-                saved_game = await serialize.game(game).save(session=session)
-                await serialize.lobby(lobby).delete(session=session)
-                return deserialize.game(saved_game)
+        saved_game = await serialize.game(game).save()  # Create FIRST
+        await serialize.lobby(lobby).delete()  # Delete AFTER
+        return deserialize.game(saved_game)
