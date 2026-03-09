@@ -3,6 +3,7 @@
 from unittest import TestCase
 
 from hundredandten.events import Event
+from hundredandten.player import HumanPlayer
 
 from src.main.mappers.client import deserialize as client_deserialize
 from src.main.mappers.client import serialize as client_serialize
@@ -10,7 +11,24 @@ from src.main.mappers.db import deserialize as db_deserialize
 from src.main.mappers.db import serialize as db_serialize
 from src.main.models.client.constants import CardNumberName, Suit
 from src.main.models.client.requests import CardRequest
-from src.main.models.internal import Action, Card, CardNumber, UnselectableSuit
+from src.main.models.internal import Action, Card, CardNumber, Person, UnselectableSuit
+
+
+def _raise_unknown_db_player_type() -> None:
+    getattr(db_deserialize, "__person")(object())
+
+
+def _raise_unknown_db_move_type() -> None:
+    unknown_move = type("UnknownMove", (), {"type": "unknown", "identifier": "id"})()
+    getattr(db_deserialize, "__move")(unknown_move)
+
+
+def _raise_unknown_internal_person_type() -> None:
+    class _UnknownPerson(Person):
+        def as_player(self):
+            return HumanPlayer(self.identifier)
+
+    getattr(db_serialize, "__person")(_UnknownPerson("id"))
 
 
 class TestMapperEdgeCases(TestCase):
@@ -34,11 +52,11 @@ class TestMapperEdgeCases(TestCase):
         """Serializing an unknown event type raises ValueError"""
         self.assertRaises(ValueError, client_serialize.events, [Event()], "identifier")
 
-    def test_unknown_db_mapper_type_errors(self):
-        """DB mapper helpers raise ValueError on unsupported payloads"""
-        unknown_move = type(
-            "UnknownMove", (), {"type": "unknown", "identifier": "id"}
-        )()
-        self.assertRaises(ValueError, getattr(db_deserialize, "__person"), object())
-        self.assertRaises(ValueError, getattr(db_deserialize, "__move"), unknown_move)
-        self.assertRaises(ValueError, getattr(db_serialize, "__person"), object())
+    def test_unknown_db_player_type_error(self):
+        self.assertRaises(ValueError, _raise_unknown_db_player_type)
+
+    def test_unknown_db_move_type_error(self):
+        self.assertRaises(ValueError, _raise_unknown_db_move_type)
+
+    def test_unknown_internal_person_type_error(self):
+        self.assertRaises(ValueError, _raise_unknown_internal_person_type)

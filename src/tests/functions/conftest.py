@@ -15,7 +15,7 @@ def _mock_google_auth():
     The mock makes verify_google_token return an Identity with the token as the id,
     so ``Authorization: Bearer some-user`` resolves to Identity(id="some-user").
     """
-    getattr(helpers, "_reset_client")()
+    helpers._reset_client()
 
     with patch(
         "src.main.auth.depends.verify_google_token",
@@ -23,4 +23,4 @@ def _mock_google_auth():
     ):
         yield
 
-    getattr(helpers, "_reset_client")()
+    helpers._reset_client()
