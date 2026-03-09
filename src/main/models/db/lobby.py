@@ -21,6 +21,7 @@ class Lobby(ABC, Document):
     class Settings:
         """Settings for this beanie model"""
 
+        is_root = True
         name = "lobbies"  # the collection
         class_id = "schema_version"  # the field to discriminate on
 
@@ -31,5 +32,5 @@ class Lobby(ABC, Document):
     invitees: list[Player]
 
 
-class LobbyV0(Document):
+class LobbyV0(Lobby):
     """A V0 lobby document"""

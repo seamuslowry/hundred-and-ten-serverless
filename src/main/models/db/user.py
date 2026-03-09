@@ -12,6 +12,7 @@ class User(ABC, Document):
     class Settings:
         """Settings for this beanie model"""
 
+        is_root = True
         name = "users"  # the collection
         class_id = "schema_version"  # the field to discriminate on
 
