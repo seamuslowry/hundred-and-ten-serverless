@@ -18,16 +18,13 @@ class UserService:
     async def save(user: User) -> User:
         """Save the provided user to the DB"""
         serialized_user = serialize.user(user)
-        await DbUser.find_one(
-            DbUser.identifier == user.identifier, with_children=True
-        ).upsert(
-            Set(serialized_user.model_dump()),
-            on_insert=serialized_user,
-        )  # type: ignore upsert does need to be awaited, but doesn't get typed as such
 
-        new_user = await DbUser.find_one(DbUser.identifier == user.identifier, with_children=True)
-        assert new_user
-        return deserialize.user(new_user)
+        existing_user = await DbUser.find_one(DbUser.identifier == user.identifier, with_children=True)
+
+        if existing_user:
+            serialized_user.id = existing_user.id
+
+        return deserialize.user(await serialized_user.save())
 
     @staticmethod
     async def search(search_text: str) -> list[User]:
