@@ -46,14 +46,7 @@ async def lobby_players(lobby_id: str):
 
     people_ids = [p.identifier for p in lobby.ordered_players]
 
-    users = await UserService.by_identifiers(people_ids)
-    by_identifier = {u.identifier: u for u in users}
-
-    return [
-        serialize.user(by_identifier[i])
-        for i in dict.fromkeys(people_ids)
-        if i in by_identifier
-    ]
+    return [serialize.user(u) for u in await UserService.by_identifiers(people_ids)]
 
 
 @router.post("/search", response_model=list[WaitingGame])
