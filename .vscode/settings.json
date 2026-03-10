@@ -15,7 +15,7 @@
     "--experimental"
   ],
   "python.testing.pytestArgs": [
-    "tests"
+    "src/tests"
   ],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true
