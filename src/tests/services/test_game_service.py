@@ -59,9 +59,9 @@ async def test_search_game():
     found_games = await GameService.search(
         "p1",
         SearchGamesRequest(
-            searchText=text,
+            search_text=text,
             statuses=None,
-            activePlayer=None,
+            active_player=None,
             winner=None,
             limit=len(games) + 1,
         ),
@@ -88,8 +88,8 @@ async def test_search_game_with_filters():
     found_with_player = await GameService.search(
         "p1",
         SearchGamesRequest(
-            searchText=text,
-            activePlayer=active_player_id,
+            search_text=text,
+            active_player=active_player_id,
             winner=None,
             statuses=None,
             limit=10,
@@ -101,8 +101,8 @@ async def test_search_game_with_filters():
     found_with_winner = await GameService.search(
         "p1",
         SearchGamesRequest(
-            searchText=text,
-            activePlayer=None,
+            search_text=text,
+            active_player=None,
             winner="nonexistent_winner",
             statuses=None,
             limit=10,
@@ -114,8 +114,8 @@ async def test_search_game_with_filters():
     found_with_status = await GameService.search(
         "p1",
         SearchGamesRequest(
-            searchText=text,
-            activePlayer=None,
+            search_text=text,
+            active_player=None,
             winner=None,
             statuses=[games[0].status.name],
             limit=10,

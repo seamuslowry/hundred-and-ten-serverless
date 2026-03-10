@@ -48,7 +48,7 @@ async def test_search_lobby():
 
     found_lobbies = await LobbyService.search(
         "p1",
-        SearchLobbiesRequest(searchText=text, limit=len(lobbies) + 1),
+        SearchLobbiesRequest(search_text=text, limit=len(lobbies) + 1),
     )
 
     assert len(found_lobbies) == len(lobbies)

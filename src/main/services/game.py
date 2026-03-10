@@ -31,15 +31,15 @@ class GameService:
         """Search for games matching the provided criteria"""
 
         filters = [
-            RegEx(DbGame.name, search_game.searchText, "i"),
+            RegEx(DbGame.name, search_game.search_text, "i"),
             Or(
                 DbGame.accessibility == Accessibility.PUBLIC,
                 ElemMatch(DbGame.players, {"identifier": player_id}),
                 DbGame.organizer.identifier == player_id,
             ),
         ]
-        if search_game.activePlayer is not None:
-            filters.append(DbGame.active_player == search_game.activePlayer)
+        if search_game.active_player is not None:
+            filters.append(DbGame.active_player == search_game.active_player)
         if search_game.winner is not None:
             filters.append(DbGame.winner == search_game.winner)
         if search_game.statuses is not None:

@@ -33,7 +33,7 @@ class LobbyService:
             map(
                 deserialize.lobby,
                 await DbLobby.find(
-                    RegEx(DbLobby.name, search_lobby.searchText, "i"),
+                    RegEx(DbLobby.name, search_lobby.search_text, "i"),
                     Or(
                         DbLobby.accessibility == Accessibility.PUBLIC,
                         ElemMatch(DbLobby.players, {"identifier": player_id}),

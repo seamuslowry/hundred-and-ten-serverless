@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from .constants import CardNumberName, SelectableSuit, Suit
 
@@ -54,7 +54,7 @@ class InviteRequest(BaseModel):
 class SearchLobbiesRequest(BaseModel):
     """Request body for searching lobbies"""
 
-    searchText: str = ""
+    search_text: str = Field(default="", serialization_alias="searchText")
     offset: int = 0
     limit: int = 20
 
@@ -62,11 +62,11 @@ class SearchLobbiesRequest(BaseModel):
 class SearchGamesRequest(BaseModel):
     """Request body for searching games"""
 
-    searchText: str = ""
+    search_text: str = Field(default="", serialization_alias="searchText")
     offset: int = 0
     limit: int = 20
     statuses: Optional[list[str]] = None
-    activePlayer: Optional[str] = None
+    active_player: Optional[str] = Field(default=None, serialization_alias="activePlayer")
     winner: Optional[str] = None
 
 
