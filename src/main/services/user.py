@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from beanie.operators import In, RegEx
+from beanie.operators import In, RegEx, Set
 
 from src.main.mappers.db import deserialize, serialize
 from src.main.models.db import User as DbUser
@@ -17,7 +17,17 @@ class UserService:
     @staticmethod
     async def save(user: User) -> User:
         """Save the provided user to the DB"""
-        return deserialize.user(await serialize.user(user).save())
+        serialized_user = serialize.user(user)
+        await DbUser.find_one(
+            DbUser.identifier == user.identifier, with_children=True
+        ).upsert(
+            Set(serialized_user.model_dump()),
+            on_insert=serialized_user,
+        )  # type: ignore upsert does need to be awaited, but doesn't get typed as such
+
+        new_user = await DbUser.find_one(DbUser.identifier == user.identifier, with_children=True)
+        assert new_user
+        return deserialize.user(new_user)
 
     @staticmethod
     async def search(search_text: str) -> list[User]:
