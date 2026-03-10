@@ -8,7 +8,7 @@ from src.main.models import db, internal
 def lobby(m_lobby: internal.Lobby) -> db.Lobby:
     """Convert a Lobby model to its DB DTO"""
     result = db.LobbyV0(
-        id=PydanticObjectId(m_lobby.id),
+        id=PydanticObjectId(m_lobby.id) if m_lobby.id else None,
         name=m_lobby.name,
         accessibility=db.Accessibility[m_lobby.accessibility.name],
         organizer=__person(m_lobby.organizer),
@@ -29,7 +29,7 @@ def game(m_game: internal.Game) -> db.Game:
     )
 
     return db.GameV0(
-        id=PydanticObjectId(m_game.id),
+        id=PydanticObjectId(m_game.id) if m_game.id else None,
         name=m_game.name,
         seed=m_game.seed,
         accessibility=db.Accessibility[m_game.accessibility.name],
