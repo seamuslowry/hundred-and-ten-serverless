@@ -25,7 +25,9 @@ class UserService:
         return list(
             map(
                 deserialize.user,
-                await DbUser.find(RegEx(DbUser.name, search_text, "i"))
+                await DbUser.find(
+                    RegEx(DbUser.name, search_text, "i"), with_children=True
+                )
                 .limit(MAX)
                 .to_list(),
             )
@@ -34,7 +36,9 @@ class UserService:
     @staticmethod
     async def by_identifier(identifier: str) -> Optional[User]:
         """Retrieve the user with identifier provided"""
-        result = await DbUser.find_one(DbUser.identifier == identifier)
+        result = await DbUser.find_one(
+            DbUser.identifier == identifier, with_children=True
+        )
 
         if not result:
             return None
@@ -46,6 +50,8 @@ class UserService:
         return list(
             map(
                 deserialize.user,
-                await DbUser.find(In(DbUser.identifier, identifiers)).to_list(),
+                await DbUser.find(
+                    In(DbUser.identifier, identifiers), with_children=True
+                ).to_list(),
             )
         )

@@ -6,15 +6,12 @@ import os
 from contextlib import asynccontextmanager
 
 import azure.functions as func
-from beanie import init_beanie
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 from pymongo import AsyncMongoClient
 
 from src.main.auth import get_authorized_identity
-from src.main.models.db.game import Game
-from src.main.models.db.lobby import Lobby
-from src.main.models.db.user import User
+from src.main.models.db.setup import init_beanie_for_client
 from src.main.models.internal import (
     HundredAndTenError,
 )
@@ -26,15 +23,22 @@ connection_string = os.environ.get(
 )
 database_name = os.environ.get("DatabaseName", "test")
 
+# =============================================================================
+# Context manager
+# =============================================================================
+
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     """Initialize the context of FastAPI"""
     client = AsyncMongoClient(connection_string)
-    await init_beanie(
-        database=client[database_name], document_models=[Game, Lobby, User]
-    )
+    await init_beanie_for_client(client, database_name)
     yield
+
+
+# =============================================================================
+# FastAPI app
+# =============================================================================
 
 
 fastapi_app = FastAPI(

@@ -20,7 +20,7 @@ class GameService:
     @staticmethod
     async def get(game_id: str) -> Game:
         """Retrieve the game with the provided ID"""
-        result = await DbGame.get(game_id)
+        result = await DbGame.get(game_id, with_children=True)
         if not result:
             raise ValueError(f"No game found with id {game_id}")
 
@@ -48,7 +48,7 @@ class GameService:
         return list(
             map(
                 deserialize.game,
-                await DbGame.find(*filters)
+                await DbGame.find(*filters, with_children=True)
                 .limit(search_game.limit)
                 .skip(search_game.offset)
                 .to_list(),

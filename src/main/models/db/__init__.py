@@ -14,6 +14,7 @@ from .move import (
     Suit,
 )
 from .player import HumanPlayer, NaiveCpuPlayer, Player
+from .setup import init_beanie_for_client
 from .user import User, UserV0
 
 __all__ = [
@@ -37,4 +38,5 @@ __all__ = [
     "Suit",
     "SelectableSuit",
     "CardNumber",
+    "init_beanie_for_client",
 ]

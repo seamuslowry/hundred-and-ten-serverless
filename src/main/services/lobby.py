@@ -19,7 +19,7 @@ class LobbyService:
     @staticmethod
     async def get(lobby_id: str) -> Lobby:
         """Retrieve the lobby with the provided ID"""
-        result = await DbLobby.get(lobby_id)
+        result = await DbLobby.get(lobby_id, with_children=True)
 
         if not result:
             raise ValueError(f"No lobby found with id {lobby_id}")
@@ -40,6 +40,7 @@ class LobbyService:
                         ElemMatch(DbLobby.invitees, {"identifier": player_id}),
                         DbLobby.organizer.identifier == player_id,
                     ),
+                    with_children=True,
                 )
                 .limit(search_lobby.limit)
                 .skip(search_lobby.offset)
