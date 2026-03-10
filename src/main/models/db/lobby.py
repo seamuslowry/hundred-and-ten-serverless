@@ -19,7 +19,7 @@ class Lobby(ABC, Document):
     """A base class for lobbies"""
 
     class Settings:
-        """Settings for this beanie model"""
+        """Settings for the base lobby beanie model"""
 
         is_root = True
         name = "lobbies"  # the collection

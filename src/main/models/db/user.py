@@ -10,7 +10,7 @@ class User(ABC, Document):
     """A base class for users"""
 
     class Settings:
-        """Settings for this beanie model"""
+        """Settings for the base user beanie model"""
 
         is_root = True
         name = "users"  # the collection
