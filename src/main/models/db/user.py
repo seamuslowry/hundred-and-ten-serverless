@@ -16,6 +16,7 @@ class User(ABC, Document):
         name = "users"  # the collection
         class_id = "schema_version"  # the field to discriminate on
 
+    # TODO: insert/update/etc by identifier
     identifier: str
     name: str
     picture_url: Optional[str]
