@@ -84,7 +84,7 @@ async def test_search_game_with_filters():
     game_with_player = games[0]
     active_player_id = game_with_player.active_round.active_player.identifier
 
-    # Search with activePlayer filter (exercises line 42)
+    # Search with activePlayer filter
     found_with_player = await GameService.search(
         "p1",
         SearchGamesRequest(
@@ -97,7 +97,7 @@ async def test_search_game_with_filters():
     )
     assert len(found_with_player) > 0
 
-    # Search with winner filter (exercises line 44 - already covered but verify)
+    # Search with winner filter
     found_with_winner = await GameService.search(
         "p1",
         SearchGamesRequest(
@@ -110,7 +110,7 @@ async def test_search_game_with_filters():
     )
     assert len(found_with_winner) == 0
 
-    # Search with statuses filter (exercises line 46)
+    # Search with statuses filter
     found_with_status = await GameService.search(
         "p1",
         SearchGamesRequest(
