@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from beanie.operators import In, RegEx, Set
+from beanie.operators import In, RegEx
 
 from src.main.mappers.db import deserialize, serialize
 from src.main.models.db import User as DbUser
@@ -19,7 +19,9 @@ class UserService:
         """Save the provided user to the DB"""
         serialized_user = serialize.user(user)
 
-        existing_user = await DbUser.find_one(DbUser.identifier == user.identifier, with_children=True)
+        existing_user = await DbUser.find_one(
+            DbUser.identifier == user.identifier, with_children=True
+        )
 
         if existing_user:
             serialized_user.id = existing_user.id
