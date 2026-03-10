@@ -25,7 +25,7 @@ def game(m_game: internal.Game) -> db.Game:
     active_player = (
         m_game.active_round.active_player.identifier
         if m_game.status != internal.GameStatus.WON
-        else winner or m_game.organizer.identifier
+        else None
     )
 
     return db.GameV0(

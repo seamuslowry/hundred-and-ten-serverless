@@ -37,7 +37,7 @@ class Game(ABC, Document):
     organizer: Player
     players: list[Player]
     winner: Optional[str]
-    active_player: str
+    active_player: Optional[str]
     status: Status
     moves: list[Move]
     accessibility: Accessibility
