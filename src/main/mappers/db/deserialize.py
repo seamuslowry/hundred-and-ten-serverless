@@ -44,7 +44,7 @@ def __person(person: db.Player) -> internal.Person:
         return internal.Human(identifier=person.identifier)
 
     # type: ignore[unreachable]
-    raise ValueError(f"Unknown player type ${person}")
+    raise ValueError(f"Unknown player type ${person}")  # pragma: no cover
 
 
 def __move(db_move: db.Move) -> internal.Action:
@@ -72,7 +72,8 @@ def __move(db_move: db.Move) -> internal.Action:
                 identifier=identifier,
                 card=__card(db_move.card),
             )
-        case _:  # type: ignore[unreachable]
+        # type: ignore[unreachable]
+        case _:  # pragma: no cover
             raise ValueError(f"Unknown move type: {db_move.type}")
 
 
