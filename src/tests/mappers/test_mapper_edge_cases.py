@@ -20,43 +20,43 @@ from src.main.models.internal import (
 )
 
 
-class TestMapperEdgeCases:
-    """Unit tests to ensure mapper edge cases behave as expected"""
+def test_bad_suggestion_error():
+    """Attempting to serialize an invalid suggestion results in an error"""
+    identifier = "identifier"
+    with pytest.raises(ValueError):
+        client_serialize.suggestion(Action(identifier))
 
-    def test_bad_suggestion_error(self):
-        """Attempting to serialize an invalid suggestion results in an error"""
-        identifier = "identifier"
-        with pytest.raises(ValueError):
-            client_serialize.suggestion(Action(identifier))
 
-    def test_card_with_unselectable_suit(self):
-        """Deserializing a card with an UnselectableSuit should succeed"""
-        result = client_deserialize.card(
-            CardRequest(suit=Suit.JOKER, number=CardNumberName.JOKER)
-        )
-        assert result == Card(suit=UnselectableSuit.JOKER, number=CardNumber.JOKER)
+def test_card_with_unselectable_suit():
+    """Deserializing a card with an UnselectableSuit should succeed"""
+    result = client_deserialize.card(
+        CardRequest(suit=Suit.JOKER, number=CardNumberName.JOKER)
+    )
+    assert result == Card(suit=UnselectableSuit.JOKER, number=CardNumber.JOKER)
 
-    def test_unknown_event_type_error(self):
-        """Serializing an unknown event type raises ValueError"""
-        with pytest.raises(ValueError):
-            client_serialize.events([Event()], "identifier")
 
-    def test_unknown_internal_person_type_error(self):
-        """Raises an error trying to serialize an unknown person type"""
+def test_unknown_event_type_error():
+    """Serializing an unknown event type raises ValueError"""
+    with pytest.raises(ValueError):
+        client_serialize.events([Event()], "identifier")
 
-        class UnknownPerson(Person):
-            """A subclassed person type the serializer is unaware of"""
 
-            def as_player(self):
-                raise NotImplementedError()
+def test_unknown_internal_person_type_error():
+    """Raises an error trying to serialize an unknown person type"""
 
-        with pytest.raises(ValueError):
-            db_serialize.lobby(
-                Lobby(
-                    name="",
-                    accessibility=Accessibility.PUBLIC,
-                    organizer=UnknownPerson(""),
-                    players=PersonGroup([]),
-                    invitees=PersonGroup([]),
-                )
+    class UnknownPerson(Person):
+        """A subclassed person type the serializer is unaware of"""
+
+        def as_player(self):
+            raise NotImplementedError()
+
+    with pytest.raises(ValueError):
+        db_serialize.lobby(
+            Lobby(
+                name="",
+                accessibility=Accessibility.PUBLIC,
+                organizer=UnknownPerson(""),
+                players=PersonGroup([]),
+                invitees=PersonGroup([]),
             )
+        )

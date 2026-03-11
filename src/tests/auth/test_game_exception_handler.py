@@ -9,120 +9,120 @@ from src.main.models.internal.errors import AuthorizationError
 from src.tests.helpers import DEFAULT_ID
 
 
-class TestErrorHandler:
-    """Error handler unit tests"""
-
-    @patch(
-        "src.main.auth.depends.verify_google_token",
-        side_effect=lambda token: Identity(id=token),
+@patch(
+    "src.main.auth.depends.verify_google_token",
+    side_effect=lambda token: Identity(id=token),
+)
+def test_returns_400_for_game_error(_, client: TestClient):
+    """Endpoint returns 400 when a game error occurs"""
+    # Use an invalid game_id to trigger a game error from GameService.get
+    resp = client.get(
+        f"/players/{DEFAULT_ID}/games/not-a-valid-id",
+        headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
-    def test_returns_400_for_game_error(self, _, client: TestClient):
-        """Endpoint returns 400 when a game error occurs"""
-        # Use an invalid game_id to trigger a game error from GameService.get
-        resp = client.get(
-            f"/players/{DEFAULT_ID}/games/not-a-valid-id",
-            headers={"authorization": f"Bearer {DEFAULT_ID}"},
-        )
-        assert 400 == resp.status_code
+    assert 400 == resp.status_code
 
-    @patch(
-        "src.main.auth.depends.verify_google_token",
-        side_effect=lambda token: Identity(id=token),
+
+@patch(
+    "src.main.auth.depends.verify_google_token",
+    side_effect=lambda token: Identity(id=token),
+)
+@patch(
+    "src.main.routers.games.GameService.get",
+    side_effect=AuthorizationError("forbidden"),
+)
+def test_returns_403_for_authorization_error(_mock_get, _mock_auth, client: TestClient):
+    """Endpoint returns 403 when an AuthorizationError occurs"""
+    resp = client.get(
+        f"/players/{DEFAULT_ID}/games/some-id",
+        headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
-    @patch(
-        "src.main.routers.games.GameService.get",
-        side_effect=AuthorizationError("forbidden"),
+    assert 403 == resp.status_code
+
+
+def test_returns_401_for_no_bearer(client: TestClient):
+    """Endpoint returns 401 when no Bearer token is provided"""
+    resp = client.get(
+        f"/players/{DEFAULT_ID}/games/some-id",
+        headers={"authorization": ""},
     )
-    def test_returns_403_for_authorization_error(
-        self, _mock_get, _mock_auth, client: TestClient
-    ):
-        """Endpoint returns 403 when an AuthorizationError occurs"""
-        resp = client.get(
-            f"/players/{DEFAULT_ID}/games/some-id",
-            headers={"authorization": f"Bearer {DEFAULT_ID}"},
-        )
-        assert 403 == resp.status_code
+    assert 401 == resp.status_code
 
-    def test_returns_401_for_no_bearer(self, client: TestClient):
-        """Endpoint returns 401 when no Bearer token is provided"""
-        resp = client.get(
-            f"/players/{DEFAULT_ID}/games/some-id",
-            headers={"authorization": ""},
-        )
-        assert 401 == resp.status_code
 
-    def test_returns_401_without_auth_header(self, client: TestClient):
-        """Endpoint returns 401 when Authorization header is missing entirely"""
-        resp = client.get(f"/players/{DEFAULT_ID}/games/some-id")
-        assert 401 == resp.status_code
+def test_returns_401_without_auth_header(client: TestClient):
+    """Endpoint returns 401 when Authorization header is missing entirely"""
+    resp = client.get(f"/players/{DEFAULT_ID}/games/some-id")
+    assert 401 == resp.status_code
 
-    @patch(
-        "src.main.auth.depends.verify_google_token",
-        side_effect=ValueError("Invalid token"),
+
+@patch(
+    "src.main.auth.depends.verify_google_token",
+    side_effect=ValueError("Invalid token"),
+)
+def test_returns_401_for_invalid_token(_, client: TestClient):
+    """Endpoint returns 401 when token validation fails"""
+    resp = client.get(
+        f"/players/{DEFAULT_ID}/games/some-id",
+        headers={"authorization": "Bearer bad.token"},
     )
-    def test_returns_401_for_invalid_token(self, _, client: TestClient):
-        """Endpoint returns 401 when token validation fails"""
-        resp = client.get(
-            f"/players/{DEFAULT_ID}/games/some-id",
-            headers={"authorization": "Bearer bad.token"},
-        )
-        assert 401 == resp.status_code
+    assert 401 == resp.status_code
 
 
-class TestAuthentication:
-    """Authentication unit tests"""
-
-    @patch(
-        "src.main.auth.depends.verify_google_token",
-        return_value=Identity(
-            id="user-123", name="Test User", picture_url="https://example.com/pic.jpg"
-        ),
+@patch(
+    "src.main.auth.depends.verify_google_token",
+    return_value=Identity(
+        id="user-123", name="Test User", picture_url="https://example.com/pic.jpg"
+    ),
+)
+def test_valid_token_authenticates(mock_verify, client: TestClient):
+    """Valid Bearer token authenticates the user"""
+    # This will still fail with 400 because "some-id" is invalid,
+    # but authentication succeeds (not 401)
+    resp = client.get(
+        "/players/valid.token/games/some-id",
+        headers={"authorization": "Bearer valid.token"},
     )
-    def test_valid_token_authenticates(self, mock_verify, client: TestClient):
-        """Valid Bearer token authenticates the user"""
-        # This will still fail with 400 because "some-id" is invalid,
-        # but authentication succeeds (not 401)
-        resp = client.get(
-            "/players/valid.token/games/some-id",
-            headers={"authorization": "Bearer valid.token"},
-        )
-        # The fact that we get 400 (not 401) proves authentication passed
-        assert 401 != resp.status_code
-        mock_verify.assert_called_once_with("valid.token")
+    # The fact that we get 400 (not 401) proves authentication passed
+    assert 401 != resp.status_code
+    mock_verify.assert_called_once_with("valid.token")
 
-    def test_raises_401_without_bearer(self, client: TestClient):
-        """Missing Bearer token returns 401"""
-        resp = client.get(
-            "/players/anything/games/some-id",
-            headers={"authorization": ""},
-        )
-        assert 401 == resp.status_code
 
-    def test_raises_401_without_auth_header(self, client: TestClient):
-        """Missing Authorization header entirely returns 401"""
-        resp = client.get("/players/anything/games/some-id", headers={})
-        assert 401 == resp.status_code
-
-    @patch(
-        "src.main.auth.depends.verify_google_token",
-        side_effect=ValueError("Invalid token"),
+def test_raises_401_without_bearer(client: TestClient):
+    """Missing Bearer token returns 401"""
+    resp = client.get(
+        "/players/anything/games/some-id",
+        headers={"authorization": ""},
     )
-    def test_raises_authentication_error_for_invalid_token(self, _, client: TestClient):
-        """Invalid token returns 401"""
-        resp = client.get(
-            "/players/anything/games/some-id",
-            headers={"authorization": "Bearer bad.token"},
-        )
-        assert 401 == resp.status_code
+    assert 401 == resp.status_code
 
-    @patch(
-        "src.main.auth.depends.verify_google_token",
-        return_value=Identity(id="user-123", name="Test User"),
+
+def test_raises_401_without_auth_header(client: TestClient):
+    """Missing Authorization header entirely returns 401"""
+    resp = client.get("/players/anything/games/some-id", headers={})
+    assert 401 == resp.status_code
+
+
+@patch(
+    "src.main.auth.depends.verify_google_token",
+    side_effect=ValueError("Invalid token"),
+)
+def test_raises_authentication_error_for_invalid_token(_, client: TestClient):
+    """Invalid token returns 401"""
+    resp = client.get(
+        "/players/anything/games/some-id",
+        headers={"authorization": "Bearer bad.token"},
     )
-    def test_raises_authorization_error_when_wrong_idenity(self, _, client: TestClient):
-        """Missing Bearer token returns 403"""
-        resp = client.get(
-            "/players/some-id/games/some-id",
-            headers={"authorization": "Bearer unknown"},
-        )
-        assert 403 == resp.status_code
+    assert 401 == resp.status_code
+
+
+@patch(
+    "src.main.auth.depends.verify_google_token",
+    return_value=Identity(id="user-123", name="Test User"),
+)
+def test_raises_authorization_error_when_wrong_idenity(_, client: TestClient):
+    """Missing Bearer token returns 403"""
+    resp = client.get(
+        "/players/some-id/games/some-id",
+        headers={"authorization": "Bearer unknown"},
+    )
+    assert 403 == resp.status_code
