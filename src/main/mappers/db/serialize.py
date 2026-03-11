@@ -1,66 +1,70 @@
 """A module to convert models to DB DTOs"""
 
-from bson import ObjectId
+from beanie import PydanticObjectId
 
-from src.main.models import internal
-from src.main.models.db import db
+from src.main.models import db, internal
 
 
 def lobby(m_lobby: internal.Lobby) -> db.Lobby:
     """Convert a Lobby model to its DB DTO"""
-    result = db.Lobby(
-        type="lobby",
+    result = db.LobbyV0(
+        id=PydanticObjectId(m_lobby.id) if m_lobby.id else None,
         name=m_lobby.name,
-        seed=m_lobby.seed,
-        accessibility=m_lobby.accessibility.name,
+        accessibility=db.Accessibility[m_lobby.accessibility.name],
         organizer=__person(m_lobby.organizer),
         players=list(map(__person, m_lobby.players)),
         invitees=list(map(__person, m_lobby.invitees)),
     )
-
-    if m_lobby.id is not None:
-        result["_id"] = ObjectId(m_lobby.id)
 
     return result
 
 
 def game(m_game: internal.Game) -> db.Game:
     """Convert a Game model to its DB DTO"""
-    active_player = m_game.active_round.active_player if not m_game.winner else None
+    winner = m_game.winner.identifier if m_game.winner else None
+    active_player = (
+        m_game.active_round.active_player.identifier
+        if m_game.status != internal.GameStatus.WON
+        else None
+    )
 
-    assert m_game.id  # games must have been created from existing lobby records
-
-    return db.Game(
-        type="game",
-        _id=ObjectId(m_game.id),
+    return db.GameV0(
+        id=PydanticObjectId(m_game.id) if m_game.id else None,
         name=m_game.name,
         seed=m_game.seed,
-        accessibility=m_game.accessibility.name,
+        accessibility=db.Accessibility[m_game.accessibility.name],
         organizer=__person(m_game.organizer),
         players=list(map(__person, m_game.players)),
-        winner=m_game.winner.identifier if m_game.winner else None,
-        active_player=active_player.identifier if active_player else None,
+        winner=winner,
+        active_player=active_player,
         moves=list(map(__move, m_game.moves)),
-        status=m_game.status.name,
+        status=db.Status[m_game.status.name],
     )
 
 
 def user(m_user: internal.User) -> db.User:
     """Convert a User model to its DB DTO"""
-    return db.User(
+    return db.UserV0(
         identifier=m_user.identifier, name=m_user.name, picture_url=m_user.picture_url
     )
 
 
 def __card(card: internal.Card) -> db.Card:
-    return db.Card(suit=card.suit.name, number=card.number.name)
+    return db.Card(suit=db.Suit[card.suit.name], number=db.CardNumber[card.number.name])
 
 
-def __person(person: internal.Person) -> db.Person:
-    return db.Person(
-        identifier=person.identifier,
-        automate=isinstance(person, internal.NaiveCpu),
-    )
+def __person(person: internal.Person) -> db.Player:
+    match person:
+        case internal.Human():
+            return __human(person)
+        case internal.NaiveCpu():
+            return db.NaiveCpuPlayer(identifier=person.identifier)
+
+    raise ValueError(f"Unrecognized player type ${person}")
+
+
+def __human(person: internal.Human) -> db.HumanPlayer:
+    return db.HumanPlayer(identifier=person.identifier)
 
 
 def __move(move: internal.Action) -> db.Move:
@@ -75,7 +79,7 @@ def __move(move: internal.Action) -> db.Move:
         return db.SelectTrumpMove(
             type="select_trump",
             identifier=move.identifier,
-            suit=move.suit.name,
+            suit=db.SelectableSuit[move.suit.name],
         )
     if isinstance(move, internal.Discard):
         return db.DiscardMove(

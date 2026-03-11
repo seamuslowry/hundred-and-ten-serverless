@@ -1,41 +1,25 @@
 """Facilitate interaction with the lobby DB"""
 
-from bson import ObjectId
-from bson.errors import InvalidId
+from beanie.operators import ElemMatch, Or, RegEx
 
 from src.main.mappers.db import deserialize, serialize
-from src.main.models.db.db import SearchLobby
+from src.main.models.client.requests import SearchLobbiesRequest
+from src.main.models.db import Lobby as DbLobby
 from src.main.models.internal import Accessibility, Game, Lobby
-from src.main.repos import lobby_client
-
-from .game import GameService
 
 
 class LobbyService:
     """A service used to handle the business logic of lobbies"""
 
     @staticmethod
-    def save(lobby: Lobby) -> Lobby:
+    async def save(lobby: Lobby) -> Lobby:
         """Save the provided lobby to the DB"""
-        if lobby.id is None:
-            result = lobby_client.insert_one(serialize.lobby(lobby))
-            lobby.id = str(result.inserted_id)
-        else:
-            lobby_client.update_one(
-                {"_id": ObjectId(lobby.id), "type": "lobby"},
-                {"$set": serialize.lobby(lobby)},
-            )
-        return lobby
+        return deserialize.lobby(await serialize.lobby(lobby).save())
 
     @staticmethod
-    def get(lobby_id: str) -> Lobby:
+    async def get(lobby_id: str) -> Lobby:
         """Retrieve the lobby with the provided ID"""
-        try:
-            oid = ObjectId(lobby_id)
-        except InvalidId as exc:
-            raise ValueError(f"No lobby found with id {lobby_id}") from exc
-
-        result = lobby_client.find_one({"_id": oid, "type": "lobby"})
+        result = await DbLobby.get(lobby_id, with_children=True)
 
         if not result:
             raise ValueError(f"No lobby found with id {lobby_id}")
@@ -43,32 +27,31 @@ class LobbyService:
         return deserialize.lobby(result)
 
     @staticmethod
-    def search(search_lobby: SearchLobby, max_count: int) -> list[Lobby]:
+    async def search(player_id: str, search_lobby: SearchLobbiesRequest) -> list[Lobby]:
         """Search for lobbies matching the provided criteria"""
         return list(
             map(
                 deserialize.lobby,
-                lobby_client.find(
-                    {
-                        "type": "lobby",
-                        "name": {"$regex": search_lobby["name"], "$options": "i"},
-                        "$or": [
-                            {"accessibility": Accessibility.PUBLIC.name},
-                            {
-                                "people": {
-                                    "$elemMatch": {
-                                        "identifier": {"$eq": search_lobby["client"]}
-                                    }
-                                }
-                            },
-                        ],
-                    }
-                ).limit(max_count),
+                await DbLobby.find(
+                    RegEx(DbLobby.name, search_lobby.search_text, "i"),
+                    Or(
+                        DbLobby.accessibility == Accessibility.PUBLIC,
+                        ElemMatch(DbLobby.players, {"identifier": player_id}),
+                        ElemMatch(DbLobby.invitees, {"identifier": player_id}),
+                        DbLobby.organizer.identifier == player_id,
+                    ),
+                    with_children=True,
+                )
+                .limit(search_lobby.limit)
+                .skip(search_lobby.offset)
+                .to_list(),
             )
         )
 
     @staticmethod
-    def start_game(lobby: Lobby) -> Game:
+    async def start_game(lobby: Lobby) -> Game:
         """Convert a lobby to a game (starts the game)"""
-        # Update the same record in DB (change type from lobby to game)
-        return GameService.save(Game.from_lobby(lobby))
+        game = Game.from_lobby(lobby)
+        saved_game = await serialize.game(game).save()  # Create FIRST
+        await serialize.lobby(lobby).delete()  # Delete AFTER
+        return deserialize.game(saved_game)

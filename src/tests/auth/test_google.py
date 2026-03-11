@@ -1,8 +1,8 @@
 """Google OAuth token validation unit tests"""
 
-from unittest import TestCase
 from unittest.mock import patch
 
+import pytest
 from google.auth.exceptions import GoogleAuthError
 
 from src.main.auth.google import verify_google_token
@@ -11,7 +11,7 @@ FAKE_TOKEN = "eyJhbGciOiJSUzI1NiJ9.fake.token"
 FAKE_SUB = "116954529561234567890"
 
 
-class TestVerifyGoogleToken(TestCase):
+class TestVerifyGoogleToken:
     """Unit tests for Google OAuth token validation"""
 
     @patch("src.main.auth.google.id_token.verify_oauth2_token")
@@ -27,9 +27,9 @@ class TestVerifyGoogleToken(TestCase):
 
         result = verify_google_token(FAKE_TOKEN)
 
-        self.assertEqual(FAKE_SUB, result.id)
-        self.assertEqual("Test User", result.name)
-        self.assertEqual("https://example.com/photo.jpg", result.picture_url)
+        assert FAKE_SUB == result.id
+        assert "Test User" == result.name
+        assert "https://example.com/photo.jpg" == result.picture_url
         mock_verify.assert_called_once()
 
     @patch("src.main.auth.google.id_token.verify_oauth2_token")
@@ -37,14 +37,16 @@ class TestVerifyGoogleToken(TestCase):
         """Raises ValueError when token validation fails"""
         mock_verify.side_effect = ValueError("Token expired")
 
-        self.assertRaises(ValueError, verify_google_token, FAKE_TOKEN)
+        with pytest.raises(ValueError):
+            verify_google_token(FAKE_TOKEN)
 
     @patch("src.main.auth.google.id_token.verify_oauth2_token")
     def test_wrong_issuer(self, mock_verify):
         """Raises ValueError when token has wrong issuer"""
         mock_verify.side_effect = GoogleAuthError("Wrong issuer")
 
-        self.assertRaises(ValueError, verify_google_token, FAKE_TOKEN)
+        with pytest.raises(ValueError):
+            verify_google_token(FAKE_TOKEN)
 
     @patch("src.main.auth.google.id_token.verify_oauth2_token")
     def test_missing_sub_claim(self, mock_verify):
@@ -54,4 +56,5 @@ class TestVerifyGoogleToken(TestCase):
             "email_verified": True,
         }
 
-        self.assertRaises(ValueError, verify_google_token, FAKE_TOKEN)
+        with pytest.raises(ValueError):
+            verify_google_token(FAKE_TOKEN)

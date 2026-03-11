@@ -2,9 +2,11 @@
 
 from typing import Optional
 
+from beanie.operators import In, RegEx
+
 from src.main.mappers.db import deserialize, serialize
+from src.main.models.db import User as DbUser
 from src.main.models.internal import User
-from src.main.repos import user_client
 
 MAX = 20
 
@@ -13,39 +15,52 @@ class UserService:
     """A service used to handle the business logic of users"""
 
     @staticmethod
-    def save(user: User) -> User:
+    async def save(user: User) -> User:
         """Save the provided user to the DB"""
-        user_client.update_one(
-            {"identifier": user.identifier}, {"$set": serialize.user(user)}, upsert=True
+        serialized_user = serialize.user(user)
+
+        existing_user = await DbUser.find_one(
+            DbUser.identifier == user.identifier, with_children=True
         )
-        return user
+
+        if existing_user:
+            serialized_user.id = existing_user.id
+
+        return deserialize.user(await serialized_user.save())
 
     @staticmethod
-    def search(search_text: str) -> list[User]:
+    async def search(search_text: str) -> list[User]:
         """Retrieve the users with names like the provided"""
         return list(
             map(
                 deserialize.user,
-                user_client.find(
-                    {"name": {"$regex": search_text, "$options": "i"}}
-                ).limit(MAX),
+                await DbUser.find(
+                    RegEx(DbUser.name, search_text, "i"), with_children=True
+                )
+                .limit(MAX)
+                .to_list(),
             )
         )
 
     @staticmethod
-    def by_identifier(identifier: str) -> Optional[User]:
+    async def by_identifier(identifier: str) -> Optional[User]:
         """Retrieve the user with identifier provided"""
-        result = user_client.find_one({"identifier": identifier})
+        result = await DbUser.find_one(
+            DbUser.identifier == identifier, with_children=True
+        )
 
         if not result:
             return None
         return deserialize.user(result)
 
     @staticmethod
-    def by_identifiers(identifiers: list[str]) -> list[User]:
+    async def by_identifiers(identifiers: list[str]) -> list[User]:
         """Retrieve the users with identifiers in the list provided"""
         return list(
             map(
-                deserialize.user, user_client.find({"identifier": {"$in": identifiers}})
+                deserialize.user,
+                await DbUser.find(
+                    In(DbUser.identifier, identifiers), with_children=True
+                ).to_list(),
             )
         )

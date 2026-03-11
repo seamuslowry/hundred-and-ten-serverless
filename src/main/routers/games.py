@@ -20,7 +20,6 @@ from src.main.models.client.responses import (
     SuggestionResponse,
     User,
 )
-from src.main.models.db.db import SearchGame
 from src.main.models.internal import (
     Bid,
     BidAmount,
@@ -43,45 +42,35 @@ router = APIRouter(
 
 
 @router.get("/{game_id}", response_model=GameResponse)
-def game_info(player_id: str, game_id: str):
+async def game_info(player_id: str, game_id: str):
     """Retrieve 110 game."""
-    game = GameService.get(game_id)
+    game = await GameService.get(game_id)
 
     return serialize.game(game, player_id)
 
 
 @router.get("/{game_id}/players", response_model=list[User])
-def game_players(game_id: str):
+async def game_players(game_id: str):
     """Retrieve players in a 110 game."""
-    game = GameService.get(game_id)
+    game = await GameService.get(game_id)
 
     people_ids = [p.identifier for p in game.ordered_players]
 
-    return [serialize.user(u) for u in UserService.by_identifiers(people_ids)]
+    return [serialize.user(u) for u in await UserService.by_identifiers(people_ids)]
 
 
 @router.post("/search", response_model=list[GameResponse])
-def search_games(player_id: str, body: SearchGamesRequest):
+async def search_games(player_id: str, body: SearchGamesRequest):
     """Search for games"""
     return [
-        serialize.game(g, player_id)
-        for g in GameService.search(
-            SearchGame(
-                name=body.searchText,
-                client=player_id,
-                statuses=body.statuses,
-                active_player=body.activePlayer,
-                winner=body.winner,
-            ),
-            body.max,
-        )
+        serialize.game(g, player_id) for g in await GameService.search(player_id, body)
     ]
 
 
 @router.get("/{game_id}/suggestion", response_model=SuggestionResponse)
-def suggestion(player_id: str, game_id: str):
+async def suggestion(player_id: str, game_id: str):
     """Ask for a suggestion in a 110 game"""
-    game = GameService.get(game_id)
+    game = await GameService.get(game_id)
 
     return serialize.suggestion(
         NaiveAutomatedPlayer(player_id).act(game.game_state_for(player_id))
@@ -89,52 +78,52 @@ def suggestion(player_id: str, game_id: str):
 
 
 @router.post("/{game_id}/bid", response_model=GameResponse)
-def bid(player_id: str, game_id: str, body: BidRequest):
+async def bid(player_id: str, game_id: str, body: BidRequest):
     """Bid in a 110 game"""
-    game = GameService.get(game_id)
+    game = await GameService.get(game_id)
     initial_event_knowledge = len(game.events)
 
     game.act(Bid(player_id, BidAmount(body.amount)))
 
-    game = GameService.save(game)
+    await GameService.save(game)
 
     return serialize.game(game, player_id, initial_event_knowledge)
 
 
 @router.post("/{game_id}/unpass", response_model=GameResponse)
-def rescind_prepass(player_id: str, game_id: str):
+async def rescind_prepass(player_id: str, game_id: str):
     """Unpass in a 110 game"""
-    game = GameService.get(game_id)
+    game = await GameService.get(game_id)
     initial_event_knowledge = len(game.events)
 
     game.act(Unpass(player_id))
 
-    game = GameService.save(game)
+    await GameService.save(game)
 
     return serialize.game(game, player_id, initial_event_knowledge)
 
 
 @router.post("/{game_id}/select", response_model=GameResponse)
-def select_trump(
+async def select_trump(
     player_id: str,
     game_id: str,
     body: SelectTrumpRequest,
 ):
     """Select trump in a 110 game"""
-    game = GameService.get(game_id)
+    game = await GameService.get(game_id)
     initial_event_knowledge = len(game.events)
 
     game.act(SelectTrump(player_id, SelectableSuit[body.suit.value]))
 
-    game = GameService.save(game)
+    game = await GameService.save(game)
 
     return serialize.game(game, player_id, initial_event_knowledge)
 
 
 @router.post("/{game_id}/discard", response_model=GameResponse)
-def discard(player_id: str, game_id: str, body: DiscardRequest):
+async def discard(player_id: str, game_id: str, body: DiscardRequest):
     """Discard in a 110 game"""
-    game = GameService.get(game_id)
+    game = await GameService.get(game_id)
     initial_event_knowledge = len(game.events)
 
     game.act(
@@ -144,15 +133,15 @@ def discard(player_id: str, game_id: str, body: DiscardRequest):
         )
     )
 
-    game = GameService.save(game)
+    game = await GameService.save(game)
 
     return serialize.game(game, player_id, initial_event_knowledge)
 
 
 @router.post("/{game_id}/play", response_model=GameResponse)
-def play(player_id: str, game_id: str, body: PlayRequest):
+async def play(player_id: str, game_id: str, body: PlayRequest):
     """Play a card in a 110 game"""
-    game = GameService.get(game_id)
+    game = await GameService.get(game_id)
     initial_event_knowledge = len(game.events)
 
     game.act(
@@ -162,18 +151,18 @@ def play(player_id: str, game_id: str, body: PlayRequest):
         )
     )
 
-    game = GameService.save(game)
+    game = await GameService.save(game)
 
     return serialize.game(game, player_id, initial_event_knowledge)
 
 
 @router.post("/{game_id}/leave", response_model=GameResponse)
-def leave_game(player_id: str, game_id: str):
+async def leave_game(player_id: str, game_id: str):
     """Leave a 110 game (automates the player)"""
-    game = GameService.get(game_id)
+    game = await GameService.get(game_id)
     initial_event_knowledge = len(game.events)
 
     game.leave(player_id)
-    game = GameService.save(game)
+    game = await GameService.save(game)
 
     return serialize.game(game, player_id, initial_event_knowledge)

@@ -1,62 +1,123 @@
 """Game Service unit tests"""
 
-from unittest import TestCase
-
+import pytest
 from bson import ObjectId
 
-from src.main.models.db.db import SearchGame
+from src.main.models.client.requests import SearchGamesRequest
 from src.main.models.internal import Game, Human, Lobby, PersonGroup
 from src.main.services import GameService, LobbyService
 
 
-def _make_game(name: str = "") -> Game:
+async def _make_game(name: str = "") -> Game:
     """Create a valid Game from a saved Lobby with players"""
-    lobby = Lobby(
-        name=name,
-        organizer=Human("p1"),
-        players=PersonGroup(
-            [
-                Human(identifier="p2"),
-            ]
-        ),
+    lobby = await LobbyService.save(
+        Lobby(
+            name=name,
+            organizer=Human("p1"),
+            players=PersonGroup(
+                [
+                    Human(identifier="p2"),
+                ]
+            ),
+        )
     )
-    LobbyService.save(lobby)
     return Game.from_lobby(lobby)
 
 
-class TestGameService(TestCase):
+class TestGameService:
     """Unit tests to ensure game service works as expected"""
 
-    def test_save_game(self):
+    async def test_save_game(self):
         """Game can be saved to the DB"""
-        game = _make_game()
+        game = await _make_game()
 
-        self.assertIsNotNone(GameService.save(game))
+        assert await GameService.save(game) is not None
 
-    def test_get_game(self):
+    async def test_get_game(self):
         """Game can be retrieved from the DB"""
-        original_game = _make_game()
-        GameService.save(original_game)
-        assert original_game.id
-        game = GameService.get(original_game.id)
+        original_game = await _make_game()
+        saved_game = await GameService.save(original_game)
+        assert saved_game.id
+        game = await GameService.get(saved_game.id)
 
-        self.assertIsNotNone(game)
-        self.assertEqual(game.id, original_game.id)
+        assert game is not None
+        assert game.id == saved_game.id
 
-    def test_get_non_existent_game(self):
+    async def test_get_non_existent_game(self):
         """Unknown game cannot be retrieved from the DB"""
-        self.assertRaises(ValueError, GameService.get, str(ObjectId()))
+        with pytest.raises(ValueError):
+            await GameService.get(str(ObjectId()))
 
-    def test_search_game(self):
+    async def test_search_game(self):
         """Games can be searched in the DB"""
         text = f"search_test{ObjectId()}"
-        games = [GameService.save(_make_game(name=f"{text} {i}")) for i in range(5)]
+        games = []
+        for i in range(5):
+            game = await _make_game(name=f"{text} {i}")
+            games.append(await GameService.save(game))
 
-        found_games = GameService.search(
-            SearchGame(
-                name=text, client="p1", statuses=None, active_player=None, winner=None
+        found_games = await GameService.search(
+            "p1",
+            SearchGamesRequest(
+                search_text=text,
+                statuses=None,
+                active_player=None,
+                winner=None,
+                limit=len(games) + 1,
             ),
-            len(games) + 1,
         )
 
-        self.assertEqual(len(found_games), len(games))
+        assert len(found_games) == len(games)
+
+    async def test_search_game_with_filters(self):
+        """Search with optional filters exercises all code paths"""
+        text = f"filter_test{ObjectId()}"
+        games = []
+
+        # Create 3 games with different properties
+        for i in range(3):
+            game = await _make_game(name=f"{text} {i}")
+            games.append(await GameService.save(game))
+
+        # Get the active player from the first game
+        game_with_player = games[0]
+        active_player_id = game_with_player.active_round.active_player.identifier
+
+        # Search with activePlayer filter
+        found_with_player = await GameService.search(
+            "p1",
+            SearchGamesRequest(
+                search_text=text,
+                active_player=active_player_id,
+                winner=None,
+                statuses=None,
+                limit=10,
+            ),
+        )
+        assert len(found_with_player) > 0
+
+        # Search with winner filter
+        found_with_winner = await GameService.search(
+            "p1",
+            SearchGamesRequest(
+                search_text=text,
+                active_player=None,
+                winner="nonexistent_winner",
+                statuses=None,
+                limit=10,
+            ),
+        )
+        assert len(found_with_winner) == 0
+
+        # Search with statuses filter
+        found_with_status = await GameService.search(
+            "p1",
+            SearchGamesRequest(
+                search_text=text,
+                active_player=None,
+                winner=None,
+                statuses=[games[0].status.name],
+                limit=10,
+            ),
+        )
+        assert len(found_with_status) > 0

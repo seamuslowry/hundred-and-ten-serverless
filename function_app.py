@@ -2,18 +2,40 @@
 The entrypoint for azure functions, wrapping a FastAPI app via AsgiFunctionApp
 """
 
+from contextlib import asynccontextmanager
+
 import azure.functions as func
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from src.main.auth import get_authorized_identity
+from src.main.models.db.setup import init_beanie_internal
 from src.main.models.internal import (
     HundredAndTenError,
 )
 from src.main.models.internal.errors import AuthenticationError, AuthorizationError
 from src.main.routers import games, lobbies, players
 
-fastapi_app = FastAPI(dependencies=[Depends(get_authorized_identity)])
+# =============================================================================
+# Context manager
+# =============================================================================
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    """Initialize the context of FastAPI"""
+    await init_beanie_internal()
+    yield
+
+
+# =============================================================================
+# FastAPI app
+# =============================================================================
+
+
+fastapi_app = FastAPI(
+    dependencies=[Depends(get_authorized_identity)], lifespan=lifespan
+)
 
 
 # =============================================================================

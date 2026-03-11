@@ -1,42 +1,41 @@
 """User Service unit tests"""
 
 from time import time
-from unittest import TestCase
 
 from src.main.models.internal import User
 from src.main.services import UserService
 
 
-class TestUserService(TestCase):
+class TestUserService:
     """Unit tests to ensure user operations work as expected"""
 
-    def test_save_unknown_user(self):
+    async def test_save_unknown_user(self):
         """User can be saved to the DB"""
         user = User(identifier=str(time()), name="save_unknown")
 
-        self.assertIsNotNone(UserService.save(user))
+        assert (await UserService.save(user)) is not None
 
-    def test_search_user(self):
+    async def test_search_user(self):
         """Users can be searched in the DB"""
         text = f"search_user{time()}"
         users = [
-            UserService.save(User(identifier=str(time()), name=f"{text} {i}"))
+            await UserService.save(User(identifier=str(time()), name=f"{text} {i}"))
             for i in range(5)
         ]
 
-        found_users = UserService.search(text)
+        found_users = await UserService.search(text)
 
-        self.assertEqual(users, found_users)
+        assert users == found_users
 
-    def test_get_users_by_identifiers(self):
+    async def test_get_users_by_identifiers(self):
         """Users can be retrieved by identifier in the DB"""
         users = [
-            UserService.save(User(identifier=str(time()), name="search"))
+            await UserService.save(User(identifier=str(time()), name="search"))
             for _ in range(5)
         ]
 
-        found_users = UserService.by_identifiers(
+        found_users = await UserService.by_identifiers(
             list(map(lambda u: u.identifier, users))
         )
 
-        self.assertEqual(users, found_users)
+        assert users == found_users
