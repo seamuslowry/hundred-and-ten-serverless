@@ -2,26 +2,19 @@
 The entrypoint for azure functions, wrapping a FastAPI app via AsgiFunctionApp
 """
 
-import os
 from contextlib import asynccontextmanager
 
 import azure.functions as func
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
-from pymongo import AsyncMongoClient
 
 from src.main.auth import get_authorized_identity
-from src.main.models.db.setup import init_beanie_for_client
+from src.main.models.db.setup import init_beanie_internal
 from src.main.models.internal import (
     HundredAndTenError,
 )
 from src.main.models.internal.errors import AuthenticationError, AuthorizationError
 from src.main.routers import games, lobbies, players
-
-connection_string = os.environ.get(
-    "MongoDb", "mongodb://root:rootpassword@localhost:27017"
-)
-database_name = os.environ.get("DatabaseName", "test")
 
 # =============================================================================
 # Context manager
@@ -31,8 +24,7 @@ database_name = os.environ.get("DatabaseName", "test")
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     """Initialize the context of FastAPI"""
-    client = AsyncMongoClient(connection_string)
-    await init_beanie_for_client(client, database_name)
+    await init_beanie_internal()
     yield
 
 
