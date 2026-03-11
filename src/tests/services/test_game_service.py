@@ -25,6 +25,8 @@ async def _make_game(name: str = "") -> Game:
 
 
 class TestGameService:
+    """Unit tests to ensure game service works as expected"""
+
     async def test_save_game(self):
         """Game can be saved to the DB"""
         game = await _make_game()
