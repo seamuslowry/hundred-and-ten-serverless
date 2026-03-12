@@ -10,13 +10,12 @@ DEFAULT_ID = "id"
 
 
 def lobby_game(
-    test_client: TestClient,
-    organizer: str = DEFAULT_ID,
+    test_client: TestClient, organizer: str = DEFAULT_ID, name: str = "test game"
 ) -> dict[str, Any]:
     """Get a lobby waiting for the players"""
     resp = test_client.post(
         f"/players/{organizer}/lobbies/create",
-        json={"name": "test game"},
+        json={"name": name},
         headers={"authorization": f"Bearer {organizer}"},
     )
     return resp.json()

@@ -54,7 +54,7 @@ class InviteRequest(BaseModel):
 class SearchLobbiesRequest(BaseModel):
     """Request body for searching lobbies"""
 
-    search_text: str = Field(default="", serialization_alias="searchText")
+    search_text: str = Field(default="", alias="searchText")
     offset: int = 0
     limit: int = 20
 

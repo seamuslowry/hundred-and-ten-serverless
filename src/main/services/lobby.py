@@ -1,11 +1,15 @@
 """Facilitate interaction with the lobby DB"""
 
+from re import escape
+
+from beanie import PydanticObjectId
 from beanie.operators import ElemMatch, Or, RegEx
 
 from src.main.mappers.db import deserialize, serialize
 from src.main.models.client.requests import SearchLobbiesRequest
 from src.main.models.db import Lobby as DbLobby
 from src.main.models.internal import Accessibility, Game, Lobby
+from src.main.models.internal.errors import NotFoundError
 
 
 class LobbyService:
@@ -17,12 +21,12 @@ class LobbyService:
         return deserialize.lobby(await serialize.lobby(lobby).save())
 
     @staticmethod
-    async def get(lobby_id: str) -> Lobby:
+    async def get(lobby_id: PydanticObjectId) -> Lobby:
         """Retrieve the lobby with the provided ID"""
         result = await DbLobby.get(lobby_id, with_children=True)
 
         if not result:
-            raise ValueError(f"No lobby found with id {lobby_id}")
+            raise NotFoundError(f"No lobby found with id {lobby_id}")
 
         return deserialize.lobby(result)
 
@@ -33,7 +37,7 @@ class LobbyService:
             map(
                 deserialize.lobby,
                 await DbLobby.find(
-                    RegEx(DbLobby.name, search_lobby.search_text, "i"),
+                    RegEx(DbLobby.name, escape(search_lobby.search_text), "i"),
                     Or(
                         DbLobby.accessibility == Accessibility.PUBLIC,
                         ElemMatch(DbLobby.players, {"identifier": player_id}),

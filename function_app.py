@@ -13,7 +13,11 @@ from src.main.models.db.setup import init_beanie_internal
 from src.main.models.internal import (
     HundredAndTenError,
 )
-from src.main.models.internal.errors import AuthenticationError, AuthorizationError
+from src.main.models.internal.errors import (
+    AuthenticationError,
+    AuthorizationError,
+    NotFoundError,
+)
 from src.main.routers import games, lobbies, players
 
 # =============================================================================
@@ -44,25 +48,35 @@ fastapi_app = FastAPI(
 
 
 @fastapi_app.exception_handler(AuthenticationError)
-def authentication_error_handler(_: Request, exc: AuthenticationError) -> JSONResponse:
+async def authentication_error_handler(
+    _: Request, exc: AuthenticationError
+) -> JSONResponse:
     """Return 401 for authentication errors"""
     return JSONResponse(status_code=401, content=str(exc))
 
 
+@fastapi_app.exception_handler(NotFoundError)
+async def not_found_error_handler(_: Request, exc: NotFoundError) -> JSONResponse:
+    """Return 404 for not found errors"""
+    return JSONResponse(status_code=404, content=str(exc))
+
+
 @fastapi_app.exception_handler(AuthorizationError)
-def authorization_error_handler(_: Request, exc: AuthorizationError) -> JSONResponse:
+async def authorization_error_handler(
+    _: Request, exc: AuthorizationError
+) -> JSONResponse:
     """Return 403 for authorization errors"""
     return JSONResponse(status_code=403, content=str(exc))
 
 
 @fastapi_app.exception_handler(HundredAndTenError)
-def game_error_handler(_: Request, exc: HundredAndTenError) -> JSONResponse:
+async def game_error_handler(_: Request, exc: HundredAndTenError) -> JSONResponse:
     """Return 400 for game errors"""
     return JSONResponse(status_code=400, content=str(exc))
 
 
 @fastapi_app.exception_handler(ValueError)
-def value_error_handler(_: Request, exc: ValueError) -> JSONResponse:
+async def value_error_handler(_: Request, exc: ValueError) -> JSONResponse:
     """Return 400 for value errors"""
     return JSONResponse(status_code=400, content=str(exc))
 

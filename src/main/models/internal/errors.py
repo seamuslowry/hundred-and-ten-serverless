@@ -7,3 +7,7 @@ class AuthenticationError(Exception):
 
 class AuthorizationError(Exception):
     """Raised when a request is authenticated but not authorized (403)"""
+
+
+class NotFoundError(Exception):
+    """Raised when a request requests a resource that cannot be found (404)"""
