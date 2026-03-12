@@ -9,7 +9,7 @@ from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from src.main.auth import get_authorized_identity
-from src.main.models.db.setup import init_beanie_internal
+from src.main.models.db.setup import initialize_odm
 from src.main.models.internal import (
     HundredAndTenError,
 )
@@ -28,7 +28,7 @@ from src.main.routers import games, lobbies, players
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     """Initialize the context of FastAPI"""
-    await init_beanie_internal()
+    await initialize_odm()
     yield
 
 
