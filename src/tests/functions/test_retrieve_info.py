@@ -2,6 +2,7 @@
 
 from time import time
 
+from beanie import PydanticObjectId
 from fastapi.testclient import TestClient
 
 from src.tests.helpers import (
@@ -28,13 +29,83 @@ def test_search_winner(client: TestClient):
     assert game["id"] in list(map(lambda g: g["id"], games))
 
 
+def test_search_game_smoke_test(client: TestClient):
+    """Can find games by name"""
+    search = f"game{time()}"
+    original_games = [started_game(client, name=search) for _ in range(5)]
+
+    player = original_games[0]["players"][0]["identifier"]
+
+    resp = client.post(
+        f"/players/{player}/games/search",
+        json={"searchText": search},
+        headers={"authorization": f"Bearer {player}"},
+    )
+
+    games = resp.json()
+    assert len(original_games) == len(games)
+
+
+def test_search_game_by_status(client: TestClient):
+    """Can find games by status"""
+    search = f"game{time()}"
+    original_games = [started_game(client, name=search) for _ in range(5)]
+
+    player = original_games[0]["players"][0]["identifier"]
+
+    won_resp = client.post(
+        f"/players/{player}/games/search",
+        json={"activePlayer": player, "statuses": ["WON"]},
+        headers={"authorization": f"Bearer {player}"},
+    )
+
+    won_games = won_resp.json()
+    assert 0 == len(won_games)
+
+    bidding_resp = client.post(
+        f"/players/{player}/games/search",
+        json={"activePlayer": player, "statuses": ["BIDDING"]},
+        headers={"authorization": f"Bearer {player}"},
+    )
+
+    bidding_resp = won_resp.json()
+    assert 0 == len(bidding_resp)
+
+
+def test_search_game_by_active_player(client: TestClient):
+    """Can find games by active player"""
+    search = f"game{time()}"
+    active_player = f"player{time()}"
+    original_games = [
+        started_game(client, organizer=active_player, name=search) for _ in range(5)
+    ]
+
+    resp = client.post(
+        f"/players/{active_player}/games/search",
+        json={"activePlayer": active_player},
+        headers={"authorization": f"Bearer {active_player}"},
+    )
+
+    games = resp.json()
+    assert len(original_games) == len(games)
+
+
 def test_game_info_invalid_id(client: TestClient):
-    """Invalid game ID returns 400"""
+    """Invalid game ID returns 422"""
     resp = client.get(
         f"/players/{DEFAULT_ID}/games/not-an-id",
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
-    assert 400 == resp.status_code
+    assert 422 == resp.status_code
+
+
+def test_game_info_id_doesnt_exist(client: TestClient):
+    """Invalid game ID returns 404"""
+    resp = client.get(
+        f"/players/{DEFAULT_ID}/games/{PydanticObjectId()}",
+        headers={"authorization": f"Bearer {DEFAULT_ID}"},
+    )
+    assert 404 == resp.status_code
 
 
 def test_game_info(client: TestClient):

@@ -4,6 +4,7 @@ The router for game operations.
 
 from typing import Union
 
+from beanie import PydanticObjectId
 from fastapi import APIRouter
 
 from src.main.mappers.client import deserialize, serialize
@@ -42,7 +43,7 @@ router = APIRouter(
 
 
 @router.get("/{game_id}", response_model=GameResponse)
-async def game_info(player_id: str, game_id: str):
+async def game_info(player_id: str, game_id: PydanticObjectId):
     """Retrieve 110 game."""
     game = await GameService.get(game_id)
 
@@ -50,7 +51,7 @@ async def game_info(player_id: str, game_id: str):
 
 
 @router.get("/{game_id}/players", response_model=list[User])
-async def game_players(game_id: str):
+async def game_players(game_id: PydanticObjectId):
     """Retrieve players in a 110 game."""
     game = await GameService.get(game_id)
 
@@ -68,7 +69,7 @@ async def search_games(player_id: str, body: SearchGamesRequest):
 
 
 @router.get("/{game_id}/suggestion", response_model=SuggestionResponse)
-async def suggestion(player_id: str, game_id: str):
+async def suggestion(player_id: str, game_id: PydanticObjectId):
     """Ask for a suggestion in a 110 game"""
     game = await GameService.get(game_id)
 
@@ -78,7 +79,7 @@ async def suggestion(player_id: str, game_id: str):
 
 
 @router.post("/{game_id}/bid", response_model=GameResponse)
-async def bid(player_id: str, game_id: str, body: BidRequest):
+async def bid(player_id: str, game_id: PydanticObjectId, body: BidRequest):
     """Bid in a 110 game"""
     game = await GameService.get(game_id)
     initial_event_knowledge = len(game.events)
@@ -91,7 +92,7 @@ async def bid(player_id: str, game_id: str, body: BidRequest):
 
 
 @router.post("/{game_id}/unpass", response_model=GameResponse)
-async def rescind_prepass(player_id: str, game_id: str):
+async def rescind_prepass(player_id: str, game_id: PydanticObjectId):
     """Unpass in a 110 game"""
     game = await GameService.get(game_id)
     initial_event_knowledge = len(game.events)
@@ -106,7 +107,7 @@ async def rescind_prepass(player_id: str, game_id: str):
 @router.post("/{game_id}/select", response_model=GameResponse)
 async def select_trump(
     player_id: str,
-    game_id: str,
+    game_id: PydanticObjectId,
     body: SelectTrumpRequest,
 ):
     """Select trump in a 110 game"""
@@ -121,7 +122,7 @@ async def select_trump(
 
 
 @router.post("/{game_id}/discard", response_model=GameResponse)
-async def discard(player_id: str, game_id: str, body: DiscardRequest):
+async def discard(player_id: str, game_id: PydanticObjectId, body: DiscardRequest):
     """Discard in a 110 game"""
     game = await GameService.get(game_id)
     initial_event_knowledge = len(game.events)
@@ -139,7 +140,7 @@ async def discard(player_id: str, game_id: str, body: DiscardRequest):
 
 
 @router.post("/{game_id}/play", response_model=GameResponse)
-async def play(player_id: str, game_id: str, body: PlayRequest):
+async def play(player_id: str, game_id: PydanticObjectId, body: PlayRequest):
     """Play a card in a 110 game"""
     game = await GameService.get(game_id)
     initial_event_knowledge = len(game.events)
@@ -157,7 +158,7 @@ async def play(player_id: str, game_id: str, body: PlayRequest):
 
 
 @router.post("/{game_id}/leave", response_model=GameResponse)
-async def leave_game(player_id: str, game_id: str):
+async def leave_game(player_id: str, game_id: PydanticObjectId):
     """Leave a 110 game (automates the player)"""
     game = await GameService.get(game_id)
     initial_event_knowledge = len(game.events)

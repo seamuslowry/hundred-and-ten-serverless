@@ -46,9 +46,11 @@ def __user(test_client: TestClient, method: str, user: User) -> dict[str, Any]:
     return resp.json()
 
 
-def started_game(test_client: TestClient) -> dict[str, Any]:
+def started_game(
+    test_client: TestClient, organizer=DEFAULT_ID, name="test game"
+) -> dict[str, Any]:
     """Get a started game waiting for the first move"""
-    created_lobby = lobby_game(test_client)
+    created_lobby = lobby_game(test_client, organizer=organizer, name=name)
     organizer = created_lobby["organizer"]["identifier"]
     resp = test_client.post(
         f"/players/{organizer}/lobbies/{created_lobby['id']}/start",

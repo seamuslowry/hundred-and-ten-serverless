@@ -1,5 +1,6 @@
 """Facilitate interaction with the game DB"""
 
+from beanie import PydanticObjectId
 from beanie.operators import ElemMatch, In, Or, RegEx
 
 from src.main.mappers.db import deserialize, serialize
@@ -7,6 +8,7 @@ from src.main.models.client.requests import SearchGamesRequest
 from src.main.models.db import Game as DbGame
 from src.main.models.db.lobby import Accessibility
 from src.main.models.internal import Game
+from src.main.models.internal.errors import NotFoundError
 
 
 class GameService:
@@ -18,11 +20,11 @@ class GameService:
         return deserialize.game(await serialize.game(game).save())
 
     @staticmethod
-    async def get(game_id: str) -> Game:
+    async def get(game_id: PydanticObjectId) -> Game:
         """Retrieve the game with the provided ID"""
         result = await DbGame.get(game_id, with_children=True)
         if not result:
-            raise ValueError(f"No game found with id {game_id}")
+            raise NotFoundError(f"No game found with id {game_id}")
 
         return deserialize.game(result)
 
