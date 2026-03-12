@@ -1,18 +1,30 @@
 """Lobby unit tests"""
 
+from time import time
+
+from beanie import PydanticObjectId
 from fastapi.testclient import TestClient
 
 from src.main.models.internal import GameStatus, RoundStatus
 from src.tests.helpers import lobby_game
 
 
-def test_lobby_info_invalid_id(client: TestClient):
-    """Invalid lobby ID returns 400"""
+def test_lobby_info_not_an_object_id(client: TestClient):
+    """Invalid lobby ID returns 422"""
     resp = client.get(
         "/players/id/lobbies/not-an-id",
         headers={"authorization": "Bearer id"},
     )
-    assert 400 == resp.status_code
+    assert 422 == resp.status_code
+
+
+def test_lobby_info_not_saved_object_id(client: TestClient):
+    """Invalid lobby ID returns 404"""
+    resp = client.get(
+        f"/players/id/lobbies/{str(PydanticObjectId())}",
+        headers={"authorization": "Bearer id"},
+    )
+    assert 404 == resp.status_code
 
 
 def test_lobby_info(client: TestClient):
@@ -255,7 +267,7 @@ def test_start_game(client: TestClient):
 
     game = resp.json()
 
-    assert lobby["id"] == game["id"]
+    assert lobby["id"] != game["id"]
     assert 4 == len(game["round"]["players"])
     assert RoundStatus.BIDDING.name == game["status"]
 
@@ -314,7 +326,7 @@ def test_organizer_leaves_fails(client: TestClient):
     assert 400 == resp.status_code
 
 
-def test_search_lobbies(client: TestClient):
+def test_search_lobbies_smoke_test(client: TestClient):
     """Can search for lobbies"""
     created_lobby = lobby_game(client)
     organizer = created_lobby["organizer"]["identifier"]
@@ -327,3 +339,20 @@ def test_search_lobbies(client: TestClient):
 
     lobbies = resp.json()
     assert len(lobbies) >= 1
+
+
+def test_search_lobbies(client: TestClient):
+    """Can find lobbies by name"""
+    search = f"lobby{time()}"
+    original_lobbies = [lobby_game(client, name=search) for _ in range(5)]
+
+    organizer = original_lobbies[0]["organizer"]["identifier"]
+
+    resp = client.post(
+        f"/players/{organizer}/lobbies/search",
+        json={"searchText": search},
+        headers={"authorization": f"Bearer {organizer}"},
+    )
+
+    lobbies = resp.json()
+    assert len(lobbies) == len(original_lobbies)

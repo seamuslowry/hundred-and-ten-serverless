@@ -4,6 +4,7 @@ The router for lobby operations.
 
 import logging
 
+from beanie import PydanticObjectId
 from fastapi import APIRouter
 
 from src.main.mappers.client import serialize
@@ -32,7 +33,7 @@ router = APIRouter(
 
 
 @router.get("/{lobby_id}", response_model=WaitingGame)
-async def lobby_info(lobby_id: str):
+async def lobby_info(lobby_id: PydanticObjectId):
     """Retrieve 110 lobby."""
     lobby = await LobbyService.get(lobby_id)
 
@@ -40,7 +41,7 @@ async def lobby_info(lobby_id: str):
 
 
 @router.get("/{lobby_id}/players", response_model=list[User])
-async def lobby_players(lobby_id: str):
+async def lobby_players(lobby_id: PydanticObjectId):
     """Retrieve players in a 110 lobby."""
     lobby = await LobbyService.get(lobby_id)
 
@@ -82,7 +83,9 @@ async def create_lobby(player_id: str, body: CreateLobbyRequest):
 
 
 @router.post("/{lobby_id}/invite", response_model=WaitingGame)
-async def invite_to_lobby(player_id: str, lobby_id: str, body: InviteRequest):
+async def invite_to_lobby(
+    player_id: str, lobby_id: PydanticObjectId, body: InviteRequest
+):
     """Invite to join a 110 lobby"""
     lobby = await LobbyService.get(lobby_id)
 
@@ -94,7 +97,7 @@ async def invite_to_lobby(player_id: str, lobby_id: str, body: InviteRequest):
 
 
 @router.post("/{lobby_id}/join", response_model=WaitingGame)
-async def join_lobby(player_id: str, lobby_id: str):
+async def join_lobby(player_id: str, lobby_id: PydanticObjectId):
     """Join a 110 lobby"""
     lobby = await LobbyService.get(lobby_id)
     lobby.join(Human(player_id))
@@ -104,7 +107,7 @@ async def join_lobby(player_id: str, lobby_id: str):
 
 
 @router.post("/{lobby_id}/leave", response_model=WaitingGame)
-async def leave_lobby(player_id: str, lobby_id: str):
+async def leave_lobby(player_id: str, lobby_id: PydanticObjectId):
     """Leave a 110 lobby"""
     lobby = await LobbyService.get(lobby_id)
     lobby.leave(player_id)
@@ -114,7 +117,7 @@ async def leave_lobby(player_id: str, lobby_id: str):
 
 
 @router.post("/{lobby_id}/start", response_model=StartedGame)
-async def start_game(player_id: str, lobby_id: str):
+async def start_game(player_id: str, lobby_id: PydanticObjectId):
     """Start a 110 game from a lobby"""
     lobby = await LobbyService.get(lobby_id)
 

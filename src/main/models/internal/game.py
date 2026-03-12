@@ -100,11 +100,7 @@ class Game(BaseGame):
     @staticmethod
     def from_lobby(lobby: Lobby) -> "Game":
         """Create a Game from a Lobby (starts the game)"""
-        if len(lobby.ordered_players) < 2:
-            raise ValueError("Need at least 2 players to start")
-
         return Game(
-            id=lobby.id,
             name=lobby.name,
             seed=lobby.seed,
             accessibility=lobby.accessibility,

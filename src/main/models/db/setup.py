@@ -10,7 +10,7 @@ from .lobby import Lobby, LobbyV0
 from .user import User, UserV0
 
 
-async def init_beanie_internal():
+async def initialize_odm():
     """Initialize beanie for the given client and DB"""
 
     connection_string = os.environ.get(

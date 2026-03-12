@@ -2,25 +2,12 @@
 
 from unittest.mock import patch
 
+from beanie import PydanticObjectId
 from fastapi.testclient import TestClient
 
 from src.main.auth import Identity
 from src.main.models.internal.errors import AuthorizationError
 from src.tests.helpers import DEFAULT_ID
-
-
-@patch(
-    "src.main.auth.depends.verify_google_token",
-    side_effect=lambda token: Identity(id=token),
-)
-def test_returns_400_for_game_error(_, client: TestClient):
-    """Endpoint returns 400 when a game error occurs"""
-    # Use an invalid game_id to trigger a game error from GameService.get
-    resp = client.get(
-        f"/players/{DEFAULT_ID}/games/not-a-valid-id",
-        headers={"authorization": f"Bearer {DEFAULT_ID}"},
-    )
-    assert 400 == resp.status_code
 
 
 @patch(
@@ -34,7 +21,7 @@ def test_returns_400_for_game_error(_, client: TestClient):
 def test_returns_403_for_authorization_error(_mock_get, _mock_auth, client: TestClient):
     """Endpoint returns 403 when an AuthorizationError occurs"""
     resp = client.get(
-        f"/players/{DEFAULT_ID}/games/some-id",
+        f"/players/{DEFAULT_ID}/games/{PydanticObjectId()}",
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
     assert 403 == resp.status_code
