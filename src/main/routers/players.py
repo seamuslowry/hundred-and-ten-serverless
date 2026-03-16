@@ -10,7 +10,7 @@ from src.main.auth import Identity, get_authorized_identity
 from src.main.mappers.client import serialize
 from src.main.models.client.responses import Player
 from src.main.models.internal import Player as InternalUser
-from src.main.services import UserService
+from src.main.services import PlayerService
 
 router = APIRouter(
     prefix="/players/{player_id}",
@@ -23,14 +23,14 @@ async def search_players(
     search_text: Optional[str] = Query(default="", alias="searchText"),
 ):
     """Get players"""
-    return [serialize.player(u) for u in await UserService.search(search_text or "")]
+    return [serialize.player(u) for u in await PlayerService.search(search_text or "")]
 
 
 @router.put("/self", response_model=Player)
 async def refresh(identity: Identity = Depends(get_authorized_identity)):
     """Save the authenticated principal as a player in the DB"""
     return serialize.player(
-        await UserService.save(
+        await PlayerService.save(
             InternalUser(
                 player_id=identity.id,
                 name=identity.name or identity.id,

@@ -3,7 +3,7 @@
 from src.main.models import db, internal
 
 
-def user(db_user: db.Player) -> internal.Player:
+def player(db_user: db.Player) -> internal.Player:
     """Convert a User DB DTO to its model"""
     return internal.Player(
         id=str(db_user.id) if db_user.id else None,
@@ -50,27 +50,27 @@ def __person(person: db.PlayerInGame) -> internal.PlayerInGame:
 
 def __move(db_move: db.Move) -> internal.Action:
     """Convert a DB move to a game action"""
-    identifier = db_move.player_id
+    player_id = db_move.player_id
 
     match db_move:
         case db.BidMove():
             return internal.Bid(
-                identifier=identifier,
+                identifier=player_id,
                 amount=internal.BidAmount(db_move.amount),
             )
         case db.SelectTrumpMove():
             return internal.SelectTrump(
-                identifier=identifier,
+                identifier=player_id,
                 suit=internal.SelectableSuit[db_move.suit],
             )
         case db.DiscardMove():
             return internal.Discard(
-                identifier=identifier,
+                identifier=player_id,
                 cards=list(map(__card, db_move.cards)),
             )
         case db.PlayMove():
             return internal.Play(
-                identifier=identifier,
+                identifier=player_id,
                 card=__card(db_move.card),
             )
         # type: ignore[unreachable]

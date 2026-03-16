@@ -31,7 +31,7 @@ from src.main.models.internal import (
     SelectTrump,
     Unpass,
 )
-from src.main.services import GameService, UserService
+from src.main.services import GameService, PlayerService
 
 # Type alias for game responses (can be started or completed)
 GameResponse = Union[StartedGame, CompletedGame]
@@ -57,7 +57,7 @@ async def game_players(game_id: PydanticObjectId):
 
     people_ids = [p.id for p in game.ordered_players]
 
-    return [serialize.player(u) for u in await UserService.by_identifiers(people_ids)]
+    return [serialize.player(u) for u in await PlayerService.by_player_ids(people_ids)]
 
 
 @router.post("/search", response_model=list[GameResponse])

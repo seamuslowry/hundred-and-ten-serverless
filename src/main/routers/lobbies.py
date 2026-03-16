@@ -21,7 +21,7 @@ from src.main.models.internal import (
     Lobby,
     NaiveCpu,
 )
-from src.main.services import LobbyService, UserService
+from src.main.services import LobbyService, PlayerService
 
 MIN_PLAYERS = 4
 
@@ -47,7 +47,7 @@ async def lobby_players(lobby_id: PydanticObjectId):
 
     people_ids = [p.id for p in lobby.ordered_players]
 
-    return [serialize.player(u) for u in await UserService.by_identifiers(people_ids)]
+    return [serialize.player(u) for u in await PlayerService.by_player_ids(people_ids)]
 
 
 @router.post("/search", response_model=list[WaitingGame])
@@ -126,9 +126,9 @@ async def start_game(player_id: str, lobby_id: PydanticObjectId):
 
     # Add CPU players if needed
     for num in range(len(lobby.ordered_players), MIN_PLAYERS):
-        cpu_identifier = str(num + 1)
-        lobby.invite(player_id, NaiveCpu(cpu_identifier))
-        lobby.join(NaiveCpu(cpu_identifier))
+        cpu_player_id = str(num + 1)
+        lobby.invite(player_id, NaiveCpu(cpu_player_id))
+        lobby.join(NaiveCpu(cpu_player_id))
 
     # Start the game (converts lobby record to game record)
     game = await LobbyService.start_game(lobby)

@@ -2,6 +2,6 @@
 
 from .game import GameService
 from .lobby import LobbyService
-from .user import UserService
+from .player import PlayerService
 
-__all__ = ["GameService", "LobbyService", "UserService"]
+__all__ = ["GameService", "LobbyService", "PlayerService"]
