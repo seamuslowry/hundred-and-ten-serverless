@@ -1,11 +1,10 @@
 """Format of a players of Hundred and Ten in the DB"""
 
 from abc import ABC
-from typing import Annotated, Literal, Union, Optional
-
-from pydantic import BaseModel, Field
+from typing import Annotated, Literal, Optional, Union
 
 from beanie import Document
+from pydantic import BaseModel, Field
 
 
 class AbstractPlayerInGame(ABC, BaseModel):
@@ -26,7 +25,9 @@ class NaiveCpuPlayer(AbstractPlayerInGame):
     type: Literal["naive"] = "naive"
 
 
-type PlayerInGame = Annotated[Union[HumanPlayer, NaiveCpuPlayer], Field(discriminator="type")]
+type PlayerInGame = Annotated[
+    Union[HumanPlayer, NaiveCpuPlayer], Field(discriminator="type")
+]
 
 
 class Player(ABC, Document):

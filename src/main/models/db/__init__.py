@@ -13,7 +13,7 @@ from .move import (
     SelectTrumpMove,
     Suit,
 )
-from .player import HumanPlayer, NaiveCpuPlayer, PlayerInGame, Player, PlayerV0
+from .player import HumanPlayer, NaiveCpuPlayer, Player, PlayerInGame, PlayerV0
 from .setup import initialize_odm
 
 __all__ = [
