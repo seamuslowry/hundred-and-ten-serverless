@@ -3,9 +3,9 @@
 from src.main.models import db, internal
 
 
-def user(db_user: db.User) -> internal.User:
+def user(db_user: db.User) -> internal.Player:
     """Convert a User DB DTO to its model"""
-    return internal.User(
+    return internal.Player(
         id=str(db_user.id) if db_user.id else None,
         player_id=db_user.identifier,
         name=db_user.name,
@@ -20,8 +20,8 @@ def lobby(db_lobby: db.Lobby) -> internal.Lobby:
         name=db_lobby.name,
         accessibility=internal.Accessibility[db_lobby.accessibility.name],
         organizer=__person(db_lobby.organizer),
-        players=internal.PersonGroup(map(__person, db_lobby.players)),
-        invitees=internal.PersonGroup(map(__person, db_lobby.invitees)),
+        players=internal.PlayerGroup(map(__person, db_lobby.players)),
+        invitees=internal.PlayerGroup(map(__person, db_lobby.invitees)),
     )
 
 
@@ -33,16 +33,16 @@ def game(db_game: db.Game) -> internal.Game:
         seed=db_game.seed,
         accessibility=internal.Accessibility[db_game.accessibility.name],
         organizer=__person(db_game.organizer),
-        players=internal.PersonGroup(map(__person, db_game.players)),
+        players=internal.PlayerGroup(map(__person, db_game.players)),
         initial_moves=list(map(__move, db_game.moves)),
     )
 
 
-def __person(person: db.Player) -> internal.Person:
+def __person(person: db.Player) -> internal.PlayerInGame:
     if isinstance(person, db.NaiveCpuPlayer):
-        return internal.NaiveCpu(identifier=person.identifier)
+        return internal.NaiveCpu(id=person.identifier)
     if isinstance(person, db.HumanPlayer):
-        return internal.Human(identifier=person.identifier)
+        return internal.Human(id=person.identifier)
 
     # type: ignore[unreachable]
     raise ValueError(f"Unknown player type ${person}")  # pragma: no cover

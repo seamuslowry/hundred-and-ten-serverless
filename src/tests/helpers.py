@@ -6,7 +6,7 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from src.main.auth import Identity
-from src.main.models.internal import User
+from src.main.models.internal import Player
 
 DEFAULT_ID = "id"
 
@@ -23,7 +23,7 @@ def lobby_game(
     return resp.json()
 
 
-def user(test_client: TestClient, new_user: User) -> dict[str, Any]:
+def user(test_client: TestClient, new_user: Player) -> dict[str, Any]:
     """Update an existing user if possible"""
     with patch(
         "src.main.auth.depends.verify_firebase_token",

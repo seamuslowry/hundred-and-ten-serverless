@@ -5,7 +5,7 @@ from time import time
 from beanie import PydanticObjectId
 from fastapi.testclient import TestClient
 
-from src.main.models.internal import User
+from src.main.models.internal import Player
 from src.tests.helpers import (
     DEFAULT_ID,
     completed_game,
@@ -128,7 +128,7 @@ def test_game_players(client: TestClient):
 
     # Create user records for the human player (organizer)
     organizer_id = original_game["organizer"]["id"]
-    organizer = user(client, User(organizer_id))
+    organizer = user(client, Player(organizer_id))
 
     # get that game's players
     resp = client.get(
@@ -147,8 +147,8 @@ def test_lobby_players(client: TestClient):
     original_lobby = lobby_game(client)
     other_player_ids = list(map(lambda i: f"{time()}-{i}", range(1, 4)))
 
-    organizer = user(client, User(original_lobby["organizer"]["id"]))
-    other_players = list(map(lambda id: user(client, User(id)), other_player_ids))
+    organizer = user(client, Player(original_lobby["organizer"]["id"]))
+    other_players = list(map(lambda id: user(client, Player(id)), other_player_ids))
 
     for player in other_players:
         client.post(
@@ -173,9 +173,9 @@ def test_search_users(client: TestClient):
     """Can retrieve user information by substring of name"""
     # create new unique users
     timestamp = time()
-    user_one = User(f"{timestamp}one", f"{timestamp}aaa")
-    user_two = User(f"{timestamp}two", f"{timestamp}AAA")
-    user_three = User(f"{timestamp}three", f"{timestamp}bbb")
+    user_one = Player(f"{timestamp}one", f"{timestamp}aaa")
+    user_two = Player(f"{timestamp}two", f"{timestamp}AAA")
+    user_three = Player(f"{timestamp}three", f"{timestamp}bbb")
     user(client, user_one)
     user(client, user_two)
     user(client, user_three)

@@ -55,7 +55,7 @@ async def game_players(game_id: PydanticObjectId):
     """Retrieve players in a 110 game."""
     game = await GameService.get(game_id)
 
-    people_ids = [p.identifier for p in game.ordered_players]
+    people_ids = [p.id for p in game.ordered_players]
 
     return [serialize.player(u) for u in await UserService.by_identifiers(people_ids)]
 

@@ -11,9 +11,9 @@ def lobby(m_lobby: internal.Lobby) -> db.Lobby:
         id=PydanticObjectId(m_lobby.id) if m_lobby.id else None,
         name=m_lobby.name,
         accessibility=db.Accessibility[m_lobby.accessibility.name],
-        organizer=__person(m_lobby.organizer),
-        players=list(map(__person, m_lobby.players)),
-        invitees=list(map(__person, m_lobby.invitees)),
+        organizer=__player_in_game(m_lobby.organizer),
+        players=list(map(__player_in_game, m_lobby.players)),
+        invitees=list(map(__player_in_game, m_lobby.invitees)),
     )
 
     return result
@@ -21,7 +21,7 @@ def lobby(m_lobby: internal.Lobby) -> db.Lobby:
 
 def game(m_game: internal.Game) -> db.Game:
     """Convert a Game model to its DB DTO"""
-    winner = m_game.winner.identifier if m_game.winner else None
+    winner = m_game.winner.id if m_game.winner else None
     active_player = (
         m_game.active_round.active_player.identifier
         if m_game.status != internal.GameStatus.WON
@@ -33,8 +33,8 @@ def game(m_game: internal.Game) -> db.Game:
         name=m_game.name,
         seed=m_game.seed,
         accessibility=db.Accessibility[m_game.accessibility.name],
-        organizer=__person(m_game.organizer),
-        players=list(map(__person, m_game.players)),
+        organizer=__player_in_game(m_game.organizer),
+        players=list(map(__player_in_game, m_game.players)),
         winner=winner,
         active_player=active_player,
         moves=list(map(__move, m_game.moves)),
@@ -42,7 +42,7 @@ def game(m_game: internal.Game) -> db.Game:
     )
 
 
-def user(m_user: internal.User) -> db.User:
+def player(m_user: internal.Player) -> db.User:
     """Convert a User model to its DB DTO"""
     return db.UserV0(
         id=PydanticObjectId(m_user.id) if m_user.id else None,
@@ -56,18 +56,18 @@ def __card(card: internal.Card) -> db.Card:
     return db.Card(suit=db.Suit[card.suit.name], number=db.CardNumber[card.number.name])
 
 
-def __person(person: internal.Person) -> db.Player:
+def __player_in_game(person: internal.PlayerInGame) -> db.Player:
     match person:
         case internal.Human():
             return __human(person)
         case internal.NaiveCpu():
-            return db.NaiveCpuPlayer(identifier=person.identifier)
+            return db.NaiveCpuPlayer(identifier=person.id)
 
     raise ValueError(f"Unrecognized player type ${person}")
 
 
 def __human(person: internal.Human) -> db.HumanPlayer:
-    return db.HumanPlayer(identifier=person.identifier)
+    return db.HumanPlayer(identifier=person.id)
 
 
 def __move(move: internal.Action) -> db.Move:

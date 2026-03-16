@@ -4,7 +4,7 @@ from beanie.operators import In, RegEx
 
 from src.main.mappers.db import deserialize, serialize
 from src.main.models.db import User as DbUser
-from src.main.models.internal import User
+from src.main.models.internal import Player
 
 MAX = 20
 
@@ -13,9 +13,9 @@ class UserService:
     """A service used to handle the business logic of users"""
 
     @staticmethod
-    async def save(user: User) -> User:
+    async def save(user: Player) -> Player:
         """Save the provided user to the DB"""
-        serialized_user = serialize.user(user)
+        serialized_user = serialize.player(user)
 
         existing_user = await DbUser.find_one(
             DbUser.identifier == user.player_id, with_children=True
@@ -27,7 +27,7 @@ class UserService:
         return deserialize.user(await serialized_user.save())
 
     @staticmethod
-    async def search(search_text: str) -> list[User]:
+    async def search(search_text: str) -> list[Player]:
         """Retrieve the users with names like the provided"""
         return list(
             map(
@@ -41,7 +41,7 @@ class UserService:
         )
 
     @staticmethod
-    async def by_identifiers(identifiers: list[str]) -> list[User]:
+    async def by_identifiers(identifiers: list[str]) -> list[Player]:
         """Retrieve the users with identifiers in the list provided"""
         return list(
             map(

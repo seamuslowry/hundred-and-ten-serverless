@@ -45,7 +45,7 @@ async def lobby_players(lobby_id: PydanticObjectId):
     """Retrieve players in a 110 lobby."""
     lobby = await LobbyService.get(lobby_id)
 
-    people_ids = [p.identifier for p in lobby.ordered_players]
+    people_ids = [p.id for p in lobby.ordered_players]
 
     return [serialize.player(u) for u in await UserService.by_identifiers(people_ids)]
 
@@ -70,7 +70,7 @@ async def create_lobby(player_id: str, body: CreateLobbyRequest):
     logging.debug("Creating lobby for %s", player_id)
 
     lobby = Lobby(
-        organizer=Human(identifier=player_id),
+        organizer=Human(id=player_id),
         name=body.name,
         accessibility=Accessibility[body.accessibility],
     )
@@ -90,7 +90,7 @@ async def invite_to_lobby(
     lobby = await LobbyService.get(lobby_id)
 
     for invitee in body.invitees:
-        lobby.invite(player_id, Human(identifier=invitee))
+        lobby.invite(player_id, Human(id=invitee))
     lobby = await LobbyService.save(lobby)
 
     return serialize.lobby(lobby)
@@ -121,7 +121,7 @@ async def start_game(player_id: str, lobby_id: PydanticObjectId):
     """Start a 110 game from a lobby"""
     lobby = await LobbyService.get(lobby_id)
 
-    if player_id != lobby.organizer.identifier:
+    if player_id != lobby.organizer.id:
         raise HundredAndTenError("Only the organizer can start the game")
 
     # Add CPU players if needed

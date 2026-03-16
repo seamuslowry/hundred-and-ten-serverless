@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, Query
 from src.main.auth import Identity, get_authorized_identity
 from src.main.mappers.client import serialize
 from src.main.models.client.responses import Player
-from src.main.models.internal import User as InternalUser
+from src.main.models.internal import Player as InternalUser
 from src.main.services import UserService
 
 router = APIRouter(

@@ -14,8 +14,8 @@ from src.main.models.internal import (
     Card,
     CardNumber,
     Lobby,
-    Person,
-    PersonGroup,
+    PlayerGroup,
+    PlayerInGame,
     UnselectableSuit,
 )
 
@@ -44,10 +44,10 @@ def test_unknown_event_type_error():
 def test_unknown_internal_person_type_error():
     """Raises an error trying to serialize an unknown person type"""
 
-    class UnknownPerson(Person):
+    class UnknownPerson(PlayerInGame):
         """A subclassed person type the serializer is unaware of"""
 
-        def as_player(self):
+        def as_engine_player(self):
             raise NotImplementedError()
 
     with pytest.raises(ValueError):
@@ -56,7 +56,7 @@ def test_unknown_internal_person_type_error():
                 name="",
                 accessibility=Accessibility.PUBLIC,
                 organizer=UnknownPerson(""),
-                players=PersonGroup([]),
-                invitees=PersonGroup([]),
+                players=PlayerGroup([]),
+                invitees=PlayerGroup([]),
             )
         )

@@ -7,7 +7,7 @@ from src.main.models.client import responses
 from src.main.models.client.constants import CardNumberName, SelectableSuit, Suit
 
 
-def player(m_user: internal.User) -> responses.Player:
+def player(m_user: internal.Player) -> responses.Player:
     """Return a user as it can be provided to the client"""
     return responses.Player(
         id=m_user.player_id,
@@ -134,9 +134,9 @@ def __round(m_round: internal.Round, client_identifier: str) -> responses.Round:
     )
 
 
-def __player_in_game(person: internal.Person) -> responses.PlayerInGame:
+def __player_in_game(player_in_game: internal.PlayerInGame) -> responses.PlayerInGame:
     return responses.PlayerInGame(
-        id=person.identifier, automate=isinstance(person, internal.NaiveCpu)
+        id=player_in_game.id, automate=isinstance(player_in_game, internal.NaiveCpu)
     )
 
 
