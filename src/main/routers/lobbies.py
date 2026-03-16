@@ -13,7 +13,7 @@ from src.main.models.client.requests import (
     InviteRequest,
     SearchLobbiesRequest,
 )
-from src.main.models.client.responses import StartedGame, User, WaitingGame
+from src.main.models.client.responses import StartedGame, Player, WaitingGame
 from src.main.models.internal import (
     Accessibility,
     Human,
@@ -40,14 +40,14 @@ async def lobby_info(lobby_id: PydanticObjectId):
     return serialize.lobby(lobby)
 
 
-@router.get("/{lobby_id}/players", response_model=list[User])
+@router.get("/{lobby_id}/players", response_model=list[Player])
 async def lobby_players(lobby_id: PydanticObjectId):
     """Retrieve players in a 110 lobby."""
     lobby = await LobbyService.get(lobby_id)
 
     people_ids = [p.identifier for p in lobby.ordered_players]
 
-    return [serialize.user(u) for u in await UserService.by_identifiers(people_ids)]
+    return [serialize.player(u) for u in await UserService.by_identifiers(people_ids)]
 
 
 @router.post("/search", response_model=list[WaitingGame])

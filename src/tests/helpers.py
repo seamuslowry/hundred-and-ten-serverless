@@ -45,7 +45,7 @@ def started_game(
 ) -> dict[str, Any]:
     """Get a started game waiting for the first move"""
     created_lobby = lobby_game(test_client, organizer=organizer, name=name)
-    organizer = created_lobby["organizer"]["identifier"]
+    organizer = created_lobby["organizer"]["id"]
     resp = test_client.post(
         f"/players/{organizer}/lobbies/{created_lobby['id']}/start",
         headers={"authorization": f"Bearer {organizer}"},
@@ -61,8 +61,8 @@ def completed_game(test_client: TestClient) -> dict[str, Any]:
     assert active_player
 
     resp = test_client.post(
-        f"/players/{active_player['identifier']}/games/{game['id']}/leave",
-        headers={"authorization": f"Bearer {active_player['identifier']}"},
+        f"/players/{active_player['id']}/games/{game['id']}/leave",
+        headers={"authorization": f"Bearer {active_player['id']}"},
     )
     return resp.json()
 

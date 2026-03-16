@@ -66,5 +66,5 @@ class SearchGamesRequest(BaseModel):
     offset: int = 0
     limit: int = 20
     statuses: Optional[list[str]] = None
-    active_player: Optional[str] = Field(default=None, alias="activePlayer")
-    winner: Optional[str] = None
+    active_player_id: Optional[str] = Field(default=None, alias="activePlayer")
+    winner_player_id: Optional[str] = Field(default=None, alias="winner")

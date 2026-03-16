@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, Query
 
 from src.main.auth import Identity, get_authorized_identity
 from src.main.mappers.client import serialize
-from src.main.models.client.responses import User
+from src.main.models.client.responses import Player
 from src.main.models.internal import User as InternalUser
 from src.main.services import UserService
 
@@ -18,18 +18,18 @@ router = APIRouter(
 )
 
 
-@router.get("/search", response_model=list[User])
-async def search_users(
+@router.get("/search", response_model=list[Player])
+async def search_players(
     search_text: Optional[str] = Query(default="", alias="searchText"),
 ):
-    """Get users"""
-    return [serialize.user(u) for u in await UserService.search(search_text or "")]
+    """Get players"""
+    return [serialize.player(u) for u in await UserService.search(search_text or "")]
 
 
-@router.put("/self", response_model=User)
+@router.put("/self", response_model=Player)
 async def refresh(identity: Identity = Depends(get_authorized_identity)):
-    """Save the authenticated principal as a user in the DB"""
-    return serialize.user(
+    """Save the authenticated principal as a player in the DB"""
+    return serialize.player(
         await UserService.save(
             InternalUser(
                 player_id=identity.id,

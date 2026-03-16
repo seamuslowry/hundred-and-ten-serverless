@@ -40,10 +40,10 @@ class GameService:
                 DbGame.organizer.identifier == player_id,
             ),
         ]
-        if search_game.active_player is not None:
-            filters.append(DbGame.active_player == search_game.active_player)
-        if search_game.winner is not None:
-            filters.append(DbGame.winner == search_game.winner)
+        if search_game.active_player_id is not None:
+            filters.append(DbGame.active_player == search_game.active_player_id)
+        if search_game.winner_player_id is not None:
+            filters.append(DbGame.winner == search_game.winner_player_id)
         if search_game.statuses is not None:
             filters.append(In(DbGame.status, search_game.statuses))
 

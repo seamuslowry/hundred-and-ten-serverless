@@ -54,7 +54,7 @@ def test_create_lobby(client: TestClient):
     )
     lobby = resp.json()
 
-    assert organizer == lobby["organizer"]["identifier"]
+    assert organizer == lobby["organizer"]["id"]
     assert 0 == len(lobby["players"])
     assert 0 == len(lobby["invitees"])
     assert GameStatus.WAITING_FOR_PLAYERS.name == lobby["status"]
@@ -65,7 +65,7 @@ def test_organizer_invite_to_lobby(client: TestClient):
     invitee = "invitee"
 
     created_lobby = lobby_game(client)
-    organizer = created_lobby["organizer"]["identifier"]
+    organizer = created_lobby["organizer"]["id"]
 
     resp = client.post(
         f"/players/{organizer}/lobbies/{created_lobby['id']}/invite",
@@ -77,7 +77,7 @@ def test_organizer_invite_to_lobby(client: TestClient):
     assert created_lobby["id"] == invited_lobby["id"]
     assert 0 == len(invited_lobby["players"])
     assert 1 == len(invited_lobby["invitees"])
-    assert invitee == invited_lobby["invitees"][0]["identifier"]
+    assert invitee == invited_lobby["invitees"][0]["id"]
     assert GameStatus.WAITING_FOR_PLAYERS.name == invited_lobby["status"]
 
 
@@ -88,7 +88,7 @@ def test_invitee_invite_to_lobby(client: TestClient):
 
     created_lobby = lobby_game(client)
 
-    organizer = created_lobby["organizer"]["identifier"]
+    organizer = created_lobby["organizer"]["id"]
 
     # invite the original
     client.post(
@@ -129,9 +129,9 @@ def test_player_invite_to_lobby(client: TestClient):
 
     assert created_lobby["id"] == invited_lobby["id"]
     assert 1 == len(invited_lobby["players"])
-    assert player == invited_lobby["players"][0]["identifier"]
+    assert player == invited_lobby["players"][0]["id"]
     assert 1 == len(invited_lobby["invitees"])
-    assert invitee == invited_lobby["invitees"][0]["identifier"]
+    assert invitee == invited_lobby["invitees"][0]["id"]
     assert GameStatus.WAITING_FOR_PLAYERS.name == invited_lobby["status"]
 
 
@@ -149,7 +149,7 @@ def test_join_public_lobby(client: TestClient):
 
     assert created_lobby["id"] == joined_lobby["id"]
     assert 1 == len(joined_lobby["players"])
-    assert player == joined_lobby["players"][0]["identifier"]
+    assert player == joined_lobby["players"][0]["id"]
     assert 0 == len(joined_lobby["invitees"])
     assert GameStatus.WAITING_FOR_PLAYERS.name == joined_lobby["status"]
 
@@ -200,7 +200,7 @@ def test_join_private_lobby_invited(client: TestClient):
 
     assert created_lobby["id"] == joined_lobby["id"]
     assert 1 == len(joined_lobby["players"])
-    assert player == joined_lobby["players"][0]["identifier"]
+    assert player == joined_lobby["players"][0]["id"]
     assert 0 == len(joined_lobby["invitees"])
     assert GameStatus.WAITING_FOR_PLAYERS.name == joined_lobby["status"]
 
@@ -219,7 +219,7 @@ def test_leave_lobby(client: TestClient):
 
     assert created_lobby["id"] == joined_lobby["id"]
     assert 1 == len(joined_lobby["players"])
-    assert player == joined_lobby["players"][0]["identifier"]
+    assert player == joined_lobby["players"][0]["id"]
 
     resp = client.post(
         f"/players/{player}/lobbies/{created_lobby['id']}/leave",
@@ -230,8 +230,8 @@ def test_leave_lobby(client: TestClient):
 
     assert created_lobby["id"] == left_lobby["id"]
     assert (
-        created_lobby["organizer"]["identifier"]
-        == left_lobby["organizer"]["identifier"]
+        created_lobby["organizer"]["id"]
+        == left_lobby["organizer"]["id"]
     )
     assert 0 == len(left_lobby["players"])
     assert GameStatus.WAITING_FOR_PLAYERS.name == left_lobby["status"]
@@ -258,7 +258,7 @@ def test_player_start_game(client: TestClient):
 def test_start_game(client: TestClient):
     """The organizer can start the game"""
     lobby = lobby_game(client)
-    organizer = lobby["organizer"]["identifier"]
+    organizer = lobby["organizer"]["id"]
 
     resp = client.post(
         f"/players/{organizer}/lobbies/{lobby['id']}/start",
@@ -314,7 +314,7 @@ def test_organizer_leaves_fails(client: TestClient):
         f"/players/{player}/lobbies/{created_lobby['id']}/join",
         headers={"authorization": f"Bearer {player}"},
     )
-    organizer = created_lobby["organizer"]["identifier"]
+    organizer = created_lobby["organizer"]["id"]
 
     # Organizer attempts to leave
     resp = client.post(
@@ -329,7 +329,7 @@ def test_organizer_leaves_fails(client: TestClient):
 def test_search_lobbies_smoke_test(client: TestClient):
     """Can search for lobbies"""
     created_lobby = lobby_game(client)
-    organizer = created_lobby["organizer"]["identifier"]
+    organizer = created_lobby["organizer"]["id"]
 
     resp = client.post(
         f"/players/{organizer}/lobbies/search",
@@ -346,7 +346,7 @@ def test_search_lobbies(client: TestClient):
     search = f"lobby{time()}"
     original_lobbies = [lobby_game(client, name=search) for _ in range(5)]
 
-    organizer = original_lobbies[0]["organizer"]["identifier"]
+    organizer = original_lobbies[0]["organizer"]["id"]
 
     resp = client.post(
         f"/players/{organizer}/lobbies/search",

@@ -23,7 +23,7 @@ def test_search_winner(client: TestClient):
     # search games
     resp = client.post(
         f"/players/{DEFAULT_ID}/games/search",
-        json={"winner": game["winner"]["identifier"]},
+        json={"winner": game["winner"]["id"]},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
     games = resp.json()
@@ -35,7 +35,7 @@ def test_search_game_smoke_test(client: TestClient):
     search = f"game{time()}"
     original_games = [started_game(client, name=search) for _ in range(5)]
 
-    player = original_games[0]["players"][0]["identifier"]
+    player = original_games[0]["players"][0]["id"]
 
     resp = client.post(
         f"/players/{player}/games/search",
@@ -52,7 +52,7 @@ def test_search_game_by_status(client: TestClient):
     search = f"game{time()}"
     original_games = [started_game(client, name=search) for _ in range(5)]
 
-    player = original_games[0]["players"][0]["identifier"]
+    player = original_games[0]["players"][0]["id"]
 
     won_resp = client.post(
         f"/players/{player}/games/search",
@@ -127,7 +127,7 @@ def test_game_players(client: TestClient):
     original_game = completed_game(client)
 
     # Create user records for the human player (organizer)
-    organizer_id = original_game["organizer"]["identifier"]
+    organizer_id = original_game["organizer"]["id"]
     organizer = user(client, User(organizer_id))
 
     # get that game's players
@@ -138,8 +138,8 @@ def test_game_players(client: TestClient):
     retrieved_users = resp.json()
 
     # Should have at least the organizer (CPU players may not have user records)
-    retrieved_user_ids = list(map(lambda u: u["identifier"], retrieved_users))
-    assert organizer["identifier"] in retrieved_user_ids
+    retrieved_user_ids = list(map(lambda u: u["id"], retrieved_users))
+    assert organizer["id"] in retrieved_user_ids
 
 
 def test_lobby_players(client: TestClient):
@@ -147,13 +147,13 @@ def test_lobby_players(client: TestClient):
     original_lobby = lobby_game(client)
     other_player_ids = list(map(lambda i: f"{time()}-{i}", range(1, 4)))
 
-    organizer = user(client, User(original_lobby["organizer"]["identifier"]))
+    organizer = user(client, User(original_lobby["organizer"]["id"]))
     other_players = list(map(lambda id: user(client, User(id)), other_player_ids))
 
     for player in other_players:
         client.post(
-            f"/players/{player['identifier']}/lobbies/{original_lobby['id']}/join",
-            headers={"authorization": f"Bearer {player['identifier']}"},
+            f"/players/{player['id']}/lobbies/{original_lobby['id']}/join",
+            headers={"authorization": f"Bearer {player['id']}"},
         )
 
     # get that lobby's players
@@ -164,8 +164,8 @@ def test_lobby_players(client: TestClient):
     retrieved_users = resp.json()
 
     assert 4 == len(retrieved_users)
-    assert ([organizer["identifier"]] + other_player_ids) == list(
-        map(lambda p: p["identifier"], retrieved_users)
+    assert ([organizer["id"]] + other_player_ids) == list(
+        map(lambda p: p["id"], retrieved_users)
     )
 
 
@@ -187,7 +187,7 @@ def test_search_users(client: TestClient):
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
     retrieved_users = resp.json()
-    retrieved_user_ids = list(map(lambda u: u["identifier"], retrieved_users))
+    retrieved_user_ids = list(map(lambda u: u["id"], retrieved_users))
     assert user_one.player_id in retrieved_user_ids
     assert user_two.player_id in retrieved_user_ids
     assert user_three.player_id not in retrieved_user_ids
@@ -201,8 +201,8 @@ def test_get_suggestion_on_other_turn(client: TestClient):
     non_active_player = next(
         p
         for p in game["round"]["players"]
-        if p["identifier"] != active_player["identifier"]
+        if p["id"] != active_player["id"]
     )
-    resp = request_suggestion(client, game["id"], non_active_player["identifier"])
+    resp = request_suggestion(client, game["id"], non_active_player["id"])
 
     assert 200 == resp.status_code
