@@ -17,9 +17,9 @@ from src.main.models.client.requests import (
 )
 from src.main.models.client.responses import (
     CompletedGame,
+    Player,
     StartedGame,
     SuggestionResponse,
-    User,
 )
 from src.main.models.internal import (
     Bid,
@@ -31,7 +31,7 @@ from src.main.models.internal import (
     SelectTrump,
     Unpass,
 )
-from src.main.services import GameService, UserService
+from src.main.services import GameService, PlayerService
 
 # Type alias for game responses (can be started or completed)
 GameResponse = Union[StartedGame, CompletedGame]
@@ -50,14 +50,14 @@ async def game_info(player_id: str, game_id: PydanticObjectId):
     return serialize.game(game, player_id)
 
 
-@router.get("/{game_id}/players", response_model=list[User])
+@router.get("/{game_id}/players", response_model=list[Player])
 async def game_players(game_id: PydanticObjectId):
     """Retrieve players in a 110 game."""
     game = await GameService.get(game_id)
 
-    people_ids = [p.identifier for p in game.ordered_players]
+    people_ids = [p.id for p in game.ordered_players]
 
-    return [serialize.user(u) for u in await UserService.by_identifiers(people_ids)]
+    return [serialize.player(u) for u in await PlayerService.by_player_ids(people_ids)]
 
 
 @router.post("/search", response_model=list[GameResponse])

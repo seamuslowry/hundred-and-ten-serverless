@@ -1,39 +1,31 @@
-"""Unit tests to create / update user as a client"""
+"""Unit tests to create / update players as a client"""
 
 from time import time
 
 from fastapi.testclient import TestClient
 
-from src.tests.helpers import create_user, update_user
+from src.main.models.internal import Player
+from src.tests.helpers import player
 
 
-def test_post_user(client: TestClient):
-    """Can post a new user"""
-    identifier = f"{time()}"
-    user = create_user(client, identifier)
+def test_create_player(client: TestClient):
+    """Can create a new player"""
+    player_id = f"{time()}"
+    u = player(client, Player(player_id=player_id, name="Name"))
 
-    assert identifier == user["identifier"]
-
-
-def test_put_user(client: TestClient):
-    """Can update an existing user"""
-    identifier = f"{time()}"
-    new_name = "new_name"
-    original_user = create_user(client, identifier, "old_name")
-    updated_user = update_user(client, identifier, new_name)
-
-    assert original_user["identifier"] == updated_user["identifier"]
-    assert original_user["name"] != updated_user["name"]
-    assert new_name == updated_user["name"]
+    assert player_id == u["id"]
 
 
-def test_cannot_recreate_user(client: TestClient):
-    """Cannot recreate a user"""
-    identifier = f"{time()}"
-    old_name = "old_name"
-    original_user = create_user(client, identifier, "old_name")
-    updated_user = create_user(client, identifier, "new_name")
+def test_refresh_player(client: TestClient):
+    """Can refresh an existing player"""
+    player_id = f"{time()}"
+    initial_name = "Initial"
+    updated_name = "Updated"
+    u = player(client, Player(player_id=player_id, name=initial_name))
 
-    assert original_user["identifier"] == updated_user["identifier"]
-    assert original_user["name"] == updated_user["name"]
-    assert old_name == updated_user["name"]
+    assert player_id == u["id"]
+    assert initial_name == u["name"]
+
+    u = player(client, Player(player_id=player_id, name=updated_name))
+    assert player_id == u["id"]
+    assert updated_name == u["name"]

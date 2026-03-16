@@ -12,74 +12,74 @@ from hundredandten.round import Round
 from hundredandten.state import GameState
 
 from .constants import Accessibility, GameStatus
-from .person import NaiveCpu, Person
+from .player import NaiveCpu, PlayerInGame
 
 
-class PersonGroup(list[Person]):
-    """A group of persons in a game"""
+class PlayerGroup(list[PlayerInGame]):
+    """A group of players in a game"""
 
-    def find_or_throw(self, identifier: str) -> Person:
-        """Find the person with the passed identifier; throw if they don't exist"""
-        p = self._by_identifier(identifier)
+    def find_or_throw(self, player_id: str) -> PlayerInGame:
+        """Find the player with the passed player ID; throw if they don't exist"""
+        p = self._by_player_id(player_id)
         if not p:
-            raise ValueError(f"Unable to find {identifier}")
+            raise ValueError(f"Unable to find {player_id}")
         return p
 
-    def find(self, identifier: str) -> Optional[Person]:
-        """Find the person with the passed identifier; return None if they don't exist"""
-        return self._by_identifier(identifier)
+    def find(self, player_id: str) -> Optional[PlayerInGame]:
+        """Find the player with the passed player ID; return None if they don't exist"""
+        return self._by_player_id(player_id)
 
-    def _by_identifier(self, identifier: str) -> Optional[Person]:
-        """Find a person by identifier"""
-        return next((p for p in self if p.identifier == identifier), None)
+    def _by_player_id(self, player_id: str) -> Optional[PlayerInGame]:
+        """Find a player by player ID"""
+        return next((p for p in self if p.id == player_id), None)
 
 
 @dataclass
 class BaseGame(ABC):
     """Shared fields and properties for Lobby and Game"""
 
-    organizer: Person = field()
-    players: PersonGroup = field(default_factory=PersonGroup)
+    organizer: PlayerInGame = field()
+    players: PlayerGroup = field(default_factory=PlayerGroup)
     id: Optional[str] = field(default=None)
     name: str = field(default="")
     seed: str = field(default_factory=lambda: str(uuid4()))
     accessibility: Accessibility = field(default=Accessibility.PUBLIC)
 
     @abstractmethod
-    def leave(self, identifier: str):
+    def leave(self, player_id: str):
         """Leave the game or the lobby"""
 
     @property
-    def ordered_players(self) -> PersonGroup:
+    def ordered_players(self) -> PlayerGroup:
         """The canonical order of all players in this game"""
-        return PersonGroup([self.organizer, *self.players])
+        return PlayerGroup([self.organizer, *self.players])
 
 
 @dataclass
 class Lobby(BaseGame):
     """A class to model the lobby phase of a Hundred and Ten game"""
 
-    invitees: PersonGroup = field(default_factory=PersonGroup)
+    invitees: PlayerGroup = field(default_factory=PlayerGroup)
 
-    def join(self, person: Person) -> None:
+    def join(self, player: PlayerInGame) -> None:
         """Add a player to the lobby"""
         if self.accessibility == Accessibility.PRIVATE and not self.invitees.find(
-            person.identifier
+            player.id
         ):
             raise ValueError("Cannot join private game without invitation")
 
-        self.players.append(person)
+        self.players.append(player)
 
-    def leave(self, identifier: str) -> None:
+    def leave(self, player_id: str) -> None:
         """Remove a player from the lobby"""
-        if identifier == self.organizer.identifier:
+        if player_id == self.organizer.id:
             raise ValueError("Organizer cannot leave a lobby")
 
-        self.players.remove(self.players.find_or_throw(identifier))
+        self.players.remove(self.players.find_or_throw(player_id))
 
-    def invite(self, inviter: str, invitee: Person) -> None:
+    def invite(self, inviter: str, invitee: PlayerInGame) -> None:
         """Invite someone to the game"""
-        if self.organizer.identifier != inviter and self.players.find(inviter) is None:
+        if self.organizer.id != inviter and self.players.find(inviter) is None:
             raise ValueError("Only players or organizer can invite")
 
         self.invitees.append(invitee)
@@ -122,7 +122,7 @@ class Game(BaseGame):
         return self._game.active_round.status
 
     @property
-    def winner(self) -> Optional[Person]:
+    def winner(self) -> Optional[PlayerInGame]:
         """Get the winner of the game"""
         if self._game.winner:
             return self.ordered_players.find_or_throw(self._game.winner.identifier)
@@ -144,16 +144,16 @@ class Game(BaseGame):
         return self._game.scores
 
     @override
-    def leave(self, identifier: str) -> None:
+    def leave(self, player_id: str) -> None:
         """Automate a player (used when leaving an active game)"""
 
-        original_player = self.ordered_players.find_or_throw(identifier)
+        original_player = self.ordered_players.find_or_throw(player_id)
 
         if original_player == self.organizer:
-            self.organizer = NaiveCpu(original_player.identifier)
+            self.organizer = NaiveCpu(original_player.id)
         else:
             self.players[self.players.index(original_player)] = NaiveCpu(
-                original_player.identifier
+                original_player.id
             )
         self._game = self._initialize_game(self.moves)
 
@@ -167,7 +167,7 @@ class Game(BaseGame):
 
     def _initialize_game(self, moves: list[Action]) -> HundredAndTen:
         return HundredAndTen(
-            players=[p.as_player() for p in self.ordered_players],
+            players=[p.as_engine_player() for p in self.ordered_players],
             seed=self.seed,
             initial_moves=moves,
         )

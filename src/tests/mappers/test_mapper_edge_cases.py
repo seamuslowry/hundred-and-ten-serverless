@@ -14,17 +14,17 @@ from src.main.models.internal import (
     Card,
     CardNumber,
     Lobby,
-    Person,
-    PersonGroup,
+    PlayerGroup,
+    PlayerInGame,
     UnselectableSuit,
 )
 
 
 def test_bad_suggestion_error():
     """Attempting to serialize an invalid suggestion results in an error"""
-    identifier = "identifier"
+    player_id = "player_id"
     with pytest.raises(ValueError):
-        client_serialize.suggestion(Action(identifier))
+        client_serialize.suggestion(Action(player_id))
 
 
 def test_card_with_unselectable_suit():
@@ -38,16 +38,16 @@ def test_card_with_unselectable_suit():
 def test_unknown_event_type_error():
     """Serializing an unknown event type raises ValueError"""
     with pytest.raises(ValueError):
-        client_serialize.events([Event()], "identifier")
+        client_serialize.events([Event()], "player_id")
 
 
 def test_unknown_internal_person_type_error():
     """Raises an error trying to serialize an unknown person type"""
 
-    class UnknownPerson(Person):
+    class UnknownPerson(PlayerInGame):
         """A subclassed person type the serializer is unaware of"""
 
-        def as_player(self):
+        def as_engine_player(self):
             raise NotImplementedError()
 
     with pytest.raises(ValueError):
@@ -56,7 +56,7 @@ def test_unknown_internal_person_type_error():
                 name="",
                 accessibility=Accessibility.PUBLIC,
                 organizer=UnknownPerson(""),
-                players=PersonGroup([]),
-                invitees=PersonGroup([]),
+                players=PlayerGroup([]),
+                invitees=PlayerGroup([]),
             )
         )

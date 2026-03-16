@@ -7,29 +7,25 @@ from pydantic import BaseModel
 from .constants import CardNumberName, SelectableSuit, Suit
 
 
-class User(BaseModel):
-    """A class to model the client format of a Hundred and Ten user"""
+class Player(BaseModel):
+    """A class to model the client format of a Hundred and Ten player"""
 
-    identifier: str
+    id: str
     name: str
     picture_url: Optional[str] = None
 
 
-class BasePerson(BaseModel):
+class PlayerInGame(BaseModel):
     """A class to model the client format of a Hundred and Ten person"""
 
-    identifier: str
-
-
-class GamePerson(BasePerson):
-    """A class to model the client format of a Hundred and Ten person at the game level"""
-
+    id: str
     automate: bool
 
 
-class OtherPlayer(BasePerson):
+class OtherPlayerInRound(BaseModel):
     """A class to model the client format of another Hundred and Ten player"""
 
+    id: str
     hand_size: int
 
 
@@ -40,14 +36,15 @@ class Card(BaseModel):
     number: CardNumberName
 
 
-class Self(BasePerson):
+class SelfInRound(BaseModel):
     """A class to model the client format of the logged in Hundred and Ten player"""
 
+    id: str
     hand: list[Card]
     prepassed: bool
 
 
-type Player = Union[Self, OtherPlayer]
+type PlayerInRound = Union[SelfInRound, OtherPlayerInRound]
 
 # =============================================================================
 # Event types
@@ -76,7 +73,7 @@ class Bid(Event):
     """A class to model the client format of a Hundred and Ten bid event"""
 
     type: Literal["BID"] = "BID"
-    identifier: str
+    player_id: str
     amount: int
 
 
@@ -84,7 +81,7 @@ class SelectTrump(Event):
     """A class to model the client format of a Hundred and Ten select trump event"""
 
     type: Literal["SELECT_TRUMP"] = "SELECT_TRUMP"
-    identifier: str
+    player_id: str
     suit: SelectableSuit
 
 
@@ -92,7 +89,7 @@ class Discard(Event):
     """A class to model the client format of a Hundred and Ten discard event"""
 
     type: Literal["DISCARD"] = "DISCARD"
-    identifier: str
+    player_id: str
     discards: Union[list[Card], int]
 
 
@@ -106,7 +103,7 @@ class PlayEvent(Event):
     """A class to model the client format of a Hundred and Ten play event"""
 
     type: Literal["PLAY"] = "PLAY"
-    identifier: str
+    player_id: str
     card: Card
 
 
@@ -114,13 +111,13 @@ class TrickEnd(Event):
     """A class to model the client format of a Hundred and Ten trick end event"""
 
     type: Literal["TRICK_END"] = "TRICK_END"
-    winner: str
+    winner_player_id: str
 
 
 class Score(BaseModel):
     """A class to model the client format of a score in a Hundred and Ten round end event"""
 
-    identifier: str
+    player_id: str
     value: int
 
 
@@ -135,7 +132,7 @@ class GameEnd(Event):
     """A class to model the client format of a Hundred and Ten game end event"""
 
     type: Literal["GAME_END"] = "GAME_END"
-    winner: str
+    winner_player_id: str
 
 
 # Union type for all event types (used in results field for OpenAPI)
@@ -156,7 +153,7 @@ GameEvent = Union[
 class Play(BaseModel):
     """A class to model the client format of a Hundred and Ten play"""
 
-    identifier: str
+    player_id: str
     card: Card
 
 
@@ -171,13 +168,13 @@ class Trick(BaseModel):
 class Round(BaseModel):
     """A class to model the client format of a Hundred and Ten round"""
 
-    players: list[Player]
-    dealer: Player
-    bidder: Optional[Player] = None
+    players: list[PlayerInRound]
+    dealer: PlayerInRound
+    bidder: Optional[PlayerInRound] = None
     bid: Optional[int] = None
     trump: Optional[SelectableSuit] = None
     tricks: list[Trick]
-    active_player: Optional[Player] = None
+    active_player: Optional[PlayerInRound] = None
 
 
 class Game(BaseModel):
@@ -192,9 +189,9 @@ class WaitingGame(Game):
     """A class to model the client format of a waiting Hundred and Ten game"""
 
     accessibility: str
-    organizer: GamePerson
-    players: list[GamePerson]
-    invitees: list[GamePerson]
+    organizer: PlayerInGame
+    players: list[PlayerInGame]
+    invitees: list[PlayerInGame]
 
 
 class StartedGame(Game):
@@ -202,16 +199,16 @@ class StartedGame(Game):
 
     round: Optional[Round] = None
     scores: dict[str, int]
-    players: list[GamePerson]
+    players: list[PlayerInGame]
     results: list[GameEvent]
 
 
 class CompletedGame(Game):
     """A class to model the client format of a completed Hundred and Ten game"""
 
-    winner: GamePerson
-    organizer: GamePerson
-    players: list[GamePerson]
+    winner: PlayerInGame
+    organizer: PlayerInGame
+    players: list[PlayerInGame]
     scores: dict[str, int]
     results: list[GameEvent]
 

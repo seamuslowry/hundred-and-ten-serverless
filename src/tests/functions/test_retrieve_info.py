@@ -5,11 +5,12 @@ from time import time
 from beanie import PydanticObjectId
 from fastapi.testclient import TestClient
 
+from src.main.models.internal import Player
 from src.tests.helpers import (
     DEFAULT_ID,
     completed_game,
-    create_user,
     lobby_game,
+    player,
     request_suggestion,
     started_game,
 )
@@ -22,7 +23,7 @@ def test_search_winner(client: TestClient):
     # search games
     resp = client.post(
         f"/players/{DEFAULT_ID}/games/search",
-        json={"winner": game["winner"]["identifier"]},
+        json={"winner": game["winner"]["id"]},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
     games = resp.json()
@@ -34,12 +35,12 @@ def test_search_game_smoke_test(client: TestClient):
     search = f"game{time()}"
     original_games = [started_game(client, name=search) for _ in range(5)]
 
-    player = original_games[0]["players"][0]["identifier"]
+    p = original_games[0]["players"][0]["id"]
 
     resp = client.post(
-        f"/players/{player}/games/search",
+        f"/players/{p}/games/search",
         json={"searchText": search},
-        headers={"authorization": f"Bearer {player}"},
+        headers={"authorization": f"Bearer {p}"},
     )
 
     games = resp.json()
@@ -51,21 +52,21 @@ def test_search_game_by_status(client: TestClient):
     search = f"game{time()}"
     original_games = [started_game(client, name=search) for _ in range(5)]
 
-    player = original_games[0]["players"][0]["identifier"]
+    p = original_games[0]["players"][0]["id"]
 
     won_resp = client.post(
-        f"/players/{player}/games/search",
-        json={"activePlayer": player, "statuses": ["WON"]},
-        headers={"authorization": f"Bearer {player}"},
+        f"/players/{p}/games/search",
+        json={"activePlayer": p, "statuses": ["WON"]},
+        headers={"authorization": f"Bearer {p}"},
     )
 
     won_games = won_resp.json()
     assert 0 == len(won_games)
 
     bidding_resp = client.post(
-        f"/players/{player}/games/search",
-        json={"activePlayer": player, "statuses": ["BIDDING"]},
-        headers={"authorization": f"Bearer {player}"},
+        f"/players/{p}/games/search",
+        json={"activePlayer": p, "statuses": ["BIDDING"]},
+        headers={"authorization": f"Bearer {p}"},
     )
 
     bidding_resp = won_resp.json()
@@ -122,37 +123,37 @@ def test_game_info(client: TestClient):
 
 
 def test_game_players(client: TestClient):
-    """Can retrieve user information for players in a game"""
+    """Can retrieve information for players in a game"""
     original_game = completed_game(client)
 
-    # Create user records for the human player (organizer)
-    organizer_id = original_game["organizer"]["identifier"]
-    organizer = create_user(client, organizer_id)
+    # Create player records for the human player (organizer)
+    organizer_id = original_game["organizer"]["id"]
+    organizer = player(client, Player(organizer_id))
 
     # get that game's players
     resp = client.get(
         f"/players/{DEFAULT_ID}/games/{original_game['id']}/players",
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
-    retrieved_users = resp.json()
+    retrieved_players = resp.json()
 
-    # Should have at least the organizer (CPU players may not have user records)
-    retrieved_user_ids = list(map(lambda u: u["identifier"], retrieved_users))
-    assert organizer["identifier"] in retrieved_user_ids
+    # Should have at least the organizer (CPU players may not have player records)
+    retrieved_player_ids = list(map(lambda u: u["id"], retrieved_players))
+    assert organizer["id"] in retrieved_player_ids
 
 
 def test_lobby_players(client: TestClient):
-    """Can retrieve user information for players in a lobby"""
+    """Can retrieve information for players in a lobby"""
     original_lobby = lobby_game(client)
     other_player_ids = list(map(lambda i: f"{time()}-{i}", range(1, 4)))
 
-    organizer = create_user(client, original_lobby["organizer"]["identifier"])
-    other_players = list(map(lambda id: create_user(client, id), other_player_ids))
+    organizer = player(client, Player(original_lobby["organizer"]["id"]))
+    other_players = list(map(lambda id: player(client, Player(id)), other_player_ids))
 
-    for player in other_players:
+    for p in other_players:
         client.post(
-            f"/players/{player['identifier']}/lobbies/{original_lobby['id']}/join",
-            headers={"authorization": f"Bearer {player['identifier']}"},
+            f"/players/{p['id']}/lobbies/{original_lobby['id']}/join",
+            headers={"authorization": f"Bearer {p['id']}"},
         )
 
     # get that lobby's players
@@ -160,36 +161,36 @@ def test_lobby_players(client: TestClient):
         f"/players/{DEFAULT_ID}/lobbies/{original_lobby['id']}/players",
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
-    retrieved_users = resp.json()
+    retrieved_players = resp.json()
 
-    assert 4 == len(retrieved_users)
-    assert ([organizer["identifier"]] + other_player_ids) == list(
-        map(lambda p: p["identifier"], retrieved_users)
+    assert 4 == len(retrieved_players)
+    assert ([organizer["id"]] + other_player_ids) == list(
+        map(lambda p: p["id"], retrieved_players)
     )
 
 
-def test_search_users(client: TestClient):
-    """Can retrieve user information by substring of name"""
-    # create new unique users
+def test_search_players(client: TestClient):
+    """Can retrieve player information by substring of name"""
+    # create new unique players
     timestamp = time()
-    user_one = (f"{timestamp}one", f"{timestamp}aaa")
-    user_two = (f"{timestamp}two", f"{timestamp}AAA")
-    user_three = (f"{timestamp}three", f"{timestamp}bbb")
-    create_user(client, user_one[0], user_one[1])
-    create_user(client, user_two[0], user_two[1])
-    create_user(client, user_three[0], user_three[1])
+    player_one = Player(f"{timestamp}one", f"{timestamp}aaa")
+    player_two = Player(f"{timestamp}two", f"{timestamp}AAA")
+    player_three = Player(f"{timestamp}three", f"{timestamp}bbb")
+    player(client, player_one)
+    player(client, player_two)
+    player(client, player_three)
 
-    # get users
+    # get players
     resp = client.get(
         f"/players/{DEFAULT_ID}/search",
         params={"searchText": "aaa"},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
-    retrieved_users = resp.json()
-    retrieved_user_ids = list(map(lambda u: u["identifier"], retrieved_users))
-    assert user_one[0] in retrieved_user_ids
-    assert user_two[0] in retrieved_user_ids
-    assert user_three[0] not in retrieved_user_ids
+    retrieved_players = resp.json()
+    retrieved_player_ids = list(map(lambda u: u["id"], retrieved_players))
+    assert player_one.player_id in retrieved_player_ids
+    assert player_two.player_id in retrieved_player_ids
+    assert player_three.player_id not in retrieved_player_ids
 
 
 def test_get_suggestion_on_other_turn(client: TestClient):
@@ -198,10 +199,8 @@ def test_get_suggestion_on_other_turn(client: TestClient):
     active_player = game["round"]["active_player"]
     assert active_player
     non_active_player = next(
-        p
-        for p in game["round"]["players"]
-        if p["identifier"] != active_player["identifier"]
+        p for p in game["round"]["players"] if p["id"] != active_player["id"]
     )
-    resp = request_suggestion(client, game["id"], non_active_player["identifier"])
+    resp = request_suggestion(client, game["id"], non_active_player["id"])
 
     assert 200 == resp.status_code

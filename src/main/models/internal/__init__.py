@@ -31,15 +31,14 @@ from hundredandten.events import (
     TrickStart,
 )
 from hundredandten.hundred_and_ten_error import HundredAndTenError
-from hundredandten.player import NaiveAutomatedPlayer, Player, RoundPlayer
+from hundredandten.player import NaiveAutomatedPlayer, RoundPlayer
 from hundredandten.round import Round
 from hundredandten.state import GameState
 from hundredandten.trick import Trick
 
 from .constants import Accessibility, GameStatus
-from .game import Game, Lobby, PersonGroup
-from .person import Human, NaiveCpu, Person
-from .user import User
+from .game import Game, Lobby, PlayerGroup
+from .player import Human, NaiveCpu, Player, PlayerInGame
 
 __all__ = [
     # Engine
@@ -89,9 +88,9 @@ __all__ = [
     # Models
     "Game",
     "Lobby",
-    "PersonGroup",
-    "Person",
-    "User",
+    "PlayerGroup",
+    "Player",
+    "PlayerInGame",
     "Human",
     "NaiveCpu",
 ]

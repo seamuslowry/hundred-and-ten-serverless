@@ -13,7 +13,7 @@ from src.main.models.client.requests import (
     InviteRequest,
     SearchLobbiesRequest,
 )
-from src.main.models.client.responses import StartedGame, User, WaitingGame
+from src.main.models.client.responses import Player, StartedGame, WaitingGame
 from src.main.models.internal import (
     Accessibility,
     Human,
@@ -21,7 +21,7 @@ from src.main.models.internal import (
     Lobby,
     NaiveCpu,
 )
-from src.main.services import LobbyService, UserService
+from src.main.services import LobbyService, PlayerService
 
 MIN_PLAYERS = 4
 
@@ -40,14 +40,14 @@ async def lobby_info(lobby_id: PydanticObjectId):
     return serialize.lobby(lobby)
 
 
-@router.get("/{lobby_id}/players", response_model=list[User])
+@router.get("/{lobby_id}/players", response_model=list[Player])
 async def lobby_players(lobby_id: PydanticObjectId):
     """Retrieve players in a 110 lobby."""
     lobby = await LobbyService.get(lobby_id)
 
-    people_ids = [p.identifier for p in lobby.ordered_players]
+    people_ids = [p.id for p in lobby.ordered_players]
 
-    return [serialize.user(u) for u in await UserService.by_identifiers(people_ids)]
+    return [serialize.player(u) for u in await PlayerService.by_player_ids(people_ids)]
 
 
 @router.post("/search", response_model=list[WaitingGame])
@@ -70,7 +70,7 @@ async def create_lobby(player_id: str, body: CreateLobbyRequest):
     logging.debug("Creating lobby for %s", player_id)
 
     lobby = Lobby(
-        organizer=Human(identifier=player_id),
+        organizer=Human(id=player_id),
         name=body.name,
         accessibility=Accessibility[body.accessibility],
     )
@@ -90,7 +90,7 @@ async def invite_to_lobby(
     lobby = await LobbyService.get(lobby_id)
 
     for invitee in body.invitees:
-        lobby.invite(player_id, Human(identifier=invitee))
+        lobby.invite(player_id, Human(id=invitee))
     lobby = await LobbyService.save(lobby)
 
     return serialize.lobby(lobby)
@@ -121,14 +121,14 @@ async def start_game(player_id: str, lobby_id: PydanticObjectId):
     """Start a 110 game from a lobby"""
     lobby = await LobbyService.get(lobby_id)
 
-    if player_id != lobby.organizer.identifier:
+    if player_id != lobby.organizer.id:
         raise HundredAndTenError("Only the organizer can start the game")
 
     # Add CPU players if needed
     for num in range(len(lobby.ordered_players), MIN_PLAYERS):
-        cpu_identifier = str(num + 1)
-        lobby.invite(player_id, NaiveCpu(cpu_identifier))
-        lobby.join(NaiveCpu(cpu_identifier))
+        cpu_player_id = str(num + 1)
+        lobby.invite(player_id, NaiveCpu(cpu_player_id))
+        lobby.join(NaiveCpu(cpu_player_id))
 
     # Start the game (converts lobby record to game record)
     game = await LobbyService.start_game(lobby)

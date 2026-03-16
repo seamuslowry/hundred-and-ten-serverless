@@ -1,10 +1,12 @@
 """Helpers to perform common functions during testing"""
 
 from typing import Any
+from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
-from src.main.models.internal import User
+from src.main.auth import Identity
+from src.main.models.internal import Player
 
 DEFAULT_ID = "id"
 
@@ -21,28 +23,20 @@ def lobby_game(
     return resp.json()
 
 
-def create_user(
-    test_client: TestClient, identifier: str, name: str = ""
-) -> dict[str, Any]:
-    """Attempt to create a user for the first time"""
-    return __user(test_client, "POST", User(identifier=identifier, name=name))
-
-
-def update_user(
-    test_client: TestClient, identifier: str, name: str = ""
-) -> dict[str, Any]:
-    """Update an existing user if possible"""
-    return __user(test_client, "PUT", User(identifier=identifier, name=name))
-
-
-def __user(test_client: TestClient, method: str, user: User) -> dict[str, Any]:
-    """Update an existing user if possible"""
-    resp = test_client.request(
-        method,
-        f"/players/{user.identifier}",
-        json={"name": user.name, "picture_url": user.picture_url},
-        headers={"authorization": f"Bearer {user.identifier}"},
-    )
+def player(test_client: TestClient, upsert_player: Player) -> dict[str, Any]:
+    """Upsert a existing player"""
+    with patch(
+        "src.main.auth.depends.verify_firebase_token",
+        side_effect=lambda _: Identity(
+            id=upsert_player.player_id,
+            name=upsert_player.name or "",
+            picture_url=upsert_player.picture_url,
+        ),
+    ):
+        resp = test_client.put(
+            f"/players/{upsert_player.player_id}/self",
+            headers={"authorization": f"Bearer {upsert_player.player_id}"},
+        )
     return resp.json()
 
 
@@ -51,7 +45,7 @@ def started_game(
 ) -> dict[str, Any]:
     """Get a started game waiting for the first move"""
     created_lobby = lobby_game(test_client, organizer=organizer, name=name)
-    organizer = created_lobby["organizer"]["identifier"]
+    organizer = created_lobby["organizer"]["id"]
     resp = test_client.post(
         f"/players/{organizer}/lobbies/{created_lobby['id']}/start",
         headers={"authorization": f"Bearer {organizer}"},
@@ -67,17 +61,19 @@ def completed_game(test_client: TestClient) -> dict[str, Any]:
     assert active_player
 
     resp = test_client.post(
-        f"/players/{active_player['identifier']}/games/{game['id']}/leave",
-        headers={"authorization": f"Bearer {active_player['identifier']}"},
+        f"/players/{active_player['id']}/games/{game['id']}/leave",
+        headers={"authorization": f"Bearer {active_player['id']}"},
     )
     return resp.json()
 
 
-def request_suggestion(test_client: TestClient, game_id: str, user: str = DEFAULT_ID):
+def request_suggestion(
+    test_client: TestClient, game_id: str, player_id: str = DEFAULT_ID
+):
     """get the suggestion for the game"""
     return test_client.get(
-        f"/players/{user}/games/{game_id}/suggestion",
-        headers={"authorization": f"Bearer {user}"},
+        f"/players/{player_id}/games/{game_id}/suggestion",
+        headers={"authorization": f"Bearer {player_id}"},
     )
 
 

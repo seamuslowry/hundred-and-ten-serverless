@@ -22,6 +22,7 @@ dependencies = [
     "google-auth==2.49.1",
     "hundredandten==3.0.2",
     "pymongo==4.16.0",
+    "pyjwt==2.12.1",
     "requests==2.32.5",
 ]
 

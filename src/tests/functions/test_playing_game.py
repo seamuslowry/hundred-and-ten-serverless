@@ -84,33 +84,29 @@ def test_prepass_and_rescind_prepass(client: TestClient):
         p
         for p in game["round"]["players"]
         if game["round"]["active_player"]
-        and p["identifier"] != game["round"]["active_player"]["identifier"]
+        and p["id"] != game["round"]["active_player"]["id"]
     )
 
     # prepass
     resp = client.post(
-        f"/players/{non_active_player['identifier']}/games/{game['id']}/bid",
+        f"/players/{non_active_player['id']}/games/{game['id']}/bid",
         json={"amount": BidAmount.PASS},
-        headers={"authorization": f"Bearer {non_active_player['identifier']}"},
+        headers={"authorization": f"Bearer {non_active_player['id']}"},
     )
     game = resp.json()
     non_active_player = next(
-        p
-        for p in game["round"]["players"]
-        if p["identifier"] == non_active_player["identifier"]
+        p for p in game["round"]["players"] if p["id"] == non_active_player["id"]
     )
     assert "prepassed" in non_active_player and non_active_player["prepassed"]
 
     # rescind prepass
     resp = client.post(
-        f"/players/{non_active_player['identifier']}/games/{game['id']}/unpass",
-        headers={"authorization": f"Bearer {non_active_player['identifier']}"},
+        f"/players/{non_active_player['id']}/games/{game['id']}/unpass",
+        headers={"authorization": f"Bearer {non_active_player['id']}"},
     )
     game = resp.json()
     non_active_player = next(
-        p
-        for p in game["round"]["players"]
-        if p["identifier"] == non_active_player["identifier"]
+        p for p in game["round"]["players"] if p["id"] == non_active_player["id"]
     )
     assert "prepassed" in non_active_player and not non_active_player["prepassed"]
 
@@ -120,9 +116,7 @@ def test_leave_playing_game_as_organizer(client: TestClient):
     original_game = started_game(client)
     active_round_player = original_game["round"]["active_player"]
     active_player = next(
-        p
-        for p in original_game["players"]
-        if p["identifier"] == active_round_player["identifier"]
+        p for p in original_game["players"] if p["id"] == active_round_player["id"]
     )
     assert active_player
     assert not active_player["automate"]
@@ -130,12 +124,10 @@ def test_leave_playing_game_as_organizer(client: TestClient):
     # leave
     resp = client.post(
         f"/players/{DEFAULT_ID}/games/{original_game['id']}/leave",
-        headers={"authorization": f"Bearer {active_player['identifier']}"},
+        headers={"authorization": f"Bearer {active_player['id']}"},
     )
     game = resp.json()
-    active_player = next(
-        p for p in game["players"] if p["identifier"] == active_player["identifier"]
-    )
+    active_player = next(p for p in game["players"] if p["id"] == active_player["id"])
 
     assert active_player["automate"]
 
@@ -153,24 +145,24 @@ def test_leave_playing_game_as_player(client: TestClient):
 
     # start the game
     resp = client.post(
-        f"/players/{lobby['organizer']['identifier']}/lobbies/{lobby['id']}/start",
-        headers={"authorization": f"Bearer {lobby['organizer']['identifier']}"},
+        f"/players/{lobby['organizer']['id']}/lobbies/{lobby['id']}/start",
+        headers={"authorization": f"Bearer {lobby['organizer']['id']}"},
     )
 
     game = resp.json()
 
-    non_active_player = next(p for p in game["players"] if p["identifier"] == player)
+    non_active_player = next(p for p in game["players"] if p["id"] == player)
     assert non_active_player
     assert not non_active_player["automate"]
 
     # leave
     resp = client.post(
-        f"/players/{non_active_player['identifier']}/games/{game['id']}/leave",
-        headers={"authorization": f"Bearer {non_active_player['identifier']}"},
+        f"/players/{non_active_player['id']}/games/{game['id']}/leave",
+        headers={"authorization": f"Bearer {non_active_player['id']}"},
     )
     game = resp.json()
     non_active_player = next(
-        p for p in game["players"] if p["identifier"] == non_active_player["identifier"]
+        p for p in game["players"] if p["id"] == non_active_player["id"]
     )
 
     assert non_active_player["automate"]

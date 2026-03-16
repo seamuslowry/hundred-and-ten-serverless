@@ -7,10 +7,12 @@ from src.main.models.client import responses
 from src.main.models.client.constants import CardNumberName, SelectableSuit, Suit
 
 
-def user(m_user: internal.User) -> responses.User:
-    """Return a user as it can be provided to the client"""
-    return responses.User(
-        identifier=m_user.identifier, name=m_user.name, picture_url=m_user.picture_url
+def player(m_player: internal.Player) -> responses.Player:
+    """Return a player as it can be provided to the client"""
+    return responses.Player(
+        id=m_player.player_id,
+        name=m_player.name or m_player.player_id,
+        picture_url=m_player.picture_url,
     )
 
 
@@ -25,20 +27,24 @@ def lobby(
         name=m_lobby.name,
         status=internal.GameStatus.WAITING_FOR_PLAYERS.name,
         accessibility=m_lobby.accessibility.name,
-        organizer=__person(m_lobby.organizer),
-        players=[__person(p) for p in m_lobby.players if p != m_lobby.organizer],
-        invitees=[__person(p) for p in m_lobby.invitees if p not in m_lobby.players],
+        organizer=__player_in_game(m_lobby.organizer),
+        players=[
+            __player_in_game(p) for p in m_lobby.players if p != m_lobby.organizer
+        ],
+        invitees=[
+            __player_in_game(p) for p in m_lobby.invitees if p not in m_lobby.players
+        ],
     )
 
 
 def game(
     m_game: internal.Game,
-    client_identifier: str,
+    client_player_id: str,
     initial_event_knowledge: Optional[int] = None,
 ) -> responses.Game:
     """Return a game as it can be provided to the client"""
     client_events = (
-        events(m_game.events[initial_event_knowledge:], client_identifier)
+        events(m_game.events[initial_event_knowledge:], client_player_id)
         if initial_event_knowledge is not None
         else []
     )
@@ -52,27 +58,27 @@ def game(
             status=m_game.status.name,
             scores=m_game.scores,
             results=client_events,
-            winner=__person(m_game.winner),
-            organizer=__person(m_game.organizer),
-            players=[__person(p) for p in m_game.ordered_players],
+            winner=__player_in_game(m_game.winner),
+            organizer=__player_in_game(m_game.organizer),
+            players=[__player_in_game(p) for p in m_game.ordered_players],
         )
 
     return responses.StartedGame(
         id=m_game.id,
         name=m_game.name,
         status=m_game.status.name,
-        round=__round(m_game.active_round, client_identifier),
+        round=__round(m_game.active_round, client_player_id),
         scores=m_game.scores,
         results=client_events,
-        players=[__person(p) for p in m_game.ordered_players],
+        players=[__player_in_game(p) for p in m_game.ordered_players],
     )
 
 
 def events(
-    m_events: list[internal.Event], client_identifier: str
+    m_events: list[internal.Event], client_player_id: str
 ) -> list[responses.GameEvent]:
     """Return a list of events as they can be provided to the client"""
-    return [__event(e, client_identifier) for e in m_events]
+    return [__event(e, client_player_id) for e in m_events]
 
 
 def suggestion(m_suggestion: internal.Action) -> responses.Suggestion:
@@ -93,7 +99,7 @@ def suggestion(m_suggestion: internal.Action) -> responses.Suggestion:
 
 
 def __play(play: internal.Play) -> responses.Play:
-    return responses.Play(identifier=play.identifier, card=__card(play.card))
+    return responses.Play(player_id=play.identifier, card=__card(play.card))
 
 
 def __trick(trick: internal.Trick) -> responses.Trick:
@@ -104,7 +110,7 @@ def __trick(trick: internal.Trick) -> responses.Trick:
     )
 
 
-def __round(m_round: internal.Round, client_identifier: str) -> responses.Round:
+def __round(m_round: internal.Round, client_player_id: str) -> responses.Round:
     non_zero_bids = [bid for bid in m_round.bids if bid.amount > 0]
     current_bid = (
         non_zero_bids[-1]
@@ -114,37 +120,39 @@ def __round(m_round: internal.Round, client_identifier: str) -> responses.Round:
     bidder = m_round.active_bidder
 
     return responses.Round(
-        players=[__player(p, client_identifier) for p in m_round.players],
-        dealer=__player(m_round.dealer, client_identifier),
-        bidder=__player(bidder, client_identifier) if bidder else None,
+        players=[__player_in_round(p, client_player_id) for p in m_round.players],
+        dealer=__player_in_round(m_round.dealer, client_player_id),
+        bidder=__player_in_round(bidder, client_player_id) if bidder else None,
         bid=current_bid.amount.value if current_bid.amount else None,
         trump=SelectableSuit[m_round.trump.name] if m_round.trump else None,
         tricks=[__trick(t) for t in m_round.tricks],
         active_player=(
-            __player(m_round.active_player, client_identifier)
+            __player_in_round(m_round.active_player, client_player_id)
             if not m_round.completed
             else None
         ),
     )
 
 
-def __person(person: internal.Person) -> responses.GamePerson:
-    return responses.GamePerson(
-        identifier=person.identifier, automate=isinstance(person, internal.NaiveCpu)
+def __player_in_game(player_in_game: internal.PlayerInGame) -> responses.PlayerInGame:
+    return responses.PlayerInGame(
+        id=player_in_game.id, automate=isinstance(player_in_game, internal.NaiveCpu)
     )
 
 
-def __player(player: internal.RoundPlayer, client_identifier: str) -> responses.Player:
-    if player.identifier == client_identifier:
-        return responses.Self(
-            identifier=player.identifier,
-            prepassed=internal.RoundRole.PRE_PASSED in player.roles,
-            hand=[__card(c) for c in player.hand],
+def __player_in_round(
+    round_player: internal.RoundPlayer, client_player_id: str
+) -> responses.PlayerInRound:
+    if round_player.identifier == client_player_id:
+        return responses.SelfInRound(
+            id=round_player.identifier,
+            prepassed=internal.RoundRole.PRE_PASSED in round_player.roles,
+            hand=[__card(c) for c in round_player.hand],
         )
 
-    return responses.OtherPlayer(
-        identifier=player.identifier,
-        hand_size=len(player.hand),
+    return responses.OtherPlayerInRound(
+        id=round_player.identifier,
+        hand_size=len(round_player.hand),
     )
 
 
@@ -154,20 +162,20 @@ def __card(card: internal.Card) -> responses.Card:
     )
 
 
-def __event(event: internal.Event, client_identifier: str) -> responses.GameEvent:
+def __event(event: internal.Event, client_player_id: str) -> responses.GameEvent:
     """Convert the provided event into the structure it should provide the client"""
     result: Optional[responses.GameEvent] = None
 
     if isinstance(event, internal.GameStart):
         result = __game_start_event()
     elif isinstance(event, internal.RoundStart):
-        result = __round_start_event(event, client_identifier)
+        result = __round_start_event(event, client_player_id)
     elif isinstance(event, internal.Bid):
         result = __bid_event(event)
     elif isinstance(event, internal.SelectTrump):
         result = __select_trump_event(event)
     elif isinstance(event, internal.Discard):
-        result = __discard_event(event, client_identifier)
+        result = __discard_event(event, client_player_id)
     elif isinstance(event, internal.TrickStart):
         result = __trick_start_event()
     elif isinstance(event, internal.Play):
@@ -190,43 +198,43 @@ def __game_start_event() -> responses.GameStart:
 
 
 def __round_start_event(
-    event: internal.RoundStart, client_identifier: str
+    event: internal.RoundStart, client_player_id: str
 ) -> responses.RoundStart:
     return responses.RoundStart(
         dealer=event.dealer,
         hands={
-            identifier: (
+            player_id: (
                 [__card(c) for c in hand]
-                if identifier == client_identifier
+                if player_id == client_player_id
                 else len(hand)
             )
-            for identifier, hand in event.hands.items()
+            for player_id, hand in event.hands.items()
         },
     )
 
 
 def __bid_event(event: internal.Bid) -> responses.Bid:
     return responses.Bid(
-        identifier=event.identifier,
+        player_id=event.identifier,
         amount=event.amount.value,
     )
 
 
 def __select_trump_event(event: internal.SelectTrump) -> responses.SelectTrump:
     return responses.SelectTrump(
-        identifier=event.identifier,
+        player_id=event.identifier,
         suit=SelectableSuit[event.suit.name],
     )
 
 
 def __discard_event(
-    event: internal.Discard, client_identifier: str
+    event: internal.Discard, client_player_id: str
 ) -> responses.Discard:
     return responses.Discard(
-        identifier=event.identifier,
+        player_id=event.identifier,
         discards=(
             [__card(c) for c in event.cards]
-            if client_identifier == event.identifier
+            if client_player_id == event.identifier
             else len(event.cards)
         ),
     )
@@ -238,19 +246,19 @@ def __trick_start_event() -> responses.TrickStart:
 
 def __play_event(event: internal.Play) -> responses.PlayEvent:
     return responses.PlayEvent(
-        identifier=event.identifier,
+        player_id=event.identifier,
         card=__card(event.card),
     )
 
 
 def __trick_end_event(event: internal.TrickEnd) -> responses.TrickEnd:
     return responses.TrickEnd(
-        winner=event.winner,
+        winner_player_id=event.winner,
     )
 
 
 def __score(score: internal.Score) -> responses.Score:
-    return responses.Score(identifier=score.identifier, value=score.value)
+    return responses.Score(player_id=score.identifier, value=score.value)
 
 
 def __round_end_event(event: internal.RoundEnd) -> responses.RoundEnd:
@@ -261,5 +269,5 @@ def __round_end_event(event: internal.RoundEnd) -> responses.RoundEnd:
 
 def __game_end_event(event: internal.GameEnd) -> responses.GameEnd:
     return responses.GameEnd(
-        winner=event.winner,
+        winner_player_id=event.winner,
     )

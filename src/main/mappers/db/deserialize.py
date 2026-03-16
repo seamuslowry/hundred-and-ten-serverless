@@ -3,12 +3,13 @@
 from src.main.models import db, internal
 
 
-def user(db_user: db.User) -> internal.User:
-    """Convert a User DB DTO to its model"""
-    return internal.User(
-        identifier=db_user.identifier,
-        name=db_user.name,
-        picture_url=db_user.picture_url,
+def player(db_player: db.Player) -> internal.Player:
+    """Convert a Player DB DTO to its model"""
+    return internal.Player(
+        id=str(db_player.id) if db_player.id else None,
+        player_id=db_player.player_id,
+        name=db_player.name,
+        picture_url=db_player.picture_url,
     )
 
 
@@ -19,8 +20,8 @@ def lobby(db_lobby: db.Lobby) -> internal.Lobby:
         name=db_lobby.name,
         accessibility=internal.Accessibility[db_lobby.accessibility.name],
         organizer=__person(db_lobby.organizer),
-        players=internal.PersonGroup(map(__person, db_lobby.players)),
-        invitees=internal.PersonGroup(map(__person, db_lobby.invitees)),
+        players=internal.PlayerGroup(map(__person, db_lobby.players)),
+        invitees=internal.PlayerGroup(map(__person, db_lobby.invitees)),
     )
 
 
@@ -32,16 +33,16 @@ def game(db_game: db.Game) -> internal.Game:
         seed=db_game.seed,
         accessibility=internal.Accessibility[db_game.accessibility.name],
         organizer=__person(db_game.organizer),
-        players=internal.PersonGroup(map(__person, db_game.players)),
+        players=internal.PlayerGroup(map(__person, db_game.players)),
         initial_moves=list(map(__move, db_game.moves)),
     )
 
 
-def __person(person: db.Player) -> internal.Person:
+def __person(person: db.PlayerInGame) -> internal.PlayerInGame:
     if isinstance(person, db.NaiveCpuPlayer):
-        return internal.NaiveCpu(identifier=person.identifier)
+        return internal.NaiveCpu(id=person.player_id)
     if isinstance(person, db.HumanPlayer):
-        return internal.Human(identifier=person.identifier)
+        return internal.Human(id=person.player_id)
 
     # type: ignore[unreachable]
     raise ValueError(f"Unknown player type ${person}")  # pragma: no cover
@@ -49,27 +50,27 @@ def __person(person: db.Player) -> internal.Person:
 
 def __move(db_move: db.Move) -> internal.Action:
     """Convert a DB move to a game action"""
-    identifier = db_move.identifier
+    player_id = db_move.player_id
 
     match db_move:
         case db.BidMove():
             return internal.Bid(
-                identifier=identifier,
+                identifier=player_id,
                 amount=internal.BidAmount(db_move.amount),
             )
         case db.SelectTrumpMove():
             return internal.SelectTrump(
-                identifier=identifier,
+                identifier=player_id,
                 suit=internal.SelectableSuit[db_move.suit],
             )
         case db.DiscardMove():
             return internal.Discard(
-                identifier=identifier,
+                identifier=player_id,
                 cards=list(map(__card, db_move.cards)),
             )
         case db.PlayMove():
             return internal.Play(
-                identifier=identifier,
+                identifier=player_id,
                 card=__card(db_move.card),
             )
         # type: ignore[unreachable]
