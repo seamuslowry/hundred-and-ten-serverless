@@ -95,9 +95,7 @@ def test_prepass_and_rescind_prepass(client: TestClient):
     )
     game = resp.json()
     non_active_player = next(
-        p
-        for p in game["round"]["players"]
-        if p["id"] == non_active_player["id"]
+        p for p in game["round"]["players"] if p["id"] == non_active_player["id"]
     )
     assert "prepassed" in non_active_player and non_active_player["prepassed"]
 
@@ -108,9 +106,7 @@ def test_prepass_and_rescind_prepass(client: TestClient):
     )
     game = resp.json()
     non_active_player = next(
-        p
-        for p in game["round"]["players"]
-        if p["id"] == non_active_player["id"]
+        p for p in game["round"]["players"] if p["id"] == non_active_player["id"]
     )
     assert "prepassed" in non_active_player and not non_active_player["prepassed"]
 
@@ -120,9 +116,7 @@ def test_leave_playing_game_as_organizer(client: TestClient):
     original_game = started_game(client)
     active_round_player = original_game["round"]["active_player"]
     active_player = next(
-        p
-        for p in original_game["players"]
-        if p["id"] == active_round_player["id"]
+        p for p in original_game["players"] if p["id"] == active_round_player["id"]
     )
     assert active_player
     assert not active_player["automate"]
@@ -133,9 +127,7 @@ def test_leave_playing_game_as_organizer(client: TestClient):
         headers={"authorization": f"Bearer {active_player['id']}"},
     )
     game = resp.json()
-    active_player = next(
-        p for p in game["players"] if p["id"] == active_player["id"]
-    )
+    active_player = next(p for p in game["players"] if p["id"] == active_player["id"])
 
     assert active_player["automate"]
 

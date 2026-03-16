@@ -17,9 +17,9 @@ from src.main.models.client.requests import (
 )
 from src.main.models.client.responses import (
     CompletedGame,
+    Player,
     StartedGame,
     SuggestionResponse,
-    Player,
 )
 from src.main.models.internal import (
     Bid,

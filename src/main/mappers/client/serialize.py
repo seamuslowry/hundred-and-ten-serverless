@@ -28,8 +28,12 @@ def lobby(
         status=internal.GameStatus.WAITING_FOR_PLAYERS.name,
         accessibility=m_lobby.accessibility.name,
         organizer=__player_in_game(m_lobby.organizer),
-        players=[__player_in_game(p) for p in m_lobby.players if p != m_lobby.organizer],
-        invitees=[__player_in_game(p) for p in m_lobby.invitees if p not in m_lobby.players],
+        players=[
+            __player_in_game(p) for p in m_lobby.players if p != m_lobby.organizer
+        ],
+        invitees=[
+            __player_in_game(p) for p in m_lobby.invitees if p not in m_lobby.players
+        ],
     )
 
 
@@ -132,13 +136,13 @@ def __round(m_round: internal.Round, client_identifier: str) -> responses.Round:
 
 def __player_in_game(person: internal.Person) -> responses.PlayerInGame:
     return responses.PlayerInGame(
-        id=person.identifier,
-        automate=isinstance(person, internal.NaiveCpu)
+        id=person.identifier, automate=isinstance(person, internal.NaiveCpu)
     )
 
 
 def __player_in_round(
-        round_player: internal.RoundPlayer, client_identifier: str) -> responses.PlayerInRound:
+    round_player: internal.RoundPlayer, client_identifier: str
+) -> responses.PlayerInRound:
     if round_player.identifier == client_identifier:
         return responses.SelfInRound(
             id=round_player.identifier,

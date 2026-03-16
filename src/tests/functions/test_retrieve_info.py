@@ -199,9 +199,7 @@ def test_get_suggestion_on_other_turn(client: TestClient):
     active_player = game["round"]["active_player"]
     assert active_player
     non_active_player = next(
-        p
-        for p in game["round"]["players"]
-        if p["id"] != active_player["id"]
+        p for p in game["round"]["players"] if p["id"] != active_player["id"]
     )
     resp = request_suggestion(client, game["id"], non_active_player["id"])
 

@@ -13,7 +13,7 @@ from src.main.models.client.requests import (
     InviteRequest,
     SearchLobbiesRequest,
 )
-from src.main.models.client.responses import StartedGame, Player, WaitingGame
+from src.main.models.client.responses import Player, StartedGame, WaitingGame
 from src.main.models.internal import (
     Accessibility,
     Human,

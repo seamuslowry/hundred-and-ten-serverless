@@ -229,10 +229,7 @@ def test_leave_lobby(client: TestClient):
     left_lobby = resp.json()
 
     assert created_lobby["id"] == left_lobby["id"]
-    assert (
-        created_lobby["organizer"]["id"]
-        == left_lobby["organizer"]["id"]
-    )
+    assert created_lobby["organizer"]["id"] == left_lobby["organizer"]["id"]
     assert 0 == len(left_lobby["players"])
     assert GameStatus.WAITING_FOR_PLAYERS.name == left_lobby["status"]
 
