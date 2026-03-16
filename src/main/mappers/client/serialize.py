@@ -10,7 +10,9 @@ from src.main.models.client.constants import CardNumberName, SelectableSuit, Sui
 def user(m_user: internal.User) -> responses.User:
     """Return a user as it can be provided to the client"""
     return responses.User(
-        identifier=m_user.player_id, name=m_user.name, picture_url=m_user.picture_url
+        identifier=m_user.player_id,
+        name=m_user.name or m_user.player_id,
+        picture_url=m_user.picture_url,
     )
 
 

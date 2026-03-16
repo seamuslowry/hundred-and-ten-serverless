@@ -5,13 +5,14 @@ from time import time
 from beanie import PydanticObjectId
 from fastapi.testclient import TestClient
 
+from src.main.models.internal import User
 from src.tests.helpers import (
     DEFAULT_ID,
     completed_game,
-    create_user,
     lobby_game,
     request_suggestion,
     started_game,
+    user,
 )
 
 
@@ -127,7 +128,7 @@ def test_game_players(client: TestClient):
 
     # Create user records for the human player (organizer)
     organizer_id = original_game["organizer"]["identifier"]
-    organizer = create_user(client, organizer_id)
+    organizer = user(client, User(organizer_id))
 
     # get that game's players
     resp = client.get(
@@ -146,8 +147,8 @@ def test_lobby_players(client: TestClient):
     original_lobby = lobby_game(client)
     other_player_ids = list(map(lambda i: f"{time()}-{i}", range(1, 4)))
 
-    organizer = create_user(client, original_lobby["organizer"]["identifier"])
-    other_players = list(map(lambda id: create_user(client, id), other_player_ids))
+    organizer = user(client, User(original_lobby["organizer"]["identifier"]))
+    other_players = list(map(lambda id: user(client, User(id)), other_player_ids))
 
     for player in other_players:
         client.post(
@@ -172,12 +173,12 @@ def test_search_users(client: TestClient):
     """Can retrieve user information by substring of name"""
     # create new unique users
     timestamp = time()
-    user_one = (f"{timestamp}one", f"{timestamp}aaa")
-    user_two = (f"{timestamp}two", f"{timestamp}AAA")
-    user_three = (f"{timestamp}three", f"{timestamp}bbb")
-    create_user(client, user_one[0], user_one[1])
-    create_user(client, user_two[0], user_two[1])
-    create_user(client, user_three[0], user_three[1])
+    user_one = User(f"{timestamp}one", f"{timestamp}aaa")
+    user_two = User(f"{timestamp}two", f"{timestamp}AAA")
+    user_three = User(f"{timestamp}three", f"{timestamp}bbb")
+    user(client, user_one)
+    user(client, user_two)
+    user(client, user_three)
 
     # get users
     resp = client.get(
@@ -187,9 +188,9 @@ def test_search_users(client: TestClient):
     )
     retrieved_users = resp.json()
     retrieved_user_ids = list(map(lambda u: u["identifier"], retrieved_users))
-    assert user_one[0] in retrieved_user_ids
-    assert user_two[0] in retrieved_user_ids
-    assert user_three[0] not in retrieved_user_ids
+    assert user_one.player_id in retrieved_user_ids
+    assert user_two.player_id in retrieved_user_ids
+    assert user_three.player_id not in retrieved_user_ids
 
 
 def test_get_suggestion_on_other_turn(client: TestClient):

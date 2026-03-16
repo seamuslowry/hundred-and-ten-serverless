@@ -68,10 +68,3 @@ class SearchGamesRequest(BaseModel):
     statuses: Optional[list[str]] = None
     active_player: Optional[str] = Field(default=None, alias="activePlayer")
     winner: Optional[str] = None
-
-
-class UpdateUserRequest(BaseModel):
-    """Request body for creating/updating a user"""
-
-    name: str
-    picture_url: Optional[str] = None

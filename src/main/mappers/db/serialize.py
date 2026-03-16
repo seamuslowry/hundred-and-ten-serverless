@@ -47,7 +47,7 @@ def user(m_user: internal.User) -> db.User:
     return db.UserV0(
         id=PydanticObjectId(m_user.id) if m_user.id else None,
         identifier=m_user.player_id,
-        name=m_user.name,
+        name=m_user.name or m_user.player_id,
         picture_url=m_user.picture_url,
     )
 

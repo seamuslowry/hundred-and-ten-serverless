@@ -1,7 +1,5 @@
 """Facilitate interaction with the user DB"""
 
-from typing import Optional
-
 from beanie.operators import In, RegEx
 
 from src.main.mappers.db import deserialize, serialize
@@ -41,17 +39,6 @@ class UserService:
                 .to_list(),
             )
         )
-
-    @staticmethod
-    async def by_identifier(identifier: str) -> Optional[User]:
-        """Retrieve the user with identifier provided"""
-        result = await DbUser.find_one(
-            DbUser.identifier == identifier, with_children=True
-        )
-
-        if not result:
-            return None
-        return deserialize.user(result)
 
     @staticmethod
     async def by_identifiers(identifiers: list[str]) -> list[User]:

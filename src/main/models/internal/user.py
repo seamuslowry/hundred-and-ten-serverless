@@ -1,6 +1,6 @@
 """Model user-related information."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
 
 
@@ -9,6 +9,6 @@ class User:
     """A class to interact with generic users"""
 
     player_id: str
-    name: str = field(compare=False)
+    name: Optional[str] = None
     id: Optional[str] = None
-    picture_url: Optional[str] = field(compare=False, default=None)
+    picture_url: Optional[str] = None

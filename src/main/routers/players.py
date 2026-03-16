@@ -7,8 +7,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 
 from src.main.auth import Identity, get_authorized_identity
-from src.main.mappers.client import deserialize, serialize
-from src.main.models.client.requests import UpdateUserRequest
+from src.main.mappers.client import serialize
 from src.main.models.client.responses import User
 from src.main.models.internal import User as InternalUser
 from src.main.services import UserService
@@ -25,25 +24,6 @@ async def search_users(
 ):
     """Get users"""
     return [serialize.user(u) for u in await UserService.search(search_text or "")]
-
-
-@router.put("", response_model=User)
-async def put_user(player_id: str, body: UpdateUserRequest):
-    """Update the user (overwrite)"""
-    provided_user = deserialize.user(player_id, body)
-
-    return serialize.user(await UserService.save(provided_user))
-
-
-@router.post("", response_model=User)
-async def post_user(player_id, body: UpdateUserRequest):
-    """Create the user (only if not exists)"""
-    existing_user = await UserService.by_identifier(player_id)
-    provided_user = deserialize.user(player_id, body)
-
-    save_user = provided_user if not existing_user else existing_user
-
-    return serialize.user(await UserService.save(save_user))
 
 
 @router.put("/self", response_model=User)
