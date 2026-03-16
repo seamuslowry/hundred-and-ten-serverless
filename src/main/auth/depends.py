@@ -5,24 +5,24 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from src.main.models.internal.errors import AuthenticationError, AuthorizationError
 
-from .google import verify_google_token
+from .firebase import verify_firebase_token
 from .identity import Identity
 
 # =============================================================================
 # Authentication dependency
 # =============================================================================
 
-google_bearer = HTTPBearer(
-    description="A Google OAuth2 ID token",
+http_bearer = HTTPBearer(
+    description="A Firebase ID token",
 )
 
 
 def get_identity(
-    credentials: HTTPAuthorizationCredentials = Depends(google_bearer),
+    credentials: HTTPAuthorizationCredentials = Depends(http_bearer),
 ) -> Identity:
     """Validate the Bearer token and return the authenticated identity"""
     try:
-        return verify_google_token(credentials.credentials)
+        return verify_firebase_token(credentials.credentials)
     except ValueError as exc:
         raise AuthenticationError(str(exc)) from exc
 

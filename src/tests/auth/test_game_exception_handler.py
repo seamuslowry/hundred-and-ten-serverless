@@ -11,7 +11,7 @@ from src.tests.helpers import DEFAULT_ID
 
 
 @patch(
-    "src.main.auth.depends.verify_google_token",
+    "src.main.auth.depends.verify_firebase_token",
     side_effect=lambda token: Identity(id=token),
 )
 @patch(
@@ -43,7 +43,7 @@ def test_returns_401_without_auth_header(client: TestClient):
 
 
 @patch(
-    "src.main.auth.depends.verify_google_token",
+    "src.main.auth.depends.verify_firebase_token",
     side_effect=ValueError("Invalid token"),
 )
 def test_returns_401_for_invalid_token(_, client: TestClient):
@@ -56,7 +56,7 @@ def test_returns_401_for_invalid_token(_, client: TestClient):
 
 
 @patch(
-    "src.main.auth.depends.verify_google_token",
+    "src.main.auth.depends.verify_firebase_token",
     return_value=Identity(
         id="user-123", name="Test User", picture_url="https://example.com/pic.jpg"
     ),
@@ -90,7 +90,7 @@ def test_raises_401_without_auth_header(client: TestClient):
 
 
 @patch(
-    "src.main.auth.depends.verify_google_token",
+    "src.main.auth.depends.verify_firebase_token",
     side_effect=ValueError("Invalid token"),
 )
 def test_raises_authentication_error_for_invalid_token(_, client: TestClient):
@@ -103,7 +103,7 @@ def test_raises_authentication_error_for_invalid_token(_, client: TestClient):
 
 
 @patch(
-    "src.main.auth.depends.verify_google_token",
+    "src.main.auth.depends.verify_firebase_token",
     return_value=Identity(id="user-123", name="Test User"),
 )
 def test_raises_authorization_error_when_wrong_idenity(_, client: TestClient):
