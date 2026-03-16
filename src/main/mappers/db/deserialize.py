@@ -3,13 +3,13 @@
 from src.main.models import db, internal
 
 
-def player(db_user: db.Player) -> internal.Player:
-    """Convert a User DB DTO to its model"""
+def player(db_player: db.Player) -> internal.Player:
+    """Convert a Player DB DTO to its model"""
     return internal.Player(
-        id=str(db_user.id) if db_user.id else None,
-        player_id=db_user.player_id,
-        name=db_user.name,
-        picture_url=db_user.picture_url,
+        id=str(db_player.id) if db_player.id else None,
+        player_id=db_player.player_id,
+        name=db_player.name,
+        picture_url=db_player.picture_url,
     )
 
 

@@ -1,4 +1,4 @@
-"""Facilitate interaction with the user DB"""
+"""Facilitate interaction with the player DB"""
 
 from beanie.operators import In, RegEx
 
@@ -15,16 +15,16 @@ class PlayerService:
     @staticmethod
     async def save(player: Player) -> Player:
         """Save the provided player to the DB"""
-        serialized_user = serialize.player(player)
+        serialized_player = serialize.player(player)
 
-        existing_user = await DbPlayer.find_one(
+        existing_player = await DbPlayer.find_one(
             DbPlayer.player_id == player.player_id, with_children=True
         )
 
-        if existing_user:
-            serialized_user.id = existing_user.id
+        if existing_player:
+            serialized_player.id = existing_player.id
 
-        return deserialize.player(await serialized_user.save())
+        return deserialize.player(await serialized_player.save())
 
     @staticmethod
     async def search(search_text: str) -> list[Player]:

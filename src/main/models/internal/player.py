@@ -9,7 +9,7 @@ from hundredandten import player
 
 @dataclass
 class Player:
-    """A class to interact with generic users"""
+    """A class to interact with generic players"""
 
     player_id: str  # The external-facing identifier (will be firebase UID)
     name: Optional[str] = None

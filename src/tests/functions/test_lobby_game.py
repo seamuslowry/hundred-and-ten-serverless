@@ -269,18 +269,18 @@ def test_start_game(client: TestClient):
     assert RoundStatus.BIDDING.name == game["status"]
 
 
-def test_unknown_user_cannot_invite(client: TestClient):
-    """A user not in the lobby cannot invite others"""
-    unknown_user = "unknown_user"
+def test_unknown_player_cannot_invite(client: TestClient):
+    """A player not in the lobby cannot invite others"""
+    unknown_player = "unknown_player"
     invitee = "invitee"
 
     created_lobby = lobby_game(client)
 
-    # Unknown user tries to invite - should fail because they're not in the lobby
+    # Unknown player tries to invite - should fail because they're not in the lobby
     resp = client.post(
-        f"/players/{unknown_user}/lobbies/{created_lobby['id']}/invite",
+        f"/players/{unknown_player}/lobbies/{created_lobby['id']}/invite",
         json={"invitees": [invitee]},
-        headers={"authorization": f"Bearer {unknown_user}"},
+        headers={"authorization": f"Bearer {unknown_player}"},
     )
     assert 400 == resp.status_code
 

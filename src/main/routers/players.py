@@ -1,5 +1,5 @@
 """
-The router for user operations.
+The router for player operations.
 """
 
 from typing import Optional
@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, Query
 from src.main.auth import Identity, get_authorized_identity
 from src.main.mappers.client import serialize
 from src.main.models.client.responses import Player
-from src.main.models.internal import Player as InternalUser
+from src.main.models.internal import Player as InternalPlayer
 from src.main.services import PlayerService
 
 router = APIRouter(
@@ -31,7 +31,7 @@ async def refresh(identity: Identity = Depends(get_authorized_identity)):
     """Save the authenticated principal as a player in the DB"""
     return serialize.player(
         await PlayerService.save(
-            InternalUser(
+            InternalPlayer(
                 player_id=identity.id,
                 name=identity.name or identity.id,
                 picture_url=identity.picture_url,

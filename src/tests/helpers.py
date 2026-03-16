@@ -23,19 +23,19 @@ def lobby_game(
     return resp.json()
 
 
-def user(test_client: TestClient, new_user: Player) -> dict[str, Any]:
-    """Update an existing user if possible"""
+def player(test_client: TestClient, upsert_player: Player) -> dict[str, Any]:
+    """Upsert a existing player"""
     with patch(
         "src.main.auth.depends.verify_firebase_token",
         side_effect=lambda _: Identity(
-            id=new_user.player_id,
-            name=new_user.name or "",
-            picture_url=new_user.picture_url,
+            id=upsert_player.player_id,
+            name=upsert_player.name or "",
+            picture_url=upsert_player.picture_url,
         ),
     ):
         resp = test_client.put(
-            f"/players/{new_user.player_id}/self",
-            headers={"authorization": f"Bearer {new_user.player_id}"},
+            f"/players/{upsert_player.player_id}/self",
+            headers={"authorization": f"Bearer {upsert_player.player_id}"},
         )
     return resp.json()
 

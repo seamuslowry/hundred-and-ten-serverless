@@ -42,13 +42,13 @@ def game(m_game: internal.Game) -> db.Game:
     )
 
 
-def player(m_user: internal.Player) -> db.Player:
+def player(m_player: internal.Player) -> db.Player:
     """Convert a User model to its DB DTO"""
     return db.PlayerV0(
-        id=PydanticObjectId(m_user.id) if m_user.id else None,
-        player_id=m_user.player_id,
-        name=m_user.name or m_user.player_id,
-        picture_url=m_user.picture_url,
+        id=PydanticObjectId(m_player.id) if m_player.id else None,
+        player_id=m_player.player_id,
+        name=m_player.name or m_player.player_id,
+        picture_url=m_player.picture_url,
     )
 
 

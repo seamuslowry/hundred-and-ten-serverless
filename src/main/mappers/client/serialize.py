@@ -7,12 +7,12 @@ from src.main.models.client import responses
 from src.main.models.client.constants import CardNumberName, SelectableSuit, Suit
 
 
-def player(m_user: internal.Player) -> responses.Player:
-    """Return a user as it can be provided to the client"""
+def player(m_player: internal.Player) -> responses.Player:
+    """Return a player as it can be provided to the client"""
     return responses.Player(
-        id=m_user.player_id,
-        name=m_user.name or m_user.player_id,
-        picture_url=m_user.picture_url,
+        id=m_player.player_id,
+        name=m_player.name or m_player.player_id,
+        picture_url=m_player.picture_url,
     )
 
 
