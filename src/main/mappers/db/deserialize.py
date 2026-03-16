@@ -6,7 +6,8 @@ from src.main.models import db, internal
 def user(db_user: db.User) -> internal.User:
     """Convert a User DB DTO to its model"""
     return internal.User(
-        identifier=db_user.identifier,
+        id=str(db_user.id) if db_user.id else None,
+        player_id=db_user.identifier,
         name=db_user.name,
         picture_url=db_user.picture_url,
     )

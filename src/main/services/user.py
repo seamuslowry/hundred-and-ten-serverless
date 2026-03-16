@@ -20,7 +20,7 @@ class UserService:
         serialized_user = serialize.user(user)
 
         existing_user = await DbUser.find_one(
-            DbUser.identifier == user.identifier, with_children=True
+            DbUser.identifier == user.player_id, with_children=True
         )
 
         if existing_user:

@@ -13,7 +13,7 @@ from src.main.models.internal import (
 def user(identifier: str, c_user: requests.UpdateUserRequest) -> User:
     """Convert a User model from a passed client request and user"""
     return User(
-        identifier=identifier,
+        player_id=identifier,
         name=c_user.name,
         picture_url=c_user.picture_url,
     )

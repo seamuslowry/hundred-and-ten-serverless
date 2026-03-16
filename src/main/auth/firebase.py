@@ -1,10 +1,9 @@
 """Firebase ID token validation"""
 
 import cachecontrol
-import requests
 import google.auth.transport.requests
+import requests
 from google.oauth2 import id_token
-
 
 from .identity import Identity
 

@@ -4,11 +4,13 @@ The router for user operations.
 
 from typing import Optional
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 
+from src.main.auth import Identity, get_authorized_identity
 from src.main.mappers.client import deserialize, serialize
 from src.main.models.client.requests import UpdateUserRequest
 from src.main.models.client.responses import User
+from src.main.models.internal import User as InternalUser
 from src.main.services import UserService
 
 router = APIRouter(
@@ -42,3 +44,17 @@ async def post_user(player_id, body: UpdateUserRequest):
     save_user = provided_user if not existing_user else existing_user
 
     return serialize.user(await UserService.save(save_user))
+
+
+@router.put("/self", response_model=User)
+async def refresh(identity: Identity = Depends(get_authorized_identity)):
+    """Save the authenticated principal as a user in the DB"""
+    return serialize.user(
+        await UserService.save(
+            InternalUser(
+                player_id=identity.id,
+                name=identity.name or identity.id,
+                picture_url=identity.picture_url,
+            )
+        )
+    )

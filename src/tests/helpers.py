@@ -25,23 +25,23 @@ def create_user(
     test_client: TestClient, identifier: str, name: str = ""
 ) -> dict[str, Any]:
     """Attempt to create a user for the first time"""
-    return __user(test_client, "POST", User(identifier=identifier, name=name))
+    return __user(test_client, "POST", User(player_id=identifier, name=name))
 
 
 def update_user(
     test_client: TestClient, identifier: str, name: str = ""
 ) -> dict[str, Any]:
     """Update an existing user if possible"""
-    return __user(test_client, "PUT", User(identifier=identifier, name=name))
+    return __user(test_client, "PUT", User(player_id=identifier, name=name))
 
 
 def __user(test_client: TestClient, method: str, user: User) -> dict[str, Any]:
     """Update an existing user if possible"""
     resp = test_client.request(
         method,
-        f"/players/{user.identifier}",
+        f"/players/{user.player_id}",
         json={"name": user.name, "picture_url": user.picture_url},
-        headers={"authorization": f"Bearer {user.identifier}"},
+        headers={"authorization": f"Bearer {user.player_id}"},
     )
     return resp.json()
 

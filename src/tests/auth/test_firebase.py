@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from src.main.auth.firebase import verify_firebase_token, ISSUER
+from src.main.auth.firebase import ISSUER, verify_firebase_token
 
 FAKE_TOKEN = "eyJhbGciOiJSUzI1NiJ9.fake.token"
 FAKE_SUB = "116954529561234567890"
@@ -19,7 +19,7 @@ def test_valid_token(mock_verify):
         "picture": "https://example.com/photo.jpg",
         "email": "user@example.com",
         "email_verified": True,
-        "iss": ISSUER
+        "iss": ISSUER,
     }
 
     result = verify_firebase_token(FAKE_TOKEN)
@@ -48,7 +48,7 @@ def test_wrong_issuer(mock_verify):
         "picture": "https://example.com/photo.jpg",
         "email": "user@example.com",
         "email_verified": True,
-        "iss": "wrong-issuer"
+        "iss": "wrong-issuer",
     }
 
     with pytest.raises(ValueError):
