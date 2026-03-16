@@ -3,7 +3,7 @@
 from beanie.operators import In, RegEx
 
 from src.main.mappers.db import deserialize, serialize
-from src.main.models.db import User as DbUser
+from src.main.models.db import Player as DbUser
 from src.main.models.internal import Player
 
 MAX = 20
@@ -18,7 +18,7 @@ class UserService:
         serialized_user = serialize.player(user)
 
         existing_user = await DbUser.find_one(
-            DbUser.identifier == user.player_id, with_children=True
+            DbUser.player_id == user.player_id, with_children=True
         )
 
         if existing_user:
@@ -47,7 +47,7 @@ class UserService:
             map(
                 deserialize.user,
                 await DbUser.find(
-                    In(DbUser.identifier, identifiers), with_children=True
+                    In(DbUser.player_id, identifiers), with_children=True
                 ).to_list(),
             )
         )

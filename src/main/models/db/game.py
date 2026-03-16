@@ -9,7 +9,7 @@ from beanie import Document
 from src.main.models.db.lobby import Accessibility
 
 from .move import Move
-from .player import Player
+from .player import PlayerInGame
 
 
 class Status(Enum):
@@ -34,10 +34,10 @@ class Game(ABC, Document):
 
     name: str
     seed: str
-    organizer: Player
-    players: list[Player]
-    winner: Optional[str]
-    active_player: Optional[str]
+    organizer: PlayerInGame
+    players: list[PlayerInGame]
+    winner_player_id: Optional[str]
+    active_player_id: Optional[str]
     status: Status
     moves: list[Move]
     accessibility: Accessibility

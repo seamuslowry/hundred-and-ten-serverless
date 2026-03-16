@@ -40,9 +40,9 @@ class LobbyService:
                     RegEx(DbLobby.name, escape(search_lobby.search_text), "i"),
                     Or(
                         DbLobby.accessibility == Accessibility.PUBLIC,
-                        ElemMatch(DbLobby.players, {"identifier": player_id}),
-                        ElemMatch(DbLobby.invitees, {"identifier": player_id}),
-                        DbLobby.organizer.identifier == player_id,
+                        ElemMatch(DbLobby.players, {"player_id": player_id}),
+                        ElemMatch(DbLobby.invitees, {"player_id": player_id}),
+                        DbLobby.organizer.player_id == player_id,
                     ),
                     with_children=True,
                 )

@@ -5,7 +5,7 @@ from enum import Enum
 
 from beanie import Document
 
-from .player import Player
+from .player import PlayerInGame
 
 
 class Accessibility(Enum):
@@ -27,9 +27,9 @@ class Lobby(ABC, Document):
 
     name: str
     accessibility: Accessibility
-    organizer: Player
-    players: list[Player]
-    invitees: list[Player]
+    organizer: PlayerInGame
+    players: list[PlayerInGame]
+    invitees: list[PlayerInGame]
 
 
 class LobbyV0(Lobby):

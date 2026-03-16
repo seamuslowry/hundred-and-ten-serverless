@@ -60,7 +60,7 @@ class BidMove(AbstractMove):
     """A bid move"""
 
     type: Literal["bid"] = "bid"
-    identifier: str
+    player_id: str
     amount: int
 
 
@@ -68,7 +68,7 @@ class SelectTrumpMove(AbstractMove):
     """A select trump move"""
 
     type: Literal["select_trump"] = "select_trump"
-    identifier: str
+    player_id: str
     suit: SelectableSuit
 
 
@@ -76,7 +76,7 @@ class DiscardMove(AbstractMove):
     """A discard move"""
 
     type: Literal["discard"] = "discard"
-    identifier: str
+    player_id: str
     cards: list[Card]
 
 
@@ -84,7 +84,7 @@ class PlayMove(AbstractMove):
     """A play card move"""
 
     type: Literal["play"] = "play"
-    identifier: str
+    player_id: str
     card: Card
 
 

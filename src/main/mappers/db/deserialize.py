@@ -3,11 +3,11 @@
 from src.main.models import db, internal
 
 
-def user(db_user: db.User) -> internal.Player:
+def user(db_user: db.Player) -> internal.Player:
     """Convert a User DB DTO to its model"""
     return internal.Player(
         id=str(db_user.id) if db_user.id else None,
-        player_id=db_user.identifier,
+        player_id=db_user.player_id,
         name=db_user.name,
         picture_url=db_user.picture_url,
     )
@@ -38,11 +38,11 @@ def game(db_game: db.Game) -> internal.Game:
     )
 
 
-def __person(person: db.Player) -> internal.PlayerInGame:
+def __person(person: db.PlayerInGame) -> internal.PlayerInGame:
     if isinstance(person, db.NaiveCpuPlayer):
-        return internal.NaiveCpu(id=person.identifier)
+        return internal.NaiveCpu(id=person.player_id)
     if isinstance(person, db.HumanPlayer):
-        return internal.Human(id=person.identifier)
+        return internal.Human(id=person.player_id)
 
     # type: ignore[unreachable]
     raise ValueError(f"Unknown player type ${person}")  # pragma: no cover
@@ -50,7 +50,7 @@ def __person(person: db.Player) -> internal.PlayerInGame:
 
 def __move(db_move: db.Move) -> internal.Action:
     """Convert a DB move to a game action"""
-    identifier = db_move.identifier
+    identifier = db_move.player_id
 
     match db_move:
         case db.BidMove():

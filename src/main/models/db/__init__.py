@@ -13,9 +13,8 @@ from .move import (
     SelectTrumpMove,
     Suit,
 )
-from .player import HumanPlayer, NaiveCpuPlayer, Player
+from .player import HumanPlayer, NaiveCpuPlayer, PlayerInGame, Player, PlayerV0
 from .setup import initialize_odm
-from .user import User, UserV0
 
 __all__ = [
     "Game",
@@ -24,9 +23,9 @@ __all__ = [
     "LobbyV0",
     "Accessibility",
     "Status",
-    "User",
-    "UserV0",
+    "PlayerInGame",
     "Player",
+    "PlayerV0",
     "Move",
     "NaiveCpuPlayer",
     "HumanPlayer",

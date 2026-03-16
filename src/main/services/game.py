@@ -36,14 +36,14 @@ class GameService:
             RegEx(DbGame.name, search_game.search_text, "i"),
             Or(
                 DbGame.accessibility == Accessibility.PUBLIC,
-                ElemMatch(DbGame.players, {"identifier": player_id}),
-                DbGame.organizer.identifier == player_id,
+                ElemMatch(DbGame.players, {"player_id": player_id}),
+                DbGame.organizer.player_id == player_id,
             ),
         ]
         if search_game.active_player_id is not None:
-            filters.append(DbGame.active_player == search_game.active_player_id)
+            filters.append(DbGame.active_player_id == search_game.active_player_id)
         if search_game.winner_player_id is not None:
-            filters.append(DbGame.winner == search_game.winner_player_id)
+            filters.append(DbGame.winner_player_id == search_game.winner_player_id)
         if search_game.statuses is not None:
             filters.append(In(DbGame.status, search_game.statuses))
 

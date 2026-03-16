@@ -7,7 +7,7 @@ from pymongo import AsyncMongoClient
 
 from .game import Game, GameV0
 from .lobby import Lobby, LobbyV0
-from .user import User, UserV0
+from .player import Player, PlayerV0
 
 
 async def initialize_odm():
@@ -22,5 +22,5 @@ async def initialize_odm():
 
     await init_beanie(
         database=client[database_name],
-        document_models=[Game, GameV0, Lobby, LobbyV0, User, UserV0],
+        document_models=[Game, GameV0, Lobby, LobbyV0, Player, PlayerV0],
     )
