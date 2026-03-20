@@ -32,7 +32,9 @@ def test_card_with_unselectable_suit():
     """Deserializing a card with an UnselectableSuit should succeed"""
     result = client_deserialize.action(
         "playerid",
-        PlayRequest(card=CardRequest(suit=Suit.JOKER, number=CardNumberName.JOKER)),
+        PlayRequest(
+            type="PLAY", card=CardRequest(suit=Suit.JOKER, number=CardNumberName.JOKER)
+        ),
     )
     assert isinstance(result, Play) and result.card == Card(
         suit=UnselectableSuit.JOKER, number=CardNumber.JOKER
