@@ -1,6 +1,6 @@
 """Pydantic models for API request bodies"""
 
-from typing import Optional
+from typing import Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -10,7 +10,14 @@ from .constants import CardNumberName, SelectableSuit, Suit
 class BidRequest(BaseModel):
     """Request body for bidding in a game"""
 
+    type: Literal["BID"] = "BID"
     amount: int
+
+
+class UnpassRequest(BaseModel):
+    """Request body for unpassing"""
+
+    type: Literal["UNPASS"] = "UNPASS"
 
 
 class CardRequest(BaseModel):
@@ -23,19 +30,27 @@ class CardRequest(BaseModel):
 class DiscardRequest(BaseModel):
     """Request body for discarding cards"""
 
+    type: Literal["DISCARD"] = "DISCARD"
     cards: list[CardRequest]
 
 
 class PlayRequest(BaseModel):
     """Request body for playing a card"""
 
+    type: Literal["PLAY"] = "PLAY"
     card: CardRequest
 
 
 class SelectTrumpRequest(BaseModel):
     """Request body for selecting trump suit"""
 
+    type: Literal["SELECT_TRUMP"] = "SELECT_TRUMP"
     suit: SelectableSuit
+
+
+type ActRequest = Union[
+    BidRequest, UnpassRequest, DiscardRequest, PlayRequest, SelectTrumpRequest
+]
 
 
 class CreateLobbyRequest(BaseModel):

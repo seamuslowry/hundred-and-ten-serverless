@@ -9,11 +9,8 @@ from fastapi import APIRouter
 
 from src.main.mappers.client import deserialize, serialize
 from src.main.models.client.requests import (
-    BidRequest,
-    DiscardRequest,
-    PlayRequest,
+    ActRequest,
     SearchGamesRequest,
-    SelectTrumpRequest,
 )
 from src.main.models.client.responses import (
     CompletedGame,
@@ -22,14 +19,7 @@ from src.main.models.client.responses import (
     SuggestionResponse,
 )
 from src.main.models.internal import (
-    Bid,
-    BidAmount,
-    Discard,
     NaiveAutomatedPlayer,
-    Play,
-    SelectableSuit,
-    SelectTrump,
-    Unpass,
 )
 from src.main.services import GameService, PlayerService
 
@@ -78,81 +68,15 @@ async def suggestion(player_id: str, game_id: PydanticObjectId):
     )
 
 
-@router.post("/{game_id}/bid", response_model=GameResponse)
-async def bid(player_id: str, game_id: PydanticObjectId, body: BidRequest):
+@router.post("/{game_id}/act", response_model=GameResponse)
+async def act(player_id: str, game_id: PydanticObjectId, body: ActRequest):
     """Bid in a 110 game"""
     game = await GameService.get(game_id)
     initial_event_knowledge = len(game.events)
 
-    game.act(Bid(player_id, BidAmount(body.amount)))
+    game.act(deserialize.action(player_id, body))
 
     await GameService.save(game)
-
-    return serialize.game(game, player_id, initial_event_knowledge)
-
-
-@router.post("/{game_id}/unpass", response_model=GameResponse)
-async def rescind_prepass(player_id: str, game_id: PydanticObjectId):
-    """Unpass in a 110 game"""
-    game = await GameService.get(game_id)
-    initial_event_knowledge = len(game.events)
-
-    game.act(Unpass(player_id))
-
-    await GameService.save(game)
-
-    return serialize.game(game, player_id, initial_event_knowledge)
-
-
-@router.post("/{game_id}/select", response_model=GameResponse)
-async def select_trump(
-    player_id: str,
-    game_id: PydanticObjectId,
-    body: SelectTrumpRequest,
-):
-    """Select trump in a 110 game"""
-    game = await GameService.get(game_id)
-    initial_event_knowledge = len(game.events)
-
-    game.act(SelectTrump(player_id, SelectableSuit[body.suit.value]))
-
-    game = await GameService.save(game)
-
-    return serialize.game(game, player_id, initial_event_knowledge)
-
-
-@router.post("/{game_id}/discard", response_model=GameResponse)
-async def discard(player_id: str, game_id: PydanticObjectId, body: DiscardRequest):
-    """Discard in a 110 game"""
-    game = await GameService.get(game_id)
-    initial_event_knowledge = len(game.events)
-
-    game.act(
-        Discard(
-            player_id,
-            [deserialize.card(c) for c in body.cards],
-        )
-    )
-
-    game = await GameService.save(game)
-
-    return serialize.game(game, player_id, initial_event_knowledge)
-
-
-@router.post("/{game_id}/play", response_model=GameResponse)
-async def play(player_id: str, game_id: PydanticObjectId, body: PlayRequest):
-    """Play a card in a 110 game"""
-    game = await GameService.get(game_id)
-    initial_event_knowledge = len(game.events)
-
-    game.act(
-        Play(
-            player_id,
-            deserialize.card(body.card),
-        )
-    )
-
-    game = await GameService.save(game)
 
     return serialize.game(game, player_id, initial_event_knowledge)
 
