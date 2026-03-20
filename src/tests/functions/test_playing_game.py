@@ -22,8 +22,8 @@ def test_perform_round_actions(client: TestClient):
 
     # bid
     resp = client.post(
-        f"/players/{DEFAULT_ID}/games/{created_game['id']}/bid",
-        json={"amount": BidAmount.SHOOT_THE_MOON},
+        f"/players/{DEFAULT_ID}/games/{created_game['id']}/act",
+        json={"type": "BID", "amount": BidAmount.SHOOT_THE_MOON},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
     game = resp.json()
@@ -36,13 +36,11 @@ def test_perform_round_actions(client: TestClient):
 
     # select trump
     resp = client.post(
-        f"/players/{DEFAULT_ID}/games/{created_game['id']}/select",
-        json={"suit": SelectableSuit.CLUBS.name},
+        f"/players/{DEFAULT_ID}/games/{created_game['id']}/act",
+        json={"type": "SELECT_TRUMP", "suit": SelectableSuit.CLUBS.name},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
     game = resp.json()
-
-    print(game)
 
     assert RoundStatus.DISCARD.name == game["status"]
 
@@ -52,8 +50,8 @@ def test_perform_round_actions(client: TestClient):
 
     # discard
     resp = client.post(
-        f"/players/{DEFAULT_ID}/games/{created_game['id']}/discard",
-        json={"cards": []},
+        f"/players/{DEFAULT_ID}/games/{created_game['id']}/act",
+        json={"type": "DISCARD", "cards": []},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
     game = resp.json()
@@ -66,8 +64,8 @@ def test_perform_round_actions(client: TestClient):
 
     # play
     resp = client.post(
-        f"/players/{DEFAULT_ID}/games/{created_game['id']}/play",
-        json={"card": suggested_play["card"]},
+        f"/players/{DEFAULT_ID}/games/{created_game['id']}/act",
+        json={"type": "PLAY", "card": suggested_play["card"]},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
     game = resp.json()
@@ -89,8 +87,8 @@ def test_prepass_and_rescind_prepass(client: TestClient):
 
     # prepass
     resp = client.post(
-        f"/players/{non_active_player['id']}/games/{game['id']}/bid",
-        json={"amount": BidAmount.PASS},
+        f"/players/{non_active_player['id']}/games/{game['id']}/act",
+        json={"type": "BID", "amount": BidAmount.PASS},
         headers={"authorization": f"Bearer {non_active_player['id']}"},
     )
     game = resp.json()
@@ -101,7 +99,8 @@ def test_prepass_and_rescind_prepass(client: TestClient):
 
     # rescind prepass
     resp = client.post(
-        f"/players/{non_active_player['id']}/games/{game['id']}/unpass",
+        f"/players/{non_active_player['id']}/games/{game['id']}/act",
+        json={"type": "UNPASS"},
         headers={"authorization": f"Bearer {non_active_player['id']}"},
     )
     game = resp.json()
