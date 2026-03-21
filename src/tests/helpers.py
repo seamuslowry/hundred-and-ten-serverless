@@ -64,7 +64,8 @@ def completed_game(test_client: TestClient) -> dict[str, Any]:
         f"/players/{active_player['id']}/games/{game['id']}/leave",
         headers={"authorization": f"Bearer {active_player['id']}"},
     )
-    return resp.json()
+    assert len(resp.json()) > 0
+    return get_game(test_client, game['id'], active_player['id'])
 
 
 def request_suggestion(
@@ -119,3 +120,10 @@ def queue_action(
         "player_id": DEFAULT_ID,
     }
     return resp.json()
+
+
+def get_game(test_client: TestClient, game_id: str, player_id: str) -> dict[str, Any]:
+    """Get a game as the given player"""
+    return test_client.get(
+        f"/players/{player_id}/games/{game_id}",
+        headers={"authorization": f"Bearer {player_id}"}).json()
