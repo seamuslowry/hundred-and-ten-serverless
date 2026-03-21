@@ -44,7 +44,7 @@ def __person(person: db.PlayerInGame) -> internal.PlayerInGame:
     if isinstance(person, db.HumanPlayer):
         return internal.Human(
             id=person.player_id,
-            stored_action=(
+            queued_action=(
                 __move(person.queued_action)
                 if person.queued_action is not None
                 else None

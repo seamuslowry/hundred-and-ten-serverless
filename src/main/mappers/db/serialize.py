@@ -70,7 +70,7 @@ def __human(person: internal.Human) -> db.HumanPlayer:
     return db.HumanPlayer(
         player_id=person.id,
         queued_action=(
-            __move(person.stored_action) if person.stored_action is not None else None
+            __move(person.queued_action) if person.queued_action is not None else None
         ),
     )
 

@@ -143,9 +143,9 @@ def __player_in_game(player_in_game: internal.PlayerInGame) -> responses.PlayerI
         id=player_in_game.id,
         automate=isinstance(player_in_game, internal.NaiveCpu),
         queued_action=(
-            action(player_in_game.stored_action)
+            action(player_in_game.queued_action)
             if isinstance(player_in_game, internal.Human)
-            and player_in_game.stored_action is not None
+            and player_in_game.queued_action is not None
             else None
         ),
     )

@@ -10,16 +10,16 @@ from src.main.models.internal.errors import BadRequestException
 
 
 @dataclass
-class StoredActionPlayer(player.AutomatedPlayer):
-    """Represent a player with a single stored action."""
+class QueuedActionPlayer(player.AutomatedPlayer):
+    """Represent a player with a single queued action."""
 
     on_action: Callable[[], None]
-    stored_action: Optional[actions.Action] = None
+    queued_action: Optional[actions.Action] = None
 
     def act(self, game_state: state.GameState) -> Optional[actions.Action]:
-        """Return the stored action if available"""
-        action = self.stored_action
-        self.stored_action = None
+        """Return the queued action if available"""
+        action = self.queued_action
+        self.queued_action = None
         self.on_action()
         if action in game_state.available_actions:
             return action
@@ -56,17 +56,17 @@ class PlayerInGame(ABC):
 class Human(PlayerInGame):
     """A human; represents a real user that will provide input"""
 
-    stored_action: Optional[actions.Action] = None
+    queued_action: Optional[actions.Action] = None
 
     def queue_action(self, action: Optional[actions.Action]) -> Self:
-        self.stored_action = action
+        self.queued_action = action
         return self
 
     def as_engine_player(self) -> player.Player:
-        return StoredActionPlayer(
+        return QueuedActionPlayer(
             self.id,
-            stored_action=self.stored_action,
-            on_action=lambda: setattr(self, "stored_action", None),
+            queued_action=self.queued_action,
+            on_action=lambda: setattr(self, "queued_action", None),
         )
 
 
