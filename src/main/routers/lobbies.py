@@ -133,4 +133,4 @@ async def start_game(player_id: str, lobby_id: PydanticObjectId):
     # Start the game (converts lobby record to game record)
     game = await LobbyService.start_game(lobby)
 
-    return serialize.game(game, player_id, 0)
+    return serialize.game(game, player_id)

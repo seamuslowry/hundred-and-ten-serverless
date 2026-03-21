@@ -17,6 +17,7 @@ from src.main.models.client.responses import (
     Player,
     StartedGame,
     SuggestionResponse,
+    GameEvent,
 )
 from src.main.models.internal import (
     NaiveAutomatedPlayer,
@@ -68,7 +69,7 @@ async def suggestion(player_id: str, game_id: PydanticObjectId):
     )
 
 
-@router.post("/{game_id}/act", response_model=GameResponse)
+@router.post("/{game_id}/act", response_model=list[GameEvent])
 async def act(player_id: str, game_id: PydanticObjectId, body: ActRequest):
     """Act in a 110 game"""
     game = await GameService.get(game_id)
@@ -78,7 +79,7 @@ async def act(player_id: str, game_id: PydanticObjectId, body: ActRequest):
 
     await GameService.save(game)
 
-    return serialize.game(game, player_id, initial_event_knowledge)
+    return serialize.events(game.events[initial_event_knowledge:], player_id)
 
 
 @router.post("/{game_id}/queued-action", response_model=GameResponse)
@@ -91,7 +92,7 @@ async def queued_action(player_id: str, game_id: PydanticObjectId, body: ActRequ
 
     await GameService.save(game)
 
-    return serialize.game(game, player_id, initial_event_knowledge)
+    return serialize.events(game.events[initial_event_knowledge:], player_id)
 
 
 @router.delete("/{game_id}/queued-action", response_model=GameResponse)
@@ -104,7 +105,7 @@ async def remove_queued_action(player_id: str, game_id: PydanticObjectId):
 
     await GameService.save(game)
 
-    return serialize.game(game, player_id, initial_event_knowledge)
+    return serialize.events(game.events[initial_event_knowledge:], player_id)
 
 
 @router.post("/{game_id}/leave", response_model=GameResponse)
@@ -116,4 +117,4 @@ async def leave_game(player_id: str, game_id: PydanticObjectId):
     game.leave(player_id)
     game = await GameService.save(game)
 
-    return serialize.game(game, player_id, initial_event_knowledge)
+    return serialize.events(game.events[initial_event_knowledge:], player_id)

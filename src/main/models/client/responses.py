@@ -1,8 +1,8 @@
 """Format of a game of Hundred and Ten on the client"""
 
-from typing import Literal, Optional, Union
+from typing import Annotated, Literal, Optional, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from .constants import CardNumberName, SelectableSuit, Suit
 
@@ -109,10 +109,10 @@ class GameEnd(BaseModel):
 type GameEvent = Union[GameStart, RoundStart, TrickStart, TrickEnd, RoundEnd, GameEnd]
 
 # Union type for all event types (used in results field for OpenAPI)
-type Event = Union[
+type Event = Annotated[Union[
     GameAction,
     GameEvent,
-]
+], Field(discriminator="type")]
 
 # =============================================================================
 # Players
@@ -199,7 +199,6 @@ class StartedGame(Game):
     round: Optional[Round] = None
     scores: dict[str, int]
     players: list[PlayerInGame]
-    results: list[Event]
 
 
 class CompletedGame(Game):
@@ -209,7 +208,38 @@ class CompletedGame(Game):
     organizer: PlayerInGame
     players: list[PlayerInGame]
     scores: dict[str, int]
-    results: list[Event]
+
+
+class Suggestion(BaseModel):
+    """A class to act as a superclass for suggested actions to the client"""
+
+
+class BidSuggestion(Suggestion):
+    """A class to model a suggested bid action to the client"""
+
+    type: Literal["BID"] = "BID"
+    amount: int
+
+
+class SelectTrumpSuggestion(Suggestion):
+    """A class to model a suggested trump selection action to the client"""
+
+    type: Literal["SELECT_TRUMP"] = "SELECT_TRUMP"
+    suit: SelectableSuit
+
+
+class DiscardSuggestion(Suggestion):
+    """A class to model a suggested discard action to the client"""
+
+    type: Literal["DISCARD"] = "DISCARD"
+    cards: list[Card]
+
+
+class PlaySuggestion(Suggestion):
+    """A class to model a suggested play action to the client"""
+
+    type: Literal["PLAY"] = "PLAY"
+    card: Card
 
 
 # Union type for all suggestion types (used in response_model for OpenAPI)

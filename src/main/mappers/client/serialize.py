@@ -40,14 +40,8 @@ def lobby(
 def game(
     m_game: internal.Game,
     client_player_id: str,
-    initial_event_knowledge: Optional[int] = None,
 ) -> responses.Game:
     """Return a game as it can be provided to the client"""
-    client_events = (
-        events(m_game.events[initial_event_knowledge:], client_player_id)
-        if initial_event_knowledge is not None
-        else []
-    )
     assert m_game.id  # games sent to clients will be saved and have an id
 
     if m_game.status == internal.GameStatus.WON:
@@ -57,7 +51,6 @@ def game(
             name=m_game.name,
             status=m_game.status.name,
             scores=m_game.scores,
-            results=client_events,
             winner=__player_in_game(m_game.winner),
             organizer=__player_in_game(m_game.organizer),
             players=[__player_in_game(p) for p in m_game.ordered_players],
@@ -69,7 +62,6 @@ def game(
         status=m_game.status.name,
         round=__round(m_game.active_round, client_player_id),
         scores=m_game.scores,
-        results=client_events,
         players=[__player_in_game(p) for p in m_game.ordered_players],
     )
 
