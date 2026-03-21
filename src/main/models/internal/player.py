@@ -13,14 +13,14 @@ from src.main.models.internal.errors import BadRequestException
 class StoredActionPlayer(player.AutomatedPlayer):
     """Represent a player with a single stored action."""
 
-    on_stored_action: Callable[[], None]
+    on_action: Callable[[], None]
     stored_action: Optional[actions.Action] = None
 
     def act(self, game_state: state.GameState) -> Optional[actions.Action]:
         """Return the stored action if available"""
         action = self.stored_action
         self.stored_action = None
-        self.on_stored_action()
+        self.on_action()
         if action in game_state.available_actions:
             return action
         return None
@@ -66,7 +66,7 @@ class Human(PlayerInGame):
         return StoredActionPlayer(
             self.id,
             stored_action=self.stored_action,
-            on_stored_action=lambda: setattr(self, "stored_action", None),
+            on_action=lambda: setattr(self, "stored_action", None),
         )
 
 
