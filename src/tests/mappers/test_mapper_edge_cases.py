@@ -25,7 +25,7 @@ def test_bad_suggestion_error():
     """Attempting to serialize an invalid suggestion results in an error"""
     player_id = "player_id"
     with pytest.raises(ValueError):
-        client_serialize.suggestion(Action(player_id))
+        client_serialize.action(Action(player_id))
 
 
 def test_card_with_unselectable_suit():
@@ -52,6 +52,9 @@ def test_unknown_internal_person_type_error():
 
     class UnknownPerson(PlayerInGame):
         """A subclassed person type the serializer is unaware of"""
+
+        def queue_action(self, action):
+            raise NotImplementedError()
 
         def as_engine_player(self):
             raise NotImplementedError()

@@ -9,7 +9,6 @@ from hundredandten.actions import (
     Discard,
     Play,
     SelectTrump,
-    Unpass,
 )
 from hundredandten.constants import (
     BidAmount,
@@ -52,7 +51,6 @@ __all__ = [
     "Discard",
     "Play",
     "SelectTrump",
-    "Unpass",
     # Constants
     "BidAmount",
     "CardNumber",

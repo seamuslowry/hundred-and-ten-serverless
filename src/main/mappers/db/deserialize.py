@@ -42,7 +42,12 @@ def __person(person: db.PlayerInGame) -> internal.PlayerInGame:
     if isinstance(person, db.NaiveCpuPlayer):
         return internal.NaiveCpu(id=person.player_id)
     if isinstance(person, db.HumanPlayer):
-        return internal.Human(id=person.player_id)
+        return internal.Human(
+            id=person.player_id,
+            stored_action=(
+                __move(person.queued_action) if person.queued_action else None
+            ),
+        )
 
     # type: ignore[unreachable]
     raise ValueError(f"Unknown player type ${person}")  # pragma: no cover

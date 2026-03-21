@@ -67,7 +67,10 @@ def __player_in_game(person: internal.PlayerInGame) -> db.PlayerInGame:
 
 
 def __human(person: internal.Human) -> db.HumanPlayer:
-    return db.HumanPlayer(player_id=person.id)
+    return db.HumanPlayer(
+        player_id=person.id,
+        queued_action=__move(person.stored_action) if person.stored_action else None,
+    )
 
 
 def __move(move: internal.Action) -> db.Move:

@@ -36,8 +36,6 @@ def action(player_id: str, c_action: requests.ActRequest) -> internal.Action:
             return internal.Discard(player_id, [__card(c) for c in c_action.cards])
         case requests.PlayRequest():
             return internal.Play(player_id, __card(c_action.card))
-        case requests.UnpassRequest():
-            return internal.Unpass(player_id)
 
     # type: ignore[unreachable]
     raise ValueError(f"Unknown action type ${c_action}")  # pragma: no cover

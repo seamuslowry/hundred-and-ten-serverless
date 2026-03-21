@@ -76,30 +76,34 @@ def game(
 
 def events(
     m_events: list[internal.Event], client_player_id: str
-) -> list[responses.GameEvent]:
+) -> list[responses.Event]:
     """Return a list of events as they can be provided to the client"""
     return [__event(e, client_player_id) for e in m_events]
 
 
-def suggestion(m_suggestion: internal.Action) -> responses.Suggestion:
+def action(m_action: internal.Action) -> responses.GameAction:
     """Return a suggested action as it can be provided to the client"""
-    if isinstance(m_suggestion, internal.Bid):
-        return responses.BidSuggestion(amount=m_suggestion.amount)
-    if isinstance(m_suggestion, internal.SelectTrump):
-        return responses.SelectTrumpSuggestion(
-            suit=SelectableSuit[m_suggestion.suit.name]
+    if isinstance(m_action, internal.Bid):
+        return responses.BidAction(
+            amount=m_action.amount, player_id=m_action.identifier
         )
-    if isinstance(m_suggestion, internal.Discard):
-        return responses.DiscardSuggestion(
-            cards=[__card(c) for c in m_suggestion.cards]
+    if isinstance(m_action, internal.SelectTrump):
+        return responses.SelectTrumpAction(
+            suit=SelectableSuit[m_action.suit.name], player_id=m_action.identifier
         )
-    if isinstance(m_suggestion, internal.Play):
-        return responses.PlaySuggestion(card=__card(m_suggestion.card))
+    if isinstance(m_action, internal.Discard):
+        return responses.DiscardAction(
+            discards=[__card(c) for c in m_action.cards], player_id=m_action.identifier
+        )
+    if isinstance(m_action, internal.Play):
+        return responses.PlayCardAction(
+            card=__card(m_action.card), player_id=m_action.identifier
+        )
     raise ValueError("No suggestion available at this time")
 
 
-def __play(play: internal.Play) -> responses.Play:
-    return responses.Play(player_id=play.identifier, card=__card(play.card))
+def __play(play: internal.Play) -> responses.PlayCardAction:
+    return responses.PlayCardAction(player_id=play.identifier, card=__card(play.card))
 
 
 def __trick(trick: internal.Trick) -> responses.Trick:
@@ -136,7 +140,14 @@ def __round(m_round: internal.Round, client_player_id: str) -> responses.Round:
 
 def __player_in_game(player_in_game: internal.PlayerInGame) -> responses.PlayerInGame:
     return responses.PlayerInGame(
-        id=player_in_game.id, automate=isinstance(player_in_game, internal.NaiveCpu)
+        id=player_in_game.id,
+        automate=isinstance(player_in_game, internal.NaiveCpu),
+        queued_action=(
+            action(player_in_game.stored_action)
+            if isinstance(player_in_game, internal.Human)
+            and player_in_game.stored_action is not None
+            else None
+        ),
     )
 
 
@@ -146,7 +157,6 @@ def __player_in_round(
     if round_player.identifier == client_player_id:
         return responses.SelfInRound(
             id=round_player.identifier,
-            prepassed=internal.RoundRole.PRE_PASSED in round_player.roles,
             hand=[__card(c) for c in round_player.hand],
         )
 
@@ -162,9 +172,9 @@ def __card(card: internal.Card) -> responses.Card:
     )
 
 
-def __event(event: internal.Event, client_player_id: str) -> responses.GameEvent:
+def __event(event: internal.Event, client_player_id: str) -> responses.Event:
     """Convert the provided event into the structure it should provide the client"""
-    result: Optional[responses.GameEvent] = None
+    result: Optional[responses.Event] = None
 
     if isinstance(event, internal.GameStart):
         result = __game_start_event()
@@ -213,15 +223,15 @@ def __round_start_event(
     )
 
 
-def __bid_event(event: internal.Bid) -> responses.Bid:
-    return responses.Bid(
+def __bid_event(event: internal.Bid) -> responses.BidAction:
+    return responses.BidAction(
         player_id=event.identifier,
         amount=event.amount.value,
     )
 
 
-def __select_trump_event(event: internal.SelectTrump) -> responses.SelectTrump:
-    return responses.SelectTrump(
+def __select_trump_event(event: internal.SelectTrump) -> responses.SelectTrumpAction:
+    return responses.SelectTrumpAction(
         player_id=event.identifier,
         suit=SelectableSuit[event.suit.name],
     )
@@ -229,8 +239,8 @@ def __select_trump_event(event: internal.SelectTrump) -> responses.SelectTrump:
 
 def __discard_event(
     event: internal.Discard, client_player_id: str
-) -> responses.Discard:
-    return responses.Discard(
+) -> responses.DiscardAction:
+    return responses.DiscardAction(
         player_id=event.identifier,
         discards=(
             [__card(c) for c in event.cards]
@@ -244,8 +254,8 @@ def __trick_start_event() -> responses.TrickStart:
     return responses.TrickStart()
 
 
-def __play_event(event: internal.Play) -> responses.PlayEvent:
-    return responses.PlayEvent(
+def __play_event(event: internal.Play) -> responses.PlayCardAction:
+    return responses.PlayCardAction(
         player_id=event.identifier,
         card=__card(event.card),
     )

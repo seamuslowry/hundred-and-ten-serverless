@@ -14,12 +14,6 @@ class BidRequest(BaseModel):
     amount: int
 
 
-class UnpassRequest(BaseModel):
-    """Request body for unpassing"""
-
-    type: Literal["UNPASS"]
-
-
 class CardRequest(BaseModel):
     """A card in a request"""
 
@@ -49,7 +43,7 @@ class SelectTrumpRequest(BaseModel):
 
 
 type ActRequest = Annotated[
-    Union[BidRequest, UnpassRequest, DiscardRequest, PlayRequest, SelectTrumpRequest],
+    Union[BidRequest, DiscardRequest, PlayRequest, SelectTrumpRequest],
     Field(discriminator="type"),
 ]
 
