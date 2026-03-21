@@ -21,7 +21,7 @@ class Card(BaseModel):
 class BidAction(BaseModel):
     """A class to model the client format of a Hundred and Ten bid action"""
 
-    type: Literal["BID"] = "BID"
+    type: Literal["BID"]
     player_id: str
     amount: int
 
@@ -29,7 +29,7 @@ class BidAction(BaseModel):
 class SelectTrumpAction(BaseModel):
     """A class to model the client format of a Hundred and Ten select trump action"""
 
-    type: Literal["SELECT_TRUMP"] = "SELECT_TRUMP"
+    type: Literal["SELECT_TRUMP"]
     player_id: str
     suit: SelectableSuit
 
@@ -37,7 +37,7 @@ class SelectTrumpAction(BaseModel):
 class DiscardAction(BaseModel):
     """A class to model the client format of a Hundred and Ten discard action"""
 
-    type: Literal["DISCARD"] = "DISCARD"
+    type: Literal["DISCARD"]
     player_id: str
     discards: Union[list[Card], int]
 
@@ -45,7 +45,7 @@ class DiscardAction(BaseModel):
 class PlayCardAction(BaseModel):
     """A class to model the client format of a Hundred and Ten play action"""
 
-    type: Literal["PLAY"] = "PLAY"
+    type: Literal["PLAY"]
     player_id: str
     card: Card
 
@@ -61,13 +61,13 @@ type GameAction = Union[BidAction, SelectTrumpAction, DiscardAction, PlayCardAct
 class GameStart(BaseModel):
     """A class to model the client format of a Hundred and Ten game start event"""
 
-    type: Literal["GAME_START"] = "GAME_START"
+    type: Literal["GAME_START"]
 
 
 class RoundStart(BaseModel):
     """A class to model the client format of a Hundred and Ten round start event"""
 
-    type: Literal["ROUND_START"] = "ROUND_START"
+    type: Literal["ROUND_START"]
     dealer: str
     hands: dict[str, Union[list[Card], int]]
 
@@ -75,13 +75,13 @@ class RoundStart(BaseModel):
 class TrickStart(BaseModel):
     """A class to model the client format of a Hundred and Ten trick start event"""
 
-    type: Literal["TRICK_START"] = "TRICK_START"
+    type: Literal["TRICK_START"]
 
 
 class TrickEnd(BaseModel):
     """A class to model the client format of a Hundred and Ten trick end event"""
 
-    type: Literal["TRICK_END"] = "TRICK_END"
+    type: Literal["TRICK_END"]
     winner_player_id: str
 
 
@@ -95,14 +95,14 @@ class Score(BaseModel):
 class RoundEnd(BaseModel):
     """A class to model the client format of a Hundred and Ten round end event"""
 
-    type: Literal["ROUND_END"] = "ROUND_END"
+    type: Literal["ROUND_END"]
     scores: list[Score]
 
 
 class GameEnd(BaseModel):
     """A class to model the client format of a Hundred and Ten game end event"""
 
-    type: Literal["GAME_END"] = "GAME_END"
+    type: Literal["GAME_END"]
     winner_player_id: str
 
 

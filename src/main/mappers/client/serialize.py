@@ -85,25 +85,31 @@ def action(m_action: internal.Action) -> responses.GameAction:
     """Return a suggested action as it can be provided to the client"""
     if isinstance(m_action, internal.Bid):
         return responses.BidAction(
-            amount=m_action.amount, player_id=m_action.identifier
+            type="BID", amount=m_action.amount, player_id=m_action.identifier
         )
     if isinstance(m_action, internal.SelectTrump):
         return responses.SelectTrumpAction(
-            suit=SelectableSuit[m_action.suit.name], player_id=m_action.identifier
+            type="SELECT_TRUMP",
+            suit=SelectableSuit[m_action.suit.name],
+            player_id=m_action.identifier,
         )
     if isinstance(m_action, internal.Discard):
         return responses.DiscardAction(
-            discards=[__card(c) for c in m_action.cards], player_id=m_action.identifier
+            type="DISCARD",
+            discards=[__card(c) for c in m_action.cards],
+            player_id=m_action.identifier,
         )
     if isinstance(m_action, internal.Play):
         return responses.PlayCardAction(
-            card=__card(m_action.card), player_id=m_action.identifier
+            type="PLAY", card=__card(m_action.card), player_id=m_action.identifier
         )
     raise ValueError("No suggestion available at this time")
 
 
 def __play(play: internal.Play) -> responses.PlayCardAction:
-    return responses.PlayCardAction(player_id=play.identifier, card=__card(play.card))
+    return responses.PlayCardAction(
+        type="PLAY", player_id=play.identifier, card=__card(play.card)
+    )
 
 
 def __trick(trick: internal.Trick) -> responses.Trick:
@@ -204,13 +210,14 @@ def __event(event: internal.Event, client_player_id: str) -> responses.Event:
 
 
 def __game_start_event() -> responses.GameStart:
-    return responses.GameStart()
+    return responses.GameStart(type="GAME_START")
 
 
 def __round_start_event(
     event: internal.RoundStart, client_player_id: str
 ) -> responses.RoundStart:
     return responses.RoundStart(
+        type="ROUND_START",
         dealer=event.dealer,
         hands={
             player_id: (
@@ -225,6 +232,7 @@ def __round_start_event(
 
 def __bid_event(event: internal.Bid) -> responses.BidAction:
     return responses.BidAction(
+        type="BID",
         player_id=event.identifier,
         amount=event.amount.value,
     )
@@ -232,6 +240,7 @@ def __bid_event(event: internal.Bid) -> responses.BidAction:
 
 def __select_trump_event(event: internal.SelectTrump) -> responses.SelectTrumpAction:
     return responses.SelectTrumpAction(
+        type="SELECT_TRUMP",
         player_id=event.identifier,
         suit=SelectableSuit[event.suit.name],
     )
@@ -241,6 +250,7 @@ def __discard_event(
     event: internal.Discard, client_player_id: str
 ) -> responses.DiscardAction:
     return responses.DiscardAction(
+        type="DISCARD",
         player_id=event.identifier,
         discards=(
             [__card(c) for c in event.cards]
@@ -251,11 +261,12 @@ def __discard_event(
 
 
 def __trick_start_event() -> responses.TrickStart:
-    return responses.TrickStart()
+    return responses.TrickStart(type="TRICK_START")
 
 
 def __play_event(event: internal.Play) -> responses.PlayCardAction:
     return responses.PlayCardAction(
+        type="PLAY",
         player_id=event.identifier,
         card=__card(event.card),
     )
@@ -263,6 +274,7 @@ def __play_event(event: internal.Play) -> responses.PlayCardAction:
 
 def __trick_end_event(event: internal.TrickEnd) -> responses.TrickEnd:
     return responses.TrickEnd(
+        type="TRICK_END",
         winner_player_id=event.winner,
     )
 
@@ -273,11 +285,13 @@ def __score(score: internal.Score) -> responses.Score:
 
 def __round_end_event(event: internal.RoundEnd) -> responses.RoundEnd:
     return responses.RoundEnd(
+        type="ROUND_END",
         scores=[__score(s) for s in event.scores],
     )
 
 
 def __game_end_event(event: internal.GameEnd) -> responses.GameEnd:
     return responses.GameEnd(
+        type="GAME_END",
         winner_player_id=event.winner,
     )
