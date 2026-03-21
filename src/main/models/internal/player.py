@@ -20,8 +20,8 @@ class StoredActionPlayer(player.AutomatedPlayer):
         """Return the stored action if available"""
         action = self.stored_action
         self.stored_action = None
+        self.on_stored_action()
         if action in game_state.available_actions:
-            self.on_stored_action()
             return action
         return None
 
