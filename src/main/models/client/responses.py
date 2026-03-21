@@ -114,6 +114,10 @@ type Event = Union[
     GameEvent,
 ]
 
+# =============================================================================
+# Players
+# =============================================================================
+
 
 class Player(BaseModel):
     """A class to model the client format of a Hundred and Ten player"""
@@ -146,6 +150,10 @@ class SelfInRound(BaseModel):
 
 
 type PlayerInRound = Union[SelfInRound, OtherPlayerInRound]
+
+# =============================================================================
+# Games
+# =============================================================================
 
 
 class Trick(BaseModel):
