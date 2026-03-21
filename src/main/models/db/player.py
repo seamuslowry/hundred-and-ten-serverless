@@ -6,6 +6,8 @@ from typing import Annotated, Literal, Optional, Union
 from beanie import Document
 from pydantic import BaseModel, Field
 
+from .move import Move
+
 
 class AbstractPlayerInGame(ABC, BaseModel):
     """A base class for players"""
@@ -17,6 +19,7 @@ class HumanPlayer(AbstractPlayerInGame):
     """A human player"""
 
     type: Literal["human"] = "human"
+    queued_action: Optional[Move]
 
 
 class NaiveCpuPlayer(AbstractPlayerInGame):

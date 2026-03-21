@@ -5,8 +5,10 @@ from fastapi.testclient import TestClient
 from src.main.models.internal import BidAmount, RoundStatus, SelectableSuit
 from src.tests.helpers import (
     DEFAULT_ID,
+    game_with_manual_player,
     get_suggestion,
     lobby_game,
+    queue_action,
     started_game,
 )
 
@@ -46,7 +48,7 @@ def test_perform_round_actions(client: TestClient):
 
     # assert that current suggestion is a discard
     suggested_discard = get_suggestion(client, created_game["id"])
-    assert "cards" in suggested_discard
+    assert "discards" in suggested_discard
 
     # discard
     resp = client.post(
@@ -76,38 +78,21 @@ def test_perform_round_actions(client: TestClient):
 
 def test_prepass_and_rescind_prepass(client: TestClient):
     """A non-active player can prepass and rescind that prepass"""
-    game = started_game(client)
-
-    non_active_player = next(
-        p
-        for p in game["round"]["players"]
-        if game["round"]["active_player"]
-        and p["id"] != game["round"]["active_player"]["id"]
-    )
+    game, _ = game_with_manual_player(client)
 
     # prepass
-    resp = client.post(
-        f"/players/{non_active_player['id']}/games/{game['id']}/act",
-        json={"type": "BID", "amount": BidAmount.PASS},
-        headers={"authorization": f"Bearer {non_active_player['id']}"},
+    game = queue_action(
+        client, game["id"], DEFAULT_ID, {"type": "BID", "amount": BidAmount.PASS}
     )
-    game = resp.json()
-    non_active_player = next(
-        p for p in game["round"]["players"] if p["id"] == non_active_player["id"]
-    )
-    assert "prepassed" in non_active_player and non_active_player["prepassed"]
 
     # rescind prepass
-    resp = client.post(
-        f"/players/{non_active_player['id']}/games/{game['id']}/act",
-        json={"type": "UNPASS"},
-        headers={"authorization": f"Bearer {non_active_player['id']}"},
+    resp = client.delete(
+        f"/players/{DEFAULT_ID}/games/{game['id']}/queued-action",
+        headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
     game = resp.json()
-    non_active_player = next(
-        p for p in game["round"]["players"] if p["id"] == non_active_player["id"]
-    )
-    assert "prepassed" in non_active_player and not non_active_player["prepassed"]
+    player = next(p for p in game["players"] if p["id"] == DEFAULT_ID)
+    assert "queued_action" in player and player["queued_action"] is None
 
 
 def test_leave_playing_game_as_organizer(client: TestClient):

@@ -146,20 +146,28 @@ class Game(BaseGame):
     @override
     def leave(self, player_id: str) -> None:
         """Automate a player (used when leaving an active game)"""
-
-        original_player = self.ordered_players.find_or_throw(player_id)
-
-        if original_player == self.organizer:
-            self.organizer = NaiveCpu(original_player.id)
-        else:
-            self.players[self.players.index(original_player)] = NaiveCpu(
-                original_player.id
-            )
-        self._game = self._initialize_game(self.moves)
+        self._update_game_player(NaiveCpu(player_id))
 
     def act(self, action: Action) -> None:
         """Perform a game action"""
         self._game.act(action)
+
+    def queue_action_for(self, player_id: str, action: Optional[Action]) -> None:
+        """Queue an action for a player"""
+        self._update_game_player(
+            self.ordered_players.find_or_throw(player_id).queue_action(action)
+        )
+
+    def _update_game_player(self, new_player: PlayerInGame):
+        """Update a game player and re-initialize the engine with that player"""
+        original_player = self.ordered_players.find_or_throw(new_player.id)
+
+        if original_player == self.organizer:
+            self.organizer = new_player
+        else:
+            self.players[self.players.index(original_player)] = new_player
+
+        self._game = self._initialize_game(self.moves)
 
     def game_state_for(self, player_id: str) -> GameState:
         """Return the game state known for a particular player"""

@@ -63,18 +63,44 @@ async def suggestion(player_id: str, game_id: PydanticObjectId):
     """Ask for a suggestion in a 110 game"""
     game = await GameService.get(game_id)
 
-    return serialize.suggestion(
+    return serialize.action(
         NaiveAutomatedPlayer(player_id).act(game.game_state_for(player_id))
     )
 
 
 @router.post("/{game_id}/act", response_model=GameResponse)
 async def act(player_id: str, game_id: PydanticObjectId, body: ActRequest):
-    """Bid in a 110 game"""
+    """Act in a 110 game"""
     game = await GameService.get(game_id)
     initial_event_knowledge = len(game.events)
 
     game.act(deserialize.action(player_id, body))
+
+    await GameService.save(game)
+
+    return serialize.game(game, player_id, initial_event_knowledge)
+
+
+@router.post("/{game_id}/queued-action", response_model=GameResponse)
+async def queued_action(player_id: str, game_id: PydanticObjectId, body: ActRequest):
+    """Queue an action in a 110 game"""
+    game = await GameService.get(game_id)
+    initial_event_knowledge = len(game.events)
+
+    game.queue_action_for(player_id, deserialize.action(player_id, body))
+
+    await GameService.save(game)
+
+    return serialize.game(game, player_id, initial_event_knowledge)
+
+
+@router.delete("/{game_id}/queued-action", response_model=GameResponse)
+async def remove_queued_action(player_id: str, game_id: PydanticObjectId):
+    """Queue an action in a 110 game"""
+    game = await GameService.get(game_id)
+    initial_event_knowledge = len(game.events)
+
+    game.queue_action_for(player_id, None)
 
     await GameService.save(game)
 

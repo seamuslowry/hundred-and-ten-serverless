@@ -11,3 +11,7 @@ class AuthorizationError(Exception):
 
 class NotFoundError(Exception):
     """Raised when a request requests a resource that cannot be found (404)"""
+
+
+class BadRequestException(Exception):
+    """Raised when a request is incorrect (400)"""

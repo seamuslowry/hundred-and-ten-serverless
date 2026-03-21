@@ -81,3 +81,41 @@ def get_suggestion(test_client: TestClient, game_id: str) -> dict[str, Any]:
     """get the suggestion for the game"""
     resp = request_suggestion(test_client, game_id)
     return resp.json()
+
+
+def game_with_manual_player(test_client: TestClient) -> tuple[dict[str, Any], str]:
+    """Start a game with a manual player who has joined.
+
+    Returns a tuple of (started_game, manual_player_id).
+    The manual player can then take actions while DEFAULT_ID queues actions.
+    """
+    lobby = lobby_game(test_client)
+    organizer = lobby["organizer"]["id"]
+    manual_player = "manual-player"
+
+    test_client.post(
+        f"/players/{manual_player}/lobbies/{lobby['id']}/join",
+        headers={"authorization": f"Bearer {manual_player}"},
+    )
+    resp = test_client.post(
+        f"/players/{organizer}/lobbies/{lobby['id']}/start",
+        headers={"authorization": f"Bearer {organizer}"},
+    )
+    return resp.json(), manual_player
+
+
+def queue_action(
+    test_client: TestClient, game_id: str, player_id: str, action: dict[str, Any]
+) -> dict[str, Any]:
+    """Queue an action and return the response."""
+    resp = test_client.post(
+        f"/players/{player_id}/games/{game_id}/queued-action",
+        json=action,
+        headers={"authorization": f"Bearer {player_id}"},
+    )
+    queued_player = next(p for p in resp.json()["players"] if p["id"] == player_id)
+    assert "queued_action" in queued_player and queued_player["queued_action"] == {
+        **action,
+        "player_id": DEFAULT_ID,
+    }
+    return resp.json()
