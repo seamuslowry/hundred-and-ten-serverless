@@ -6,11 +6,11 @@ from src.main.models.internal import BidAmount, RoundStatus
 from src.tests.helpers import (
     DEFAULT_ID,
     game_with_manual_player,
+    get_game,
     get_suggestion,
     lobby_game,
     queue_action,
     started_game,
-    get_game,
 )
 
 
@@ -31,11 +31,14 @@ def test_perform_round_actions(client: TestClient):
     ).json()
 
     # assert bid event in results
-    assert {"type": "BID", "player_id": DEFAULT_ID,
-            "amount": BidAmount.SHOOT_THE_MOON} in results
+    assert {
+        "type": "BID",
+        "player_id": DEFAULT_ID,
+        "amount": BidAmount.SHOOT_THE_MOON,
+    } in results
 
     # assert that now in trump selection
-    game = get_game(client, created_game['id'], DEFAULT_ID)
+    game = get_game(client, created_game["id"], DEFAULT_ID)
     assert RoundStatus.TRUMP_SELECTION.name == game["status"]
 
     # assert that current suggestion is a trump selection
@@ -50,10 +53,13 @@ def test_perform_round_actions(client: TestClient):
     ).json()
 
     # assert trump selection event in results
-    assert {"type": "SELECT_TRUMP", "player_id": DEFAULT_ID,
-            "suit": suggested_trump["suit"]} in results
+    assert {
+        "type": "SELECT_TRUMP",
+        "player_id": DEFAULT_ID,
+        "suit": suggested_trump["suit"],
+    } in results
 
-    game = get_game(client, created_game['id'], DEFAULT_ID)
+    game = get_game(client, created_game["id"], DEFAULT_ID)
     assert RoundStatus.DISCARD.name == game["status"]
 
     # assert that current suggestion is a discard
@@ -68,11 +74,14 @@ def test_perform_round_actions(client: TestClient):
     ).json()
 
     # assert discard and trick start event in results
-    assert {"type": "DISCARD", "player_id": DEFAULT_ID,
-            "discards": suggested_discard["cards"]} in results
+    assert {
+        "type": "DISCARD",
+        "player_id": DEFAULT_ID,
+        "discards": suggested_discard["cards"],
+    } in results
     assert {"type": "TRICK_START"} in results
 
-    game = get_game(client, created_game['id'], DEFAULT_ID)
+    game = get_game(client, created_game["id"], DEFAULT_ID)
     assert RoundStatus.TRICKS.name == game["status"]
 
     # ask for a suggestion so we know what card we can play
@@ -85,10 +94,13 @@ def test_perform_round_actions(client: TestClient):
         json={"type": "PLAY", "card": suggested_play["card"]},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     ).json()
-    assert {"type": "PLAY", "player_id": DEFAULT_ID,
-            "card": suggested_play["card"]} in results
+    assert {
+        "type": "PLAY",
+        "player_id": DEFAULT_ID,
+        "card": suggested_play["card"],
+    } in results
 
-    game = get_game(client, created_game['id'], DEFAULT_ID)
+    game = get_game(client, created_game["id"], DEFAULT_ID)
     assert RoundStatus.TRICKS.name == game["status"]
     assert 2 == len(game["round"]["tricks"])
 
@@ -165,9 +177,10 @@ def test_leave_playing_game_as_player(client: TestClient):
         f"/players/{non_organizer_player['id']}/games/{game['id']}/leave",
         headers={"authorization": f"Bearer {non_organizer_player['id']}"},
     ).json()
-    assert any(r['player_id'] == non_organizer_player['id']
-               for r in results)  # leaving makes them take a turn
-    game = get_game(client, game['id'], non_organizer_player['id'])
+    assert any(
+        r["player_id"] == non_organizer_player["id"] for r in results
+    )  # leaving makes them take a turn
+    game = get_game(client, game["id"], non_organizer_player["id"])
     non_organizer_player = next(
         p for p in game["players"] if p["id"] == non_organizer_player["id"]
     )

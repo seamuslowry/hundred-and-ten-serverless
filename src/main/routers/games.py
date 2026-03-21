@@ -14,10 +14,10 @@ from src.main.models.client.requests import (
 )
 from src.main.models.client.responses import (
     CompletedGame,
+    GameEvent,
     Player,
     StartedGame,
     SuggestionResponse,
-    GameEvent,
 )
 from src.main.models.internal import (
     NaiveAutomatedPlayer,

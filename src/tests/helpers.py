@@ -65,7 +65,7 @@ def completed_game(test_client: TestClient) -> dict[str, Any]:
         headers={"authorization": f"Bearer {active_player['id']}"},
     )
     assert len(resp.json()) > 0
-    return get_game(test_client, game['id'], active_player['id'])
+    return get_game(test_client, game["id"], active_player["id"])
 
 
 def request_suggestion(
@@ -126,4 +126,5 @@ def get_game(test_client: TestClient, game_id: str, player_id: str) -> dict[str,
     """Get a game as the given player"""
     return test_client.get(
         f"/players/{player_id}/games/{game_id}",
-        headers={"authorization": f"Bearer {player_id}"}).json()
+        headers={"authorization": f"Bearer {player_id}"},
+    ).json()
