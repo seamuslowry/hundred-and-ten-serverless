@@ -46,9 +46,10 @@ class PlayerInGame(ABC):
 @dataclass
 class Human(PlayerInGame):
     """A human; represents a real user that will provide input"""
+    stored_action: Optional[actions.Action] = None
 
     def as_engine_player(self) -> player.Player:
-        return StoredActionPlayer(self.id)
+        return StoredActionPlayer(self.id, self.stored_action)
 
 
 @dataclass
