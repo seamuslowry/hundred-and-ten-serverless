@@ -5,39 +5,23 @@ from fastapi.testclient import TestClient
 from src.main.models.internal import BidAmount
 from src.tests.helpers import (
     DEFAULT_ID,
-    lobby_game,
+    game_with_manual_player,
+    queue_action,
     started_game,
 )
 
 
 def test_queue_bid_action(client: TestClient):
     """A non-active player can queue a bid"""
-    lobby = lobby_game(client)
-
-    manual_player = "manual-player"
-
-    client.post(
-        f"/players/{manual_player}/lobbies/{lobby['id']}/join",
-        headers={"authorization": f"Bearer {manual_player}"},
-    )
-    game = client.post(
-        f"/players/{DEFAULT_ID}/lobbies/{lobby['id']}/start",
-        headers={"authorization": f"Bearer {DEFAULT_ID}"},
-    ).json()
+    game, manual_player = game_with_manual_player(client)
 
     # pre-bid on dealer; ensure take bid
-    resp = client.post(
-        f"/players/{DEFAULT_ID}/games/{game['id']}/queued-action",
-        json={"type": "BID", "amount": BidAmount.SHOOT_THE_MOON},
-        headers={"authorization": f"Bearer {DEFAULT_ID}"},
+    game = queue_action(
+        client,
+        game["id"],
+        DEFAULT_ID,
+        {"type": "BID", "amount": BidAmount.SHOOT_THE_MOON},
     )
-    game = resp.json()
-    player = next(p for p in game["players"] if p["id"] == DEFAULT_ID)
-    assert "queued_action" in player and player["queued_action"] == {
-        "type": "BID",
-        "amount": BidAmount.SHOOT_THE_MOON,
-        "player_id": DEFAULT_ID,
-    }
     assert game["round"]["active_player"]["id"] == manual_player
 
     # bid as manual player
@@ -60,32 +44,12 @@ def test_queue_bid_action(client: TestClient):
 
 def test_queue_pass_action(client: TestClient):
     """A non-active player can queue a bid"""
-    lobby = lobby_game(client)
-
-    manual_player = "manual-player"
-
-    client.post(
-        f"/players/{manual_player}/lobbies/{lobby['id']}/join",
-        headers={"authorization": f"Bearer {manual_player}"},
-    )
-    game = client.post(
-        f"/players/{DEFAULT_ID}/lobbies/{lobby['id']}/start",
-        headers={"authorization": f"Bearer {DEFAULT_ID}"},
-    ).json()
+    game, manual_player = game_with_manual_player(client)
 
     # pre-pass on dealer
-    resp = client.post(
-        f"/players/{DEFAULT_ID}/games/{game['id']}/queued-action",
-        json={"type": "BID", "amount": BidAmount.PASS},
-        headers={"authorization": f"Bearer {DEFAULT_ID}"},
+    game = queue_action(
+        client, game["id"], DEFAULT_ID, {"type": "BID", "amount": BidAmount.PASS}
     )
-    game = resp.json()
-    player = next(p for p in game["players"] if p["id"] == DEFAULT_ID)
-    assert "queued_action" in player and player["queued_action"] == {
-        "type": "BID",
-        "amount": BidAmount.PASS,
-        "player_id": DEFAULT_ID,
-    }
     assert game["round"]["active_player"]["id"] == manual_player
 
     # bid as manual player
