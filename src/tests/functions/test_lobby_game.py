@@ -383,7 +383,7 @@ def test_kick_player_as_organizer(client: TestClient):
         json={"type": "KICK", "player_id": player},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     ).json()
-    assert not any(p['id'] == player for p in lobby['players'])
+    assert not any(p["id"] == player for p in lobby["players"])
 
 
 def test_kick_player_as_player(client: TestClient):
