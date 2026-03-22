@@ -152,7 +152,8 @@ def test_lobby_players(client: TestClient):
 
     for p in other_players:
         client.post(
-            f"/players/{p['id']}/lobbies/{original_lobby['id']}/join",
+            f"/players/{p['id']}/lobbies/{original_lobby['id']}/players",
+            json={"type": "JOIN"},
             headers={"authorization": f"Bearer {p['id']}"},
         )
 
