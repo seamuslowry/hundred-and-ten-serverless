@@ -17,7 +17,7 @@ http_bearer = HTTPBearer(
 )
 
 
-def get_identity(
+def get_authenticated_identity(
     credentials: HTTPAuthorizationCredentials = Depends(http_bearer),
 ) -> Identity:
     """Validate the Bearer token and return the authenticated identity"""
@@ -27,8 +27,8 @@ def get_identity(
         raise AuthenticationError(str(exc)) from exc
 
 
-def get_authorized_identity(
-    player_id: str = Path(), identity: Identity = Depends(get_identity)
+def get_authorized_identity_for_path_player(
+    player_id: str = Path(), identity: Identity = Depends(get_authenticated_identity)
 ):
     """Retrieve the authenticated identity and authorize it for the path"""
     if identity.id != player_id:

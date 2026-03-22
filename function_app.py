@@ -8,7 +8,10 @@ import azure.functions as func
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from src.main.auth import get_authorized_identity
+from src.main.auth import (
+    get_authenticated_identity,
+    get_authorized_identity_for_path_player,
+)
 from src.main.models.db.setup import initialize_odm
 from src.main.models.internal import (
     HundredAndTenError,
@@ -39,7 +42,7 @@ async def lifespan(_: FastAPI):
 
 
 fastapi_app = FastAPI(
-    dependencies=[Depends(get_authorized_identity)], lifespan=lifespan
+    dependencies=[Depends(get_authenticated_identity)], lifespan=lifespan
 )
 
 
@@ -93,8 +96,12 @@ async def value_error_handler(_: Request, exc: ValueError) -> JSONResponse:
 # =============================================================================
 
 fastapi_app.include_router(players)
-fastapi_app.include_router(lobbies)
-fastapi_app.include_router(games)
+fastapi_app.include_router(
+    lobbies, dependencies=[Depends(get_authorized_identity_for_path_player)]
+)
+fastapi_app.include_router(
+    games, dependencies=[Depends(get_authorized_identity_for_path_player)]
+)
 
 # =============================================================================
 # Azure Functions ASGI wrapper

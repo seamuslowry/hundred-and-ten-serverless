@@ -34,7 +34,8 @@ class PlayerService:
             map(
                 deserialize.player,
                 await DbPlayer.find(
-                    RegEx(DbPlayer.name, search_request.search_text, "i"), with_children=True
+                    RegEx(DbPlayer.name, search_request.search_text, "i"),
+                    with_children=True,
                 )
                 .limit(MAX)
                 .to_list(),

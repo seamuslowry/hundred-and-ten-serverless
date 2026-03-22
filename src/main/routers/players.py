@@ -4,7 +4,7 @@ The router for player operations.
 
 from fastapi import APIRouter, Depends
 
-from src.main.auth import Identity, get_authorized_identity
+from src.main.auth import Identity, get_authorized_identity_for_path_player
 from src.main.mappers.client import serialize
 from src.main.models.client.requests import SearchPlayersRequest
 from src.main.models.client.responses import Player
@@ -26,7 +26,9 @@ async def search_players(
 
 
 @router.put("", response_model=Player)
-async def refresh(identity: Identity = Depends(get_authorized_identity)):
+async def refresh(
+    identity: Identity = Depends(get_authorized_identity_for_path_player),
+):
     """Save the authenticated principal as a player in the DB"""
     return serialize.player(
         await PlayerService.save(
