@@ -205,7 +205,7 @@ def test_get_player(client: TestClient):
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
     retrieved_player = resp.json()
-    assert retrieved_player['id'] == p['id']
+    assert retrieved_player["id"] == p["id"]
 
 
 def test_get_nonexistent_player(client: TestClient):

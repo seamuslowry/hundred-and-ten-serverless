@@ -45,7 +45,9 @@ class PlayerService:
     @staticmethod
     async def by_player_id(player_id: str) -> Player:
         """Retrieve the player with the player ID provided"""
-        result = await DbPlayer.find_one(DbPlayer.player_id == player_id, with_children=True)
+        result = await DbPlayer.find_one(
+            DbPlayer.player_id == player_id, with_children=True
+        )
         if not result:
             raise NotFoundError(f"No player found with id {player_id}")
 
