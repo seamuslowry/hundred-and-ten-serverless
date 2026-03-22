@@ -12,7 +12,7 @@ from src.main.models.internal import Player as InternalPlayer
 from src.main.services import PlayerService
 
 router = APIRouter(
-    prefix="/players/{player_id}",
+    prefix="/players",
     tags=["Players"],
 )
 
@@ -25,7 +25,7 @@ async def search_players(
     return [serialize.player(u) for u in await PlayerService.search(body)]
 
 
-@router.put("", response_model=Player)
+@router.put("/{player_id}", response_model=Player)
 async def refresh(
     identity: Identity = Depends(get_authorized_identity_for_path_player),
 ):
