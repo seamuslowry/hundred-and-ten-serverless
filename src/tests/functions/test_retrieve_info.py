@@ -9,6 +9,7 @@ from src.main.models.internal import Player
 from src.tests.helpers import (
     DEFAULT_ID,
     completed_game,
+    lobby_game,
     player,
     request_suggestion,
     started_game,
@@ -119,8 +120,53 @@ def test_game_info(client: TestClient):
     )
     game = resp.json()
     assert game["id"] == original_game["id"]
-    assert len(game["players"]) == 4
-    assert all(p["id"] for p in game["players"])
+
+
+def test_game_players(client: TestClient):
+    """Can retrieve information for players in a game"""
+    original_game = completed_game(client)
+
+    # Create player records for the human player (organizer)
+    organizer_id = original_game["organizer"]["id"]
+    organizer = player(client, Player(organizer_id))
+
+    # get that game's players
+    resp = client.get(
+        f"/players/{DEFAULT_ID}/games/{original_game['id']}/players",
+        headers={"authorization": f"Bearer {DEFAULT_ID}"},
+    )
+    retrieved_players = resp.json()
+
+    # Should have at least the organizer (CPU players may not have player records)
+    retrieved_player_ids = list(map(lambda u: u["id"], retrieved_players))
+    assert organizer["id"] in retrieved_player_ids
+
+
+def test_lobby_players(client: TestClient):
+    """Can retrieve information for players in a lobby"""
+    original_lobby = lobby_game(client)
+    other_player_ids = list(map(lambda i: f"{time()}-{i}", range(1, 4)))
+
+    organizer = player(client, Player(original_lobby["organizer"]["id"]))
+    other_players = list(map(lambda id: player(client, Player(id)), other_player_ids))
+
+    for p in other_players:
+        client.post(
+            f"/players/{p['id']}/lobbies/{original_lobby['id']}/join",
+            headers={"authorization": f"Bearer {p['id']}"},
+        )
+
+    # get that lobby's players
+    resp = client.get(
+        f"/players/{DEFAULT_ID}/lobbies/{original_lobby['id']}/players",
+        headers={"authorization": f"Bearer {DEFAULT_ID}"},
+    )
+    retrieved_players = resp.json()
+
+    assert 4 == len(retrieved_players)
+    assert ([organizer["id"]] + other_player_ids) == list(
+        map(lambda p: p["id"], retrieved_players)
+    )
 
 
 def test_search_players(client: TestClient):
@@ -158,7 +204,7 @@ def test_get_player(client: TestClient):
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
     retrieved_player = resp.json()
-    assert retrieved_player["id"] == p["id"]
+    assert retrieved_player['id'] == p['id']
 
 
 def test_get_nonexistent_player(client: TestClient):

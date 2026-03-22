@@ -17,7 +17,7 @@ from src.main.models.client.requests import (
     LobbyPlayerRequest,
     SearchLobbiesRequest,
 )
-from src.main.models.client.responses import Event, WaitingGame
+from src.main.models.client.responses import Event, Player, WaitingGame
 from src.main.models.internal import (
     Accessibility,
     Human,
@@ -26,7 +26,7 @@ from src.main.models.internal import (
     NaiveCpu,
 )
 from src.main.models.internal.errors import AuthorizationError, BadRequestError
-from src.main.services import LobbyService
+from src.main.services import LobbyService, PlayerService
 
 MIN_PLAYERS = 4
 
@@ -43,6 +43,16 @@ async def lobby_info(lobby_id: PydanticObjectId):
     lobby = await LobbyService.get(lobby_id)
 
     return serialize.lobby(lobby)
+
+
+@router.get("/{lobby_id}/players", response_model=list[Player])
+async def lobby_players(lobby_id: PydanticObjectId):
+    """Retrieve players in a 110 lobby."""
+    lobby = await LobbyService.get(lobby_id)
+
+    people_ids = [p.id for p in lobby.ordered_players]
+
+    return [serialize.player(u) for u in await PlayerService.by_player_ids(people_ids)]
 
 
 @router.post("/search", response_model=list[WaitingGame])

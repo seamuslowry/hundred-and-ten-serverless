@@ -1,6 +1,6 @@
 """Facilitate interaction with the player DB"""
 
-from beanie.operators import RegEx
+from beanie.operators import In, RegEx
 
 from src.main.mappers.db import deserialize, serialize
 from src.main.models.client.requests import SearchPlayersRequest
@@ -45,10 +45,20 @@ class PlayerService:
     @staticmethod
     async def by_player_id(player_id: str) -> Player:
         """Retrieve the player with the player ID provided"""
-        result = await DbPlayer.find_one(
-            DbPlayer.player_id == player_id, with_children=True
-        )
+        result = await DbPlayer.find_one(DbPlayer.player_id == player_id, with_children=True)
         if not result:
             raise NotFoundError(f"No player found with id {player_id}")
 
         return deserialize.player(result)
+
+    @staticmethod
+    async def by_player_ids(player_ids: list[str]) -> list[Player]:
+        """Retrieve the players with the player IDs in the list provided"""
+        return list(
+            map(
+                deserialize.player,
+                await DbPlayer.find(
+                    In(DbPlayer.player_id, player_ids), with_children=True
+                ).to_list(),
+            )
+        )
