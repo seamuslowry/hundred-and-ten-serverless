@@ -183,7 +183,7 @@ def test_search_players(client: TestClient):
 
     # get players
     resp = client.post(
-        "/players/search",
+        f"/players/{DEFAULT_ID}/search",
         json={"searchText": "aaa"},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
@@ -202,7 +202,7 @@ def test_get_player(client: TestClient):
     # get player
     resp = client.get(
         f"/players/{p['id']}",
-        headers={"authorization": f"Bearer {DEFAULT_ID}"},
+        headers={"authorization": f"Bearer {p['id']}"},
     )
     retrieved_player = resp.json()
     assert retrieved_player["id"] == p["id"]
@@ -213,7 +213,7 @@ def test_get_nonexistent_player(client: TestClient):
     # get players
     resp = client.get(
         "/players/nonsense",
-        headers={"authorization": f"Bearer {DEFAULT_ID}"},
+        headers={"authorization": "Bearer nonsense"},
     )
     assert 404 == resp.status_code
 

@@ -12,12 +12,12 @@ from src.main.models.internal import Player as InternalPlayer
 from src.main.services import PlayerService
 
 router = APIRouter(
-    prefix="/players",
+    prefix="/players/{player_id}",
     tags=["Players"],
 )
 
 
-@router.get("/{player_id}", response_model=Player)
+@router.get("", response_model=Player)
 async def get_player(
     player_id: str,
 ):
@@ -25,7 +25,7 @@ async def get_player(
     return serialize.player(await PlayerService.by_player_id(player_id))
 
 
-@router.put("/{player_id}", response_model=Player)
+@router.put("", response_model=Player)
 async def refresh(
     identity: Identity = Depends(get_authorized_identity_for_path_player),
 ):
