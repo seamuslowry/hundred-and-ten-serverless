@@ -48,7 +48,7 @@ def test_create_lobby(client: TestClient):
     """New lobby can be created"""
     organizer = "organizer"
     resp = client.post(
-        f"/players/{organizer}/lobbies/create",
+        f"/players/{organizer}/lobbies",
         json={"name": "create test"},
         headers={"authorization": f"Bearer {organizer}"},
     )
@@ -162,7 +162,7 @@ def test_join_private_lobby_uninvited(client: TestClient):
     player = "player"
 
     resp = client.post(
-        f"/players/{organizer}/lobbies/create",
+        f"/players/{organizer}/lobbies",
         json={"name": "private uninvited join test", "accessibility": "PRIVATE"},
         headers={"authorization": f"Bearer {organizer}"},
     )
@@ -182,7 +182,7 @@ def test_join_private_lobby_invited(client: TestClient):
     player = "player"
 
     resp = client.post(
-        f"/players/{organizer}/lobbies/create",
+        f"/players/{organizer}/lobbies",
         json={"name": "private invite join test", "accessibility": "PRIVATE"},
         headers={"authorization": f"Bearer {organizer}"},
     )

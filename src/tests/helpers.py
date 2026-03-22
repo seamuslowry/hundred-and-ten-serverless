@@ -16,7 +16,7 @@ def lobby_game(
 ) -> dict[str, Any]:
     """Get a lobby waiting for the players"""
     resp = test_client.post(
-        f"/players/{organizer}/lobbies/create",
+        f"/players/{organizer}/lobbies",
         json={"name": name},
         headers={"authorization": f"Bearer {organizer}"},
     )

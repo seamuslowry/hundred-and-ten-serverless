@@ -57,7 +57,7 @@ async def search_lobbies(player_id: str, body: SearchLobbiesRequest):
     ]
 
 
-@router.post("/create", response_model=WaitingGame)
+@router.post("", response_model=WaitingGame)
 async def create_lobby(player_id: str, body: CreateLobbyRequest):
     """Create a new 110 lobby."""
     logging.info("Initiating create lobby request.")
