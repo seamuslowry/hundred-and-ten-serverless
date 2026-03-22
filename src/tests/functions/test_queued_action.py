@@ -109,7 +109,7 @@ def test_queue_multiple_actions(client: TestClient):
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
     hand = hand_resp.json()["round"]["players"][0]["hand"]
-    card = next(c for c in hand if c['suit'] != 'JOKER')
+    card = next(c for c in hand if c["suit"] != "JOKER")
 
     # queue actions
     # dealer takes the bid to ensure we go into tricks
@@ -124,7 +124,7 @@ def test_queue_multiple_actions(client: TestClient):
         client,
         game["id"],
         DEFAULT_ID,
-        {"type": "SELECT_TRUMP", "suit": card['suit']},
+        {"type": "SELECT_TRUMP", "suit": card["suit"]},
     )
     # dealer discards none
     queue_action(client, game["id"], DEFAULT_ID, {"type": "DISCARD", "cards": []})
