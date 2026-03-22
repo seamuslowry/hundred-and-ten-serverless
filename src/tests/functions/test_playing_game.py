@@ -2,12 +2,12 @@
 
 from fastapi.testclient import TestClient
 
-from src.main.models.internal import BidAmount, RoundStatus, SelectableSuit
+from src.main.models.internal import BidAmount, RoundStatus
 from src.tests.helpers import (
     DEFAULT_ID,
     game_with_manual_player,
+    get_game,
     get_suggestion,
-    lobby_game,
     queue_action,
     started_game,
 )
@@ -28,8 +28,17 @@ def test_perform_round_actions(client: TestClient):
         json={"type": "BID", "amount": BidAmount.SHOOT_THE_MOON},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
-    game = resp.json()
+    results = resp.json()
 
+    # assert bid event in results
+    assert {
+        "type": "BID",
+        "player_id": DEFAULT_ID,
+        "amount": BidAmount.SHOOT_THE_MOON,
+    } in results
+
+    # assert that now in trump selection
+    game = get_game(client, created_game["id"], DEFAULT_ID)
     assert RoundStatus.TRUMP_SELECTION.name == game["status"]
 
     # assert that current suggestion is a trump selection
@@ -37,13 +46,20 @@ def test_perform_round_actions(client: TestClient):
     assert "suit" in suggested_trump
 
     # select trump
-    resp = client.post(
+    results = client.post(
         f"/players/{DEFAULT_ID}/games/{created_game['id']}/act",
-        json={"type": "SELECT_TRUMP", "suit": SelectableSuit.CLUBS.name},
+        json={"type": "SELECT_TRUMP", "suit": suggested_trump["suit"]},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
-    )
-    game = resp.json()
+    ).json()
 
+    # assert trump selection event in results
+    assert {
+        "type": "SELECT_TRUMP",
+        "player_id": DEFAULT_ID,
+        "suit": suggested_trump["suit"],
+    } in results
+
+    game = get_game(client, created_game["id"], DEFAULT_ID)
     assert RoundStatus.DISCARD.name == game["status"]
 
     # assert that current suggestion is a discard
@@ -51,13 +67,21 @@ def test_perform_round_actions(client: TestClient):
     assert "discards" in suggested_discard
 
     # discard
-    resp = client.post(
+    results = client.post(
         f"/players/{DEFAULT_ID}/games/{created_game['id']}/act",
-        json={"type": "DISCARD", "cards": []},
+        json={"type": "DISCARD", "cards": suggested_discard["discards"]},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
-    )
-    game = resp.json()
+    ).json()
 
+    # assert discard and trick start event in results
+    assert {
+        "type": "DISCARD",
+        "player_id": DEFAULT_ID,
+        "discards": suggested_discard["discards"],
+    } in results
+    assert {"type": "TRICK_START"} in results
+
+    game = get_game(client, created_game["id"], DEFAULT_ID)
     assert RoundStatus.TRICKS.name == game["status"]
 
     # ask for a suggestion so we know what card we can play
@@ -65,13 +89,18 @@ def test_perform_round_actions(client: TestClient):
     assert "card" in suggested_play
 
     # play
-    resp = client.post(
+    results = client.post(
         f"/players/{DEFAULT_ID}/games/{created_game['id']}/act",
         json={"type": "PLAY", "card": suggested_play["card"]},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
-    )
-    game = resp.json()
+    ).json()
+    assert {
+        "type": "PLAY",
+        "player_id": DEFAULT_ID,
+        "card": suggested_play["card"],
+    } in results
 
+    game = get_game(client, created_game["id"], DEFAULT_ID)
     assert RoundStatus.TRICKS.name == game["status"]
     assert 2 == len(game["round"]["tricks"])
 
@@ -81,16 +110,17 @@ def test_prepass_and_rescind_prepass(client: TestClient):
     game, _ = game_with_manual_player(client)
 
     # prepass
-    game = queue_action(
+    queue_action(
         client, game["id"], DEFAULT_ID, {"type": "BID", "amount": BidAmount.PASS}
     )
 
     # rescind prepass
-    resp = client.delete(
+    results = client.delete(
         f"/players/{DEFAULT_ID}/games/{game['id']}/queued-action",
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
-    )
-    game = resp.json()
+    ).json()
+    assert len(results) == 0  # removing a queued action has no results
+    game = get_game(client, game["id"], DEFAULT_ID)
     player = next(p for p in game["players"] if p["id"] == DEFAULT_ID)
     assert "queued_action" in player and player["queued_action"] is None
 
@@ -106,11 +136,15 @@ def test_leave_playing_game_as_organizer(client: TestClient):
     assert not active_player["automate"]
 
     # leave
-    resp = client.post(
-        f"/players/{DEFAULT_ID}/games/{original_game['id']}/leave",
+    results = client.post(
+        f"/players/{active_player["id"]}/games/{original_game['id']}/leave",
         headers={"authorization": f"Bearer {active_player['id']}"},
-    )
-    game = resp.json()
+    ).json()
+
+    # automates the organizer and ends the game
+    assert any(r["type"] == "GAME_END" for r in results)
+
+    game = get_game(client, original_game["id"], active_player["id"])
     active_player = next(p for p in game["players"] if p["id"] == active_player["id"])
 
     assert active_player["automate"]
@@ -118,35 +152,22 @@ def test_leave_playing_game_as_organizer(client: TestClient):
 
 def test_leave_playing_game_as_player(client: TestClient):
     """A player can leave an active game by automating themselves"""
-    lobby = lobby_game(client)
-    player = "player"
-
-    # join as player
-    client.post(
-        f"/players/{player}/lobbies/{lobby['id']}/join",
-        headers={"authorization": f"Bearer {player}"},
-    )
-
-    # start the game
-    resp = client.post(
-        f"/players/{lobby['organizer']['id']}/lobbies/{lobby['id']}/start",
-        headers={"authorization": f"Bearer {lobby['organizer']['id']}"},
-    )
-
-    game = resp.json()
-
-    non_active_player = next(p for p in game["players"] if p["id"] == player)
-    assert non_active_player
-    assert not non_active_player["automate"]
+    game, player = game_with_manual_player(client)
+    non_organizer_player = next(p for p in game["players"] if p["id"] == player)
+    assert non_organizer_player
+    assert not non_organizer_player["automate"]
 
     # leave
-    resp = client.post(
-        f"/players/{non_active_player['id']}/games/{game['id']}/leave",
-        headers={"authorization": f"Bearer {non_active_player['id']}"},
-    )
-    game = resp.json()
-    non_active_player = next(
-        p for p in game["players"] if p["id"] == non_active_player["id"]
+    results = client.post(
+        f"/players/{non_organizer_player['id']}/games/{game['id']}/leave",
+        headers={"authorization": f"Bearer {non_organizer_player['id']}"},
+    ).json()
+    assert any(
+        r["player_id"] == non_organizer_player["id"] for r in results
+    )  # leaving makes them take a turn
+    game = get_game(client, game["id"], non_organizer_player["id"])
+    non_organizer_player = next(
+        p for p in game["players"] if p["id"] == non_organizer_player["id"]
     )
 
-    assert non_active_player["automate"]
+    assert non_organizer_player["automate"]

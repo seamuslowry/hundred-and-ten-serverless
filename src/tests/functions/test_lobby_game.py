@@ -6,7 +6,7 @@ from beanie import PydanticObjectId
 from fastapi.testclient import TestClient
 
 from src.main.models.internal import GameStatus, RoundStatus
-from src.tests.helpers import lobby_game
+from src.tests.helpers import get_game, lobby_game
 
 
 def test_lobby_info_not_an_object_id(client: TestClient):
@@ -257,14 +257,15 @@ def test_start_game(client: TestClient):
     lobby = lobby_game(client)
     organizer = lobby["organizer"]["id"]
 
-    resp = client.post(
+    results = client.post(
         f"/players/{organizer}/lobbies/{lobby['id']}/start",
         headers={"authorization": f"Bearer {organizer}"},
-    )
+    ).json()
 
-    game = resp.json()
+    game = get_game(client, lobby["id"], organizer)
 
-    assert lobby["id"] != game["id"]
+    assert {"type": "GAME_START"} in results
+    assert lobby["id"] == game["id"]
     assert 4 == len(game["round"]["players"])
     assert RoundStatus.BIDDING.name == game["status"]
 
