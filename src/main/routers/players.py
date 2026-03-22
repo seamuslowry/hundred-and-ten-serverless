@@ -18,7 +18,7 @@ router = APIRouter(
 )
 
 
-@router.get("/search", response_model=list[Player])
+@router.get("", response_model=list[Player])
 async def search_players(
     search_text: Optional[str] = Query(default="", alias="searchText"),
 ):

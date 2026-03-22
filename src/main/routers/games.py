@@ -51,7 +51,7 @@ async def game_players(game_id: PydanticObjectId):
     return [serialize.player(u) for u in await PlayerService.by_player_ids(people_ids)]
 
 
-@router.post("/search", response_model=list[GameResponse])
+@router.post("", response_model=list[GameResponse])
 async def search_games(player_id: str, body: SearchGamesRequest):
     """Search for games"""
     return [
