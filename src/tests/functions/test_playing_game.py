@@ -24,7 +24,7 @@ def test_perform_round_actions(client: TestClient):
 
     # bid
     resp = client.post(
-        f"/players/{DEFAULT_ID}/games/{created_game['id']}/act",
+        f"/players/{DEFAULT_ID}/games/{created_game['id']}/actions",
         json={"type": "BID", "amount": BidAmount.SHOOT_THE_MOON},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
@@ -47,7 +47,7 @@ def test_perform_round_actions(client: TestClient):
 
     # select trump
     results = client.post(
-        f"/players/{DEFAULT_ID}/games/{created_game['id']}/act",
+        f"/players/{DEFAULT_ID}/games/{created_game['id']}/actions",
         json={"type": "SELECT_TRUMP", "suit": suggested_trump["suit"]},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     ).json()
@@ -68,7 +68,7 @@ def test_perform_round_actions(client: TestClient):
 
     # discard
     results = client.post(
-        f"/players/{DEFAULT_ID}/games/{created_game['id']}/act",
+        f"/players/{DEFAULT_ID}/games/{created_game['id']}/actions",
         json={"type": "DISCARD", "cards": suggested_discard["cards"]},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     ).json()
@@ -90,7 +90,7 @@ def test_perform_round_actions(client: TestClient):
 
     # play
     results = client.post(
-        f"/players/{DEFAULT_ID}/games/{created_game['id']}/act",
+        f"/players/{DEFAULT_ID}/games/{created_game['id']}/actions",
         json={"type": "PLAY", "card": suggested_play["card"]},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     ).json()
@@ -137,7 +137,8 @@ def test_leave_playing_game_as_organizer(client: TestClient):
 
     # leave
     results = client.post(
-        f"/players/{active_player['id']}/games/{original_game['id']}/leave",
+        f"/players/{active_player['id']}/games/{original_game['id']}/players",
+        json={"type": "LEAVE"},
         headers={"authorization": f"Bearer {active_player['id']}"},
     ).json()
 
@@ -159,7 +160,8 @@ def test_leave_playing_game_as_player(client: TestClient):
 
     # leave
     results = client.post(
-        f"/players/{non_organizer_player['id']}/games/{game['id']}/leave",
+        f"/players/{non_organizer_player['id']}/games/{game['id']}/players",
+        json={"type": "LEAVE"},
         headers={"authorization": f"Bearer {non_organizer_player['id']}"},
     ).json()
     assert any(
@@ -171,3 +173,35 @@ def test_leave_playing_game_as_player(client: TestClient):
     )
 
     assert non_organizer_player["automate"]
+
+
+def test_kick_player_as_organizer(client: TestClient):
+    """An organizer can kick a player"""
+    game, non_organizer_player = game_with_manual_player(client)
+
+    # kick
+    results = client.post(
+        f"/players/{DEFAULT_ID}/games/{game['id']}/players",
+        json={"type": "KICK", "player_id": non_organizer_player},
+        headers={"authorization": f"Bearer {DEFAULT_ID}"},
+    ).json()
+    assert any(
+        r["player_id"] == non_organizer_player for r in results
+    )  # leaving makes them take a turn
+    game = get_game(client, game["id"], non_organizer_player)
+    assert next(p for p in game["players"] if p["id"] == non_organizer_player)[
+        "automate"
+    ]
+
+
+def test_kick_player_as_player(client: TestClient):
+    """A player cannot kick another player"""
+    game, non_organizer_player = game_with_manual_player(client)
+
+    # try kick
+    resp = client.post(
+        f"/players/{non_organizer_player}/games/{game['id']}/players",
+        json={"type": "KICK", "player_id": DEFAULT_ID},
+        headers={"authorization": f"Bearer {non_organizer_player}"},
+    )
+    assert 403 == resp.status_code

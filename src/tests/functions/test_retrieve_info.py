@@ -64,7 +64,7 @@ def test_search_game_by_status(client: TestClient):
     assert 0 == len(won_games)
 
     bidding_resp = client.post(
-        f"/players/{p}/games/search",
+        f"/players/{p}/games",
         json={"activePlayer": p, "statuses": ["BIDDING"]},
         headers={"authorization": f"Bearer {p}"},
     )
@@ -152,7 +152,8 @@ def test_lobby_players(client: TestClient):
 
     for p in other_players:
         client.post(
-            f"/players/{p['id']}/lobbies/{original_lobby['id']}/join",
+            f"/players/{p['id']}/lobbies/{original_lobby['id']}/players",
+            json={"type": "JOIN"},
             headers={"authorization": f"Bearer {p['id']}"},
         )
 
@@ -181,9 +182,9 @@ def test_search_players(client: TestClient):
     player(client, player_three)
 
     # get players
-    resp = client.get(
+    resp = client.post(
         f"/players/{DEFAULT_ID}/search",
-        params={"searchText": "aaa"},
+        json={"searchText": "aaa"},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
     retrieved_players = resp.json()
@@ -191,6 +192,30 @@ def test_search_players(client: TestClient):
     assert player_one.player_id in retrieved_player_ids
     assert player_two.player_id in retrieved_player_ids
     assert player_three.player_id not in retrieved_player_ids
+
+
+def test_get_player(client: TestClient):
+    """Can retrieve player information"""
+    # create new unique player
+    p = player(client, Player(f"{time()}retrieve", f"{time()}retrieve"))
+
+    # get player
+    resp = client.get(
+        f"/players/{p['id']}",
+        headers={"authorization": f"Bearer {p['id']}"},
+    )
+    retrieved_player = resp.json()
+    assert retrieved_player["id"] == p["id"]
+
+
+def test_get_nonexistent_player(client: TestClient):
+    """404s on not found player"""
+    # get players
+    resp = client.get(
+        "/players/nonsense",
+        headers={"authorization": "Bearer nonsense"},
+    )
+    assert 404 == resp.status_code
 
 
 def test_get_suggestion_on_other_turn(client: TestClient):

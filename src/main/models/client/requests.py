@@ -61,6 +61,14 @@ class InviteRequest(BaseModel):
     invitees: list[str] = []
 
 
+class SearchPlayersRequest(BaseModel):
+    """Request body for searching players"""
+
+    search_text: str = Field(default="", alias="searchText")
+    offset: int = 0
+    limit: int = 20
+
+
 class SearchLobbiesRequest(BaseModel):
     """Request body for searching lobbies"""
 
@@ -78,3 +86,58 @@ class SearchGamesRequest(BaseModel):
     statuses: Optional[list[str]] = None
     active_player_id: Optional[str] = Field(default=None, alias="activePlayer")
     winner_player_id: Optional[str] = Field(default=None, alias="winner")
+
+
+class GamePlayerLeaveRequest(BaseModel):
+    """Request to leave a game as a player"""
+
+    type: Literal["LEAVE"]
+
+
+class GamePlayerKickRequest(BaseModel):
+    """Request to kick a player from a game"""
+
+    type: Literal["KICK"]
+    player_id: str
+
+
+type GamePlayerRequest = Annotated[
+    Union[GamePlayerLeaveRequest, GamePlayerKickRequest], Field(discriminator="type")
+]
+
+
+class LobbyPlayerLeaveRequest(BaseModel):
+    """Request to leave a lobby as a player"""
+
+    type: Literal["LEAVE"]
+
+
+class LobbyPlayerJoinRequest(BaseModel):
+    """Request to join a lobby as a player"""
+
+    type: Literal["JOIN"]
+
+
+class LobbyPlayerInviteRequest(BaseModel):
+    """Request to invite another player to a lobby"""
+
+    type: Literal["INVITE"]
+    player_id: str
+
+
+class LobbyPlayerKickRequest(BaseModel):
+    """Request to kick a player from a lobby"""
+
+    type: Literal["KICK"]
+    player_id: str
+
+
+type LobbyPlayerRequest = Annotated[
+    Union[
+        LobbyPlayerLeaveRequest,
+        LobbyPlayerJoinRequest,
+        LobbyPlayerInviteRequest,
+        LobbyPlayerKickRequest,
+    ],
+    Field(discriminator="type"),
+]

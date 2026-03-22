@@ -16,7 +16,7 @@ def lobby_game(
 ) -> dict[str, Any]:
     """Get a lobby waiting for the players"""
     resp = test_client.post(
-        f"/players/{organizer}/lobbies/create",
+        f"/players/{organizer}/lobbies",
         json={"name": name},
         headers={"authorization": f"Bearer {organizer}"},
     )
@@ -34,7 +34,7 @@ def player(test_client: TestClient, upsert_player: Player) -> dict[str, Any]:
         ),
     ):
         resp = test_client.put(
-            f"/players/{upsert_player.player_id}/self",
+            f"/players/{upsert_player.player_id}",
             headers={"authorization": f"Bearer {upsert_player.player_id}"},
         )
     return resp.json()
@@ -62,7 +62,8 @@ def completed_game(test_client: TestClient) -> dict[str, Any]:
     assert active_player
 
     resp = test_client.post(
-        f"/players/{active_player['id']}/games/{game['id']}/leave",
+        f"/players/{active_player['id']}/games/{game['id']}/players",
+        json={"type": "LEAVE"},
         headers={"authorization": f"Bearer {active_player['id']}"},
     )
     assert len(resp.json()) > 0
@@ -96,7 +97,8 @@ def game_with_manual_player(test_client: TestClient) -> tuple[dict[str, Any], st
     manual_player = "manual-player"
 
     test_client.post(
-        f"/players/{manual_player}/lobbies/{lobby['id']}/join",
+        f"/players/{manual_player}/lobbies/{lobby['id']}/players",
+        json={"type": "JOIN"},
         headers={"authorization": f"Bearer {manual_player}"},
     )
     resp = test_client.post(

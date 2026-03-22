@@ -8,7 +8,9 @@ import azure.functions as func
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from src.main.auth import get_authorized_identity
+from src.main.auth import (
+    get_authorized_identity_for_path_player,
+)
 from src.main.models.db.setup import initialize_odm
 from src.main.models.internal import (
     HundredAndTenError,
@@ -16,7 +18,7 @@ from src.main.models.internal import (
 from src.main.models.internal.errors import (
     AuthenticationError,
     AuthorizationError,
-    BadRequestException,
+    BadRequestError,
     NotFoundError,
 )
 from src.main.routers import games, lobbies, players
@@ -39,7 +41,7 @@ async def lifespan(_: FastAPI):
 
 
 fastapi_app = FastAPI(
-    dependencies=[Depends(get_authorized_identity)], lifespan=lifespan
+    dependencies=[Depends(get_authorized_identity_for_path_player)], lifespan=lifespan
 )
 
 
@@ -62,7 +64,7 @@ async def not_found_error_handler(_: Request, exc: NotFoundError) -> JSONRespons
     return JSONResponse(status_code=404, content=str(exc))
 
 
-@fastapi_app.exception_handler(BadRequestException)
+@fastapi_app.exception_handler(BadRequestError)
 async def bad_request_error_handler(_: Request, exc: NotFoundError) -> JSONResponse:
     """Return 404 for not found errors"""
     return JSONResponse(status_code=400, content=str(exc))
