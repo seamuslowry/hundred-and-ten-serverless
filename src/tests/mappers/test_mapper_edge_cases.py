@@ -56,6 +56,9 @@ def test_unknown_internal_person_type_error():
         def queue_action(self, action):
             raise NotImplementedError()
 
+        def clear_queued_actions(self):
+            raise NotImplementedError()
+
         def as_engine_player(self):
             raise NotImplementedError()
 

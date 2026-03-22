@@ -112,7 +112,7 @@ def queue_action(
 ) -> dict[str, Any]:
     """Queue an action and return the response."""
     results = test_client.post(
-        f"/players/{player_id}/games/{game_id}/queued-action",
+        f"/players/{player_id}/games/{game_id}/queued-actions",
         json=action,
         headers={"authorization": f"Bearer {player_id}"},
     ).json()
@@ -120,10 +120,12 @@ def queue_action(
     game = get_game(test_client, game_id, player_id)
 
     queued_player = next(p for p in game["players"] if p["id"] == player_id)
-    assert "queued_action" in queued_player and queued_player["queued_action"] == {
+    assert {
         **action,
         "player_id": DEFAULT_ID,
-    }
+    } == queued_player[
+        "queued_actions"
+    ][-1]
     return results
 
 

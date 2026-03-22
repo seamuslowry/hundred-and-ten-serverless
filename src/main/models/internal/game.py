@@ -153,10 +153,16 @@ class Game(BaseGame):
         """Perform a game action"""
         self._game.act(action)
 
-    def queue_action_for(self, player_id: str, action: Optional[Action]) -> None:
+    def queue_action_for(self, player_id: str, action: Action) -> None:
         """Queue an action for a player"""
         self._update_game_player(
             self.ordered_players.find_or_throw(player_id).queue_action(action)
+        )
+
+    def clear_queued_actions_for(self, player_id: str) -> None:
+        """Clear all queued actions for a player"""
+        self._update_game_player(
+            self.ordered_players.find_or_throw(player_id).clear_queued_actions()
         )
 
     def _update_game_player(self, new_player: PlayerInGame):

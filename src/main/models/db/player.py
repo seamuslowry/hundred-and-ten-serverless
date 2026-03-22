@@ -19,7 +19,7 @@ class HumanPlayer(AbstractPlayerInGame):
     """A human player"""
 
     type: Literal["human"] = "human"
-    queued_action: Optional[Move]
+    queued_actions: list[Move]
 
 
 class NaiveCpuPlayer(AbstractPlayerInGame):
