@@ -10,9 +10,9 @@ from fastapi import APIRouter
 from src.main.mappers.client import deserialize, serialize
 from src.main.models.client.requests import (
     ActRequest,
-    GamePlayerRequest,
     GamePlayerKickRequest,
     GamePlayerLeaveRequest,
+    GamePlayerRequest,
     SearchGamesRequest,
 )
 from src.main.models.client.responses import (

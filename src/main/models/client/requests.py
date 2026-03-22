@@ -104,3 +104,40 @@ class GamePlayerKickRequest(BaseModel):
 type GamePlayerRequest = Annotated[
     Union[GamePlayerLeaveRequest, GamePlayerKickRequest], Field(discriminator="type")
 ]
+
+
+class LobbyPlayerLeaveRequest(BaseModel):
+    """Request to leave a lobby as a player"""
+
+    type: Literal["LEAVE"]
+
+
+class LobbyPlayerJoinRequest(BaseModel):
+    """Request to join a lobby as a player"""
+
+    type: Literal["JOIN"]
+
+
+class LobbyPlayerInviteRequest(BaseModel):
+    """Request to invite another player to a lobby"""
+
+    type: Literal["INVITE"]
+    player_id: str
+
+
+class LobbyPlayerKickRequest(BaseModel):
+    """Request to kick a player from a lobby"""
+
+    type: Literal["KICK"]
+    player_id: str
+
+
+type LobbyPlayerRequest = Annotated[
+    Union[
+        LobbyPlayerLeaveRequest,
+        LobbyPlayerJoinRequest,
+        LobbyPlayerInviteRequest,
+        LobbyPlayerKickRequest,
+    ],
+    Field(discriminator="type"),
+]

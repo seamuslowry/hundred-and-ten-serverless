@@ -97,7 +97,8 @@ def game_with_manual_player(test_client: TestClient) -> tuple[dict[str, Any], st
     manual_player = "manual-player"
 
     test_client.post(
-        f"/players/{manual_player}/lobbies/{lobby['id']}/join",
+        f"/players/{manual_player}/lobbies/{lobby['id']}/players",
+        json={"type": "JOIN"},
         headers={"authorization": f"Bearer {manual_player}"},
     )
     resp = test_client.post(

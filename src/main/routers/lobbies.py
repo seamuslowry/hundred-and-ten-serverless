@@ -10,7 +10,11 @@ from fastapi import APIRouter
 from src.main.mappers.client import serialize
 from src.main.models.client.requests import (
     CreateLobbyRequest,
-    InviteRequest,
+    LobbyPlayerInviteRequest,
+    LobbyPlayerJoinRequest,
+    LobbyPlayerKickRequest,
+    LobbyPlayerLeaveRequest,
+    LobbyPlayerRequest,
     SearchLobbiesRequest,
 )
 from src.main.models.client.responses import Event, WaitingGame
@@ -21,6 +25,7 @@ from src.main.models.internal import (
     Lobby,
     NaiveCpu,
 )
+from src.main.models.internal.errors import AuthorizationError, BadRequestError
 from src.main.services import LobbyService
 
 MIN_PLAYERS = 4
@@ -72,35 +77,28 @@ async def create_lobby(player_id: str, body: CreateLobbyRequest):
     return serialize.lobby(lobby)
 
 
-@router.post("/{lobby_id}/invite", response_model=WaitingGame)
+@router.post("/{lobby_id}/players", response_model=WaitingGame)
 async def invite_to_lobby(
-    player_id: str, lobby_id: PydanticObjectId, body: InviteRequest
+    player_id: str, lobby_id: PydanticObjectId, body: LobbyPlayerRequest
 ):
     """Invite to join a 110 lobby"""
     lobby = await LobbyService.get(lobby_id)
 
-    for invitee in body.invitees:
-        lobby.invite(player_id, Human(id=invitee))
-    lobby = await LobbyService.save(lobby)
+    match body:
+        case LobbyPlayerInviteRequest():
+            lobby.invite(player_id, Human(id=body.player_id))
+        case LobbyPlayerJoinRequest():
+            lobby.join(Human(id=player_id))
+        case LobbyPlayerLeaveRequest():
+            lobby.leave(player_id)
+        case LobbyPlayerKickRequest():
+            if player_id != lobby.organizer.id:
+                raise AuthorizationError("Only the organizer may kick players")
+            lobby.leave(body.player_id)
+        case _:  # pragma: no cover
+            # type: ignore[unreachable]
+            raise BadRequestError(f"Invalid request {body}")
 
-    return serialize.lobby(lobby)
-
-
-@router.post("/{lobby_id}/join", response_model=WaitingGame)
-async def join_lobby(player_id: str, lobby_id: PydanticObjectId):
-    """Join a 110 lobby"""
-    lobby = await LobbyService.get(lobby_id)
-    lobby.join(Human(player_id))
-    lobby = await LobbyService.save(lobby)
-
-    return serialize.lobby(lobby)
-
-
-@router.post("/{lobby_id}/leave", response_model=WaitingGame)
-async def leave_lobby(player_id: str, lobby_id: PydanticObjectId):
-    """Leave a 110 lobby"""
-    lobby = await LobbyService.get(lobby_id)
-    lobby.leave(player_id)
     lobby = await LobbyService.save(lobby)
 
     return serialize.lobby(lobby)
