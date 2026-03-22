@@ -109,17 +109,20 @@ def queue_action(
     test_client: TestClient, game_id: str, player_id: str, action: dict[str, Any]
 ) -> dict[str, Any]:
     """Queue an action and return the response."""
-    resp = test_client.post(
+    results = test_client.post(
         f"/players/{player_id}/games/{game_id}/queued-action",
         json=action,
         headers={"authorization": f"Bearer {player_id}"},
-    )
-    queued_player = next(p for p in resp.json()["players"] if p["id"] == player_id)
+    ).json()
+
+    game = get_game(test_client, game_id, player_id)
+
+    queued_player = next(p for p in game["players"] if p["id"] == player_id)
     assert "queued_action" in queued_player and queued_player["queued_action"] == {
         **action,
         "player_id": DEFAULT_ID,
     }
-    return resp.json()
+    return results
 
 
 def get_game(test_client: TestClient, game_id: str, player_id: str) -> dict[str, Any]:

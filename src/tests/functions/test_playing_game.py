@@ -24,11 +24,12 @@ def test_perform_round_actions(client: TestClient):
     assert "amount" in suggested_bid
 
     # bid
-    results = client.post(
+    resp = client.post(
         f"/players/{DEFAULT_ID}/games/{created_game['id']}/act",
         json={"type": "BID", "amount": BidAmount.SHOOT_THE_MOON},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
-    ).json()
+    )
+    results = resp.json()
 
     # assert bid event in results
     assert {
@@ -69,7 +70,7 @@ def test_perform_round_actions(client: TestClient):
     # discard
     results = client.post(
         f"/players/{DEFAULT_ID}/games/{created_game['id']}/act",
-        json={"type": "DISCARD", "cards": suggested_discard["cards"]},
+        json={"type": "DISCARD", "cards": suggested_discard["discards"]},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     ).json()
 
@@ -77,7 +78,7 @@ def test_perform_round_actions(client: TestClient):
     assert {
         "type": "DISCARD",
         "player_id": DEFAULT_ID,
-        "discards": suggested_discard["cards"],
+        "discards": suggested_discard["discards"],
     } in results
     assert {"type": "TRICK_START"} in results
 
@@ -110,16 +111,17 @@ def test_prepass_and_rescind_prepass(client: TestClient):
     game, _ = game_with_manual_player(client)
 
     # prepass
-    game = queue_action(
+    queue_action(
         client, game["id"], DEFAULT_ID, {"type": "BID", "amount": BidAmount.PASS}
     )
 
     # rescind prepass
-    resp = client.delete(
+    results = client.delete(
         f"/players/{DEFAULT_ID}/games/{game['id']}/queued-action",
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
-    )
-    game = resp.json()
+    ).json()
+    assert len(results) == 0  # removing a queued action has no results
+    game = get_game(client, game["id"], DEFAULT_ID)
     player = next(p for p in game["players"] if p["id"] == DEFAULT_ID)
     assert "queued_action" in player and player["queued_action"] is None
 
