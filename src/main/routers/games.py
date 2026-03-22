@@ -44,7 +44,7 @@ async def game_info(player_id: str, game_id: PydanticObjectId):
     return serialize.game(game, player_id)
 
 
-@router.post("", response_model=list[GameResponse])
+@router.post("/search", response_model=list[GameResponse])
 async def search_games(player_id: str, body: SearchGamesRequest):
     """Search for games"""
     return [

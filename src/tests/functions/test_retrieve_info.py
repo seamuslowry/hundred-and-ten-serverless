@@ -21,7 +21,7 @@ def test_search_winner(client: TestClient):
 
     # search games
     resp = client.post(
-        f"/players/{DEFAULT_ID}/games",
+        f"/players/{DEFAULT_ID}/games/search",
         json={"winner": game["winner"]["id"]},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
@@ -37,7 +37,7 @@ def test_search_game_smoke_test(client: TestClient):
     p = original_games[0]["players"][0]["id"]
 
     resp = client.post(
-        f"/players/{p}/games",
+        f"/players/{p}/games/search",
         json={"searchText": search},
         headers={"authorization": f"Bearer {p}"},
     )
@@ -54,7 +54,7 @@ def test_search_game_by_status(client: TestClient):
     p = original_games[0]["players"][0]["id"]
 
     won_resp = client.post(
-        f"/players/{p}/games",
+        f"/players/{p}/games/search",
         json={"activePlayer": p, "statuses": ["WON"]},
         headers={"authorization": f"Bearer {p}"},
     )
@@ -81,7 +81,7 @@ def test_search_game_by_active_player(client: TestClient):
     ]
 
     resp = client.post(
-        f"/players/{active_player}/games",
+        f"/players/{active_player}/games/search",
         json={"activePlayer": active_player},
         headers={"authorization": f"Bearer {active_player}"},
     )
@@ -136,7 +136,7 @@ def test_search_players(client: TestClient):
 
     # get players
     resp = client.post(
-        "/players",
+        "/players/search",
         json={"searchText": "aaa"},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )

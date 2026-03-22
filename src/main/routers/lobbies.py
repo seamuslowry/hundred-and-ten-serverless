@@ -45,7 +45,7 @@ async def lobby_info(lobby_id: PydanticObjectId):
     return serialize.lobby(lobby)
 
 
-@router.post("", response_model=list[WaitingGame])
+@router.post("/search", response_model=list[WaitingGame])
 async def search_lobbies(player_id: str, body: SearchLobbiesRequest):
     """Search for lobbies"""
     return [

@@ -340,7 +340,7 @@ def test_search_lobbies_smoke_test(client: TestClient):
     organizer = created_lobby["organizer"]["id"]
 
     resp = client.post(
-        f"/players/{organizer}/lobbies",
+        f"/players/{organizer}/lobbies/search",
         json={"searchText": "test"},
         headers={"authorization": f"Bearer {organizer}"},
     )
@@ -357,7 +357,7 @@ def test_search_lobbies(client: TestClient):
     organizer = original_lobbies[0]["organizer"]["id"]
 
     resp = client.post(
-        f"/players/{organizer}/lobbies",
+        f"/players/{organizer}/lobbies/search",
         json={"searchText": search},
         headers={"authorization": f"Bearer {organizer}"},
     )

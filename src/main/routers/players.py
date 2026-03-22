@@ -17,7 +17,7 @@ router = APIRouter(
 )
 
 
-@router.post("", response_model=list[Player])
+@router.post("/search", response_model=list[Player])
 async def search_players(
     body: SearchPlayersRequest,
 ):
