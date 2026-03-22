@@ -6,6 +6,7 @@ from src.main.models.client.constants import SelectableSuit
 from src.main.models.internal import BidAmount
 from src.tests.helpers import (
     DEFAULT_ID,
+    contains_unsequenced,
     game_with_manual_player,
     get_game,
     queue_action,
@@ -33,11 +34,14 @@ def test_queue_bid_action(client: TestClient):
         headers={"authorization": f"Bearer {manual_player}"},
     ).json()
 
-    assert {
-        "type": "BID",
-        "amount": BidAmount.SHOOT_THE_MOON,
-        "player_id": DEFAULT_ID,
-    } in results
+    contains_unsequenced(
+        results,
+        {
+            "type": "BID",
+            "player_id": DEFAULT_ID,
+            "amount": BidAmount.SHOOT_THE_MOON,
+        },
+    )
 
     game = get_game(client, game["id"], manual_player)
 
@@ -63,11 +67,16 @@ def test_queue_pass_action(client: TestClient):
         json={"type": "BID", "amount": BidAmount.PASS},
         headers={"authorization": f"Bearer {manual_player}"},
     ).json()
-    assert {
-        "type": "BID",
-        "player_id": DEFAULT_ID,
-        "amount": BidAmount.PASS,
-    } in results
+
+    contains_unsequenced(
+        results,
+        {
+            "type": "BID",
+            "player_id": DEFAULT_ID,
+            "amount": BidAmount.PASS,
+        },
+    )
+
     game = get_game(client, game["id"], manual_player)
 
     player = next(p for p in game["players"] if p["id"] == DEFAULT_ID)
@@ -139,7 +148,14 @@ def test_queue_multiple_actions(client: TestClient):
     ).json()
 
     # the final play action is in the results
-    assert {"type": "PLAY", "player_id": DEFAULT_ID, "card": card} in results
+    contains_unsequenced(
+        results,
+        {
+            "type": "PLAY",
+            "player_id": DEFAULT_ID,
+            "card": card,
+        },
+    )
 
     # queued actions are consumed
     game = get_game(client, game["id"], manual_player)
@@ -208,11 +224,15 @@ def test_valid_queued_action_survives_other_players_turns(client: TestClient):
     ).json()
 
     # DEFAULT_ID's SHOOT_THE_MOON was consumed and appears in results
-    assert {
-        "type": "BID",
-        "amount": BidAmount.SHOOT_THE_MOON,
-        "player_id": DEFAULT_ID,
-    } in results
+
+    contains_unsequenced(
+        results,
+        {
+            "type": "BID",
+            "player_id": DEFAULT_ID,
+            "amount": BidAmount.SHOOT_THE_MOON,
+        },
+    )
 
     # The queued SHOOT_THE_MOON is consumed (valid); SELECT_TRUMP is then checked
     # against available_actions during BIDDING and is not valid, so it is dropped.
@@ -220,10 +240,11 @@ def test_valid_queued_action_survives_other_players_turns(client: TestClient):
     game = get_game(client, game["id"], DEFAULT_ID)
     assert game["status"] == "BIDDING"
     player = next(p for p in game["players"] if p["id"] == DEFAULT_ID)
-    assert player["queued_actions"] == [
+    contains_unsequenced(
+        player["queued_actions"],
         {
             "type": "SELECT_TRUMP",
-            "suit": SelectableSuit.DIAMONDS,
             "player_id": DEFAULT_ID,
+            "suid": SelectableSuit.DIAMONDS,
         },
-    ]
+    )

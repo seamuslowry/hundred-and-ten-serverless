@@ -25,7 +25,7 @@ def test_bad_suggestion_error():
     """Attempting to serialize an invalid suggestion results in an error"""
     player_id = "player_id"
     with pytest.raises(ValueError):
-        client_serialize.action(Action(player_id))
+        client_serialize.suggestion(Action(player_id))
 
 
 def test_card_with_unselectable_suit():

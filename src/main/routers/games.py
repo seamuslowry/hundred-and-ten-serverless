@@ -20,7 +20,7 @@ from src.main.models.client.responses import (
     Event,
     Player,
     StartedGame,
-    SuggestionResponse,
+    UnorderedActionResponse,
 )
 from src.main.models.internal import (
     NaiveAutomatedPlayer,
@@ -128,15 +128,17 @@ async def events(
     """Retrieve the events in a 110 game."""
     game = await GameService.get(game_id)
 
-    return serialize.events(game.events[skip:], player_id)[:limit]
+    return serialize.events(game.events, player_id)[
+        skip : (skip + limit) if limit else None
+    ]
 
 
-@router.get("/{game_id}/suggestion", response_model=SuggestionResponse)
+@router.get("/{game_id}/suggestion", response_model=UnorderedActionResponse)
 async def suggestion(player_id: str, game_id: PydanticObjectId):
     """Ask for a suggestion in a 110 game"""
     game = await GameService.get(game_id)
 
-    return serialize.action(
+    return serialize.suggestion(
         NaiveAutomatedPlayer(player_id).act(game.game_state_for(player_id))
     )
 
