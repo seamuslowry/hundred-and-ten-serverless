@@ -45,6 +45,30 @@ async def game_info(player_id: str, game_id: PydanticObjectId):
     return serialize.game(game, player_id)
 
 
+@router.post("/{game_id}/players", response_model=list[Event])
+async def leave_game(
+    player_id: str, game_id: PydanticObjectId, body: GamePlayerRequest
+):
+    """Leave a 110 game (automates the player)"""
+    game = await GameService.get(game_id)
+    initial_event_knowledge = len(game.events)
+
+    match body:
+        case GamePlayerLeaveRequest():
+            game.leave(player_id)
+        case GamePlayerKickRequest():
+            if player_id != game.organizer.id:
+                raise AuthorizationError("Only the organizer may kick players")
+            game.leave(body.player_id)
+        case _:  # pragma: no cover
+            # type: ignore[unreachable]
+            raise BadRequestError(f"Invalid request {body}")
+
+    game = await GameService.save(game)
+
+    return serialize.events(game.events[initial_event_knowledge:], player_id)
+
+
 @router.get("/{game_id}/players", response_model=list[Player])
 async def game_players(game_id: PydanticObjectId):
     """Retrieve players in a 110 game."""
@@ -53,24 +77,6 @@ async def game_players(game_id: PydanticObjectId):
     people_ids = [p.id for p in game.ordered_players]
 
     return [serialize.player(u) for u in await PlayerService.by_player_ids(people_ids)]
-
-
-@router.post("/search", response_model=list[GameResponse])
-async def search_games(player_id: str, body: SearchGamesRequest):
-    """Search for games"""
-    return [
-        serialize.game(g, player_id) for g in await GameService.search(player_id, body)
-    ]
-
-
-@router.get("/{game_id}/suggestion", response_model=SuggestionResponse)
-async def suggestion(player_id: str, game_id: PydanticObjectId):
-    """Ask for a suggestion in a 110 game"""
-    game = await GameService.get(game_id)
-
-    return serialize.action(
-        NaiveAutomatedPlayer(player_id).act(game.game_state_for(player_id))
-    )
 
 
 @router.post("/{game_id}/actions", response_model=list[Event])
@@ -112,25 +118,19 @@ async def remove_queued_action(player_id: str, game_id: PydanticObjectId):
     return serialize.events(game.events[initial_event_knowledge:], player_id)
 
 
-@router.post("/{game_id}/players", response_model=list[Event])
-async def leave_game(
-    player_id: str, game_id: PydanticObjectId, body: GamePlayerRequest
-):
-    """Leave a 110 game (automates the player)"""
+@router.get("/{game_id}/suggestion", response_model=SuggestionResponse)
+async def suggestion(player_id: str, game_id: PydanticObjectId):
+    """Ask for a suggestion in a 110 game"""
     game = await GameService.get(game_id)
-    initial_event_knowledge = len(game.events)
 
-    match body:
-        case GamePlayerLeaveRequest():
-            game.leave(player_id)
-        case GamePlayerKickRequest():
-            if player_id != game.organizer.id:
-                raise AuthorizationError("Only the organizer may kick players")
-            game.leave(body.player_id)
-        case _:  # pragma: no cover
-            # type: ignore[unreachable]
-            raise BadRequestError(f"Invalid request {body}")
+    return serialize.action(
+        NaiveAutomatedPlayer(player_id).act(game.game_state_for(player_id))
+    )
 
-    game = await GameService.save(game)
 
-    return serialize.events(game.events[initial_event_knowledge:], player_id)
+@router.post("/search", response_model=list[GameResponse])
+async def search_games(player_id: str, body: SearchGamesRequest):
+    """Search for games"""
+    return [
+        serialize.game(g, player_id) for g in await GameService.search(player_id, body)
+    ]

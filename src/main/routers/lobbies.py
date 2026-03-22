@@ -37,36 +37,6 @@ router = APIRouter(
 )
 
 
-@router.get("/{lobby_id}", response_model=WaitingGame)
-async def lobby_info(lobby_id: PydanticObjectId):
-    """Retrieve 110 lobby."""
-    lobby = await LobbyService.get(lobby_id)
-
-    return serialize.lobby(lobby)
-
-
-@router.get("/{lobby_id}/players", response_model=list[Player])
-async def lobby_players(lobby_id: PydanticObjectId):
-    """Retrieve players in a 110 lobby."""
-    lobby = await LobbyService.get(lobby_id)
-
-    people_ids = [p.id for p in lobby.ordered_players]
-
-    return [serialize.player(u) for u in await PlayerService.by_player_ids(people_ids)]
-
-
-@router.post("/search", response_model=list[WaitingGame])
-async def search_lobbies(player_id: str, body: SearchLobbiesRequest):
-    """Search for lobbies"""
-    return [
-        serialize.lobby(lobby)
-        for lobby in await LobbyService.search(
-            player_id,
-            body,
-        )
-    ]
-
-
 @router.post("", response_model=WaitingGame)
 async def create_lobby(player_id: str, body: CreateLobbyRequest):
     """Create a new 110 lobby."""
@@ -83,6 +53,14 @@ async def create_lobby(player_id: str, body: CreateLobbyRequest):
     lobby = await LobbyService.save(lobby)
 
     logging.debug("Lobby %s created successfully", lobby.seed)
+
+    return serialize.lobby(lobby)
+
+
+@router.get("/{lobby_id}", response_model=WaitingGame)
+async def lobby_info(lobby_id: PydanticObjectId):
+    """Retrieve 110 lobby."""
+    lobby = await LobbyService.get(lobby_id)
 
     return serialize.lobby(lobby)
 
@@ -114,6 +92,16 @@ async def invite_to_lobby(
     return serialize.lobby(lobby)
 
 
+@router.get("/{lobby_id}/players", response_model=list[Player])
+async def lobby_players(lobby_id: PydanticObjectId):
+    """Retrieve players in a 110 lobby."""
+    lobby = await LobbyService.get(lobby_id)
+
+    people_ids = [p.id for p in lobby.ordered_players]
+
+    return [serialize.player(u) for u in await PlayerService.by_player_ids(people_ids)]
+
+
 @router.post("/{lobby_id}/start", response_model=list[Event])
 async def start_game(player_id: str, lobby_id: PydanticObjectId):
     """Start a 110 game from a lobby"""
@@ -132,3 +120,15 @@ async def start_game(player_id: str, lobby_id: PydanticObjectId):
     game = await LobbyService.start_game(lobby)
 
     return serialize.events(game.events, player_id)
+
+
+@router.post("/search", response_model=list[WaitingGame])
+async def search_lobbies(player_id: str, body: SearchLobbiesRequest):
+    """Search for lobbies"""
+    return [
+        serialize.lobby(lobby)
+        for lobby in await LobbyService.search(
+            player_id,
+            body,
+        )
+    ]

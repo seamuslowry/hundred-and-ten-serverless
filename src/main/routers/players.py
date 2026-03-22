@@ -17,14 +17,6 @@ router = APIRouter(
 )
 
 
-@router.post("/search", response_model=list[Player])
-async def search_players(
-    body: SearchPlayersRequest,
-):
-    """Search players"""
-    return [serialize.player(u) for u in await PlayerService.search(body)]
-
-
 @router.get("/{player_id}", response_model=Player)
 async def get_player(
     player_id: str,
@@ -47,3 +39,11 @@ async def refresh(
             )
         )
     )
+
+
+@router.post("/search", response_model=list[Player])
+async def search_players(
+    body: SearchPlayersRequest,
+):
+    """Search players"""
+    return [serialize.player(u) for u in await PlayerService.search(body)]
