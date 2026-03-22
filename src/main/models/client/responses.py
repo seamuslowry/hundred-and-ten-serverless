@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from .constants import CardNumberName, SelectableSuit, Suit
 
 # =============================================================================
-# Actions
+# Actions & Events
 # =============================================================================
 
 
@@ -51,11 +51,6 @@ class PlayCardAction(BaseModel):
 
 
 type GameAction = Union[BidAction, SelectTrumpAction, DiscardAction, PlayCardAction]
-
-
-# =============================================================================
-# Events
-# =============================================================================
 
 
 class GameStart(BaseModel):
