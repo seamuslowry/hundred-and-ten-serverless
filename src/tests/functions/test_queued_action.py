@@ -109,8 +109,7 @@ def test_queue_multiple_actions(client: TestClient):
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
     hand = hand_resp.json()["round"]["players"][0]["hand"]
-    assert len(hand) >= 2, "Need at least 2 cards in hand"
-    card1, card2 = hand[0], hand[1]
+    card = next(c for c in hand if c['suit'] != 'JOKER')
 
     # queue actions
     # dealer takes the bid to ensure we go into tricks
@@ -120,19 +119,17 @@ def test_queue_multiple_actions(client: TestClient):
         DEFAULT_ID,
         {"type": "BID", "amount": BidAmount.SHOOT_THE_MOON},
     )
-    # dealer selects DIAMONDS as trump
+    # dealer selects cart suit as trump
     queue_action(
         client,
         game["id"],
         DEFAULT_ID,
-        {"type": "SELECT_TRUMP", "suit": SelectableSuit.DIAMONDS},
+        {"type": "SELECT_TRUMP", "suit": card['suit']},
     )
     # dealer discards none
     queue_action(client, game["id"], DEFAULT_ID, {"type": "DISCARD", "cards": []})
-    # dealer plays first card
-    queue_action(client, game["id"], DEFAULT_ID, {"type": "PLAY", "card": card1})
-    # delaer plays second card
-    queue_action(client, game["id"], DEFAULT_ID, {"type": "PLAY", "card": card2})
+    # dealer plays card
+    queue_action(client, game["id"], DEFAULT_ID, {"type": "PLAY", "card": card})
 
     # manual player leaves to automate themselves
     results = client.post(
@@ -141,7 +138,7 @@ def test_queue_multiple_actions(client: TestClient):
     ).json()
 
     # the final play action is in the results
-    assert {"type": "PLAY", "player_id": DEFAULT_ID, "card": card2} in results
+    assert {"type": "PLAY", "player_id": DEFAULT_ID, "card": card} in results
 
     # queued actions are consumed
     game = get_game(client, game["id"], manual_player)
