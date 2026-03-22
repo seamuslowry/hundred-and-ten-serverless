@@ -3,6 +3,7 @@
 from beanie.operators import In, RegEx
 
 from src.main.mappers.db import deserialize, serialize
+from src.main.models.client.requests import SearchPlayersRequest
 from src.main.models.db import Player as DbPlayer
 from src.main.models.internal import Player
 
@@ -27,13 +28,13 @@ class PlayerService:
         return deserialize.player(await serialized_player.save())
 
     @staticmethod
-    async def search(search_text: str) -> list[Player]:
+    async def search(search_request: SearchPlayersRequest) -> list[Player]:
         """Retrieve the players with names like the provided"""
         return list(
             map(
                 deserialize.player,
                 await DbPlayer.find(
-                    RegEx(DbPlayer.name, search_text, "i"), with_children=True
+                    RegEx(DbPlayer.name, search_request.search_text, "i"), with_children=True
                 )
                 .limit(MAX)
                 .to_list(),

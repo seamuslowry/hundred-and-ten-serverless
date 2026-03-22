@@ -181,9 +181,9 @@ def test_search_players(client: TestClient):
     player(client, player_three)
 
     # get players
-    resp = client.get(
+    resp = client.post(
         f"/players/{DEFAULT_ID}",
-        params={"searchText": "aaa"},
+        json={"searchText": "aaa"},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
     retrieved_players = resp.json()

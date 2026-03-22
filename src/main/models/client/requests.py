@@ -61,6 +61,14 @@ class InviteRequest(BaseModel):
     invitees: list[str] = []
 
 
+class SearchPlayersRequest(BaseModel):
+    """Request body for searching players"""
+
+    search_text: str = Field(default="", alias="searchText")
+    offset: int = 0
+    limit: int = 20
+
+
 class SearchLobbiesRequest(BaseModel):
     """Request body for searching lobbies"""
 

@@ -2,12 +2,11 @@
 The router for player operations.
 """
 
-from typing import Optional
-
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 
 from src.main.auth import Identity, get_authorized_identity
 from src.main.mappers.client import serialize
+from src.main.models.client.requests import SearchPlayersRequest
 from src.main.models.client.responses import Player
 from src.main.models.internal import Player as InternalPlayer
 from src.main.services import PlayerService
@@ -18,12 +17,12 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=list[Player])
+@router.post("", response_model=list[Player])
 async def search_players(
-    search_text: Optional[str] = Query(default="", alias="searchText"),
+    body: SearchPlayersRequest,
 ):
-    """Get players"""
-    return [serialize.player(u) for u in await PlayerService.search(search_text or "")]
+    """Search players"""
+    return [serialize.player(u) for u in await PlayerService.search(body)]
 
 
 @router.put("", response_model=Player)
