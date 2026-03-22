@@ -82,7 +82,7 @@ async def act(player_id: str, game_id: PydanticObjectId, body: ActRequest):
     return serialize.events(game.events[initial_event_knowledge:], player_id)
 
 
-@router.post("/{game_id}/queued-action", response_model=list[Event])
+@router.post("/{game_id}/queued-actions", response_model=list[Event])
 async def queued_action(player_id: str, game_id: PydanticObjectId, body: ActRequest):
     """Queue an action in a 110 game"""
     game = await GameService.get(game_id)
@@ -95,13 +95,13 @@ async def queued_action(player_id: str, game_id: PydanticObjectId, body: ActRequ
     return serialize.events(game.events[initial_event_knowledge:], player_id)
 
 
-@router.delete("/{game_id}/queued-action", response_model=list[Event])
+@router.delete("/{game_id}/queued-actions", response_model=list[Event])
 async def remove_queued_action(player_id: str, game_id: PydanticObjectId):
-    """Queue an action in a 110 game"""
+    """Clear all queued actions for a player in a 110 game"""
     game = await GameService.get(game_id)
     initial_event_knowledge = len(game.events)
 
-    game.queue_action_for(player_id, None)
+    game.clear_queued_actions_for(player_id)
 
     await GameService.save(game)
 

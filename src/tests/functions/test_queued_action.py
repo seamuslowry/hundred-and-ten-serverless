@@ -2,6 +2,7 @@
 
 from fastapi.testclient import TestClient
 
+from src.main.models.client.constants import SelectableSuit
 from src.main.models.internal import BidAmount
 from src.tests.helpers import (
     DEFAULT_ID,
@@ -43,7 +44,7 @@ def test_queue_bid_action(client: TestClient):
     assert game["round"]["active_player"]["id"] == DEFAULT_ID
     assert game["status"] == "TRUMP_SELECTION"
     player = next(p for p in game["players"] if p["id"] == DEFAULT_ID)
-    assert "queued_action" in player and player["queued_action"] is None
+    assert player["queued_actions"] == []
 
 
 def test_queue_pass_action(client: TestClient):
@@ -70,17 +71,161 @@ def test_queue_pass_action(client: TestClient):
     game = get_game(client, game["id"], manual_player)
 
     player = next(p for p in game["players"] if p["id"] == DEFAULT_ID)
-    assert "queued_action" in player and player["queued_action"] is None
+    assert player["queued_actions"] == []
 
 
-def test_only_human_players(client: TestClient):
+def test_only_human_players_queue(client: TestClient):
     """An automated player cannot queue an action"""
     game = started_game(client)
 
     # attempt queue action on automated player
     resp = client.post(
-        f"/players/{game['players'][-1]['id']}/games/{game['id']}/queued-action",
+        f"/players/{game['players'][-1]['id']}/games/{game['id']}/queued-actions",
         json={"type": "BID", "amount": BidAmount.SHOOT_THE_MOON},
         headers={"authorization": f"Bearer {game['players'][-1]['id']}"},
     )
     assert 400 == resp.status_code
+
+
+def test_only_human_players_clear_queue(client: TestClient):
+    """An automated player cannot clear action queue"""
+    game = started_game(client)
+
+    # attempt clear queue action on automated player
+    resp = client.delete(
+        f"/players/{game['players'][-1]['id']}/games/{game['id']}/queued-actions",
+        headers={"authorization": f"Bearer {game['players'][-1]['id']}"},
+    )
+    assert 400 == resp.status_code
+
+
+def test_queue_multiple_actions(client: TestClient):
+    """Multiple play actions can be queued and are played in FIFO order"""
+    game, manual_player = game_with_manual_player(client)
+    assert game["round"]["active_player"]["id"] == manual_player
+
+    hand_resp = client.get(
+        f"/players/{DEFAULT_ID}/games/{game['id']}",
+        headers={"authorization": f"Bearer {DEFAULT_ID}"},
+    )
+    hand = hand_resp.json()["round"]["players"][0]["hand"]
+    assert len(hand) >= 2, "Need at least 2 cards in hand"
+    card1, card2 = hand[0], hand[1]
+
+    # queue actions
+    # dealer takes the bid to ensure we go into tricks
+    queue_action(
+        client,
+        game["id"],
+        DEFAULT_ID,
+        {"type": "BID", "amount": BidAmount.SHOOT_THE_MOON},
+    )
+    # dealer selects DIAMONDS as trump
+    queue_action(
+        client,
+        game["id"],
+        DEFAULT_ID,
+        {"type": "SELECT_TRUMP", "suit": SelectableSuit.DIAMONDS},
+    )
+    # dealer discards none
+    queue_action(client, game["id"], DEFAULT_ID, {"type": "DISCARD", "cards": []})
+    # dealer plays first card
+    queue_action(client, game["id"], DEFAULT_ID, {"type": "PLAY", "card": card1})
+    # delaer plays second card
+    queue_action(client, game["id"], DEFAULT_ID, {"type": "PLAY", "card": card2})
+
+    # manual player leaves to automate themselves
+    results = client.post(
+        f"/players/{manual_player}/games/{game['id']}/leave",
+        headers={"authorization": f"Bearer {manual_player}"},
+    ).json()
+
+    # the final play action is in the results
+    assert {"type": "PLAY", "player_id": DEFAULT_ID, "card": card2} in results
+
+    # queued actions are consumed
+    game = get_game(client, game["id"], manual_player)
+    player = next(p for p in game["players"] if p["id"] == DEFAULT_ID)
+    assert len(player["queued_actions"]) == 0
+
+
+def test_invalid_action_clears_queue(client: TestClient):
+    """An invalid queued action clears the entire queue on the player's turn"""
+    game, manual_player = game_with_manual_player(client)
+    assert game["round"]["active_player"]["id"] == manual_player
+
+    # queue a bid of FIFTEEN and a select trump of DIAMONDS
+    queue_action(
+        client, game["id"], DEFAULT_ID, {"type": "BID", "amount": BidAmount.FIFTEEN}
+    )
+    queue_action(
+        client,
+        game["id"],
+        DEFAULT_ID,
+        {"type": "SELECT_TRUMP", "suit": SelectableSuit.DIAMONDS},
+    )
+
+    # manual player bids higher; queued actions are checked against new game state
+    results = client.post(
+        f"/players/{manual_player}/games/{game['id']}/act",
+        json={"type": "BID", "amount": BidAmount.SHOOT_THE_MOON},
+        headers={"authorization": f"Bearer {manual_player}"},
+    ).json()
+
+    assert not any(a["player_id"] == DEFAULT_ID for a in results)
+
+    # FIFTEEN is below 60 (not in available_actions), dropped. SELECT_TRUMP is not
+    # valid during BIDDING, also dropped. The FIFO drain clears the entire queue.
+    game = get_game(client, game["id"], DEFAULT_ID)
+    assert game["status"] == "BIDDING"
+    assert game["round"]["active_player"]["id"] == DEFAULT_ID
+    player = next(p for p in game["players"] if p["id"] == DEFAULT_ID)
+    assert player["queued_actions"] == []
+
+
+def test_valid_queued_action_survives_other_players_turns(client: TestClient):
+    """A valid queued action stays queued through other players' turns"""
+    game, manual_player = game_with_manual_player(client)
+    assert game["round"]["active_player"]["id"] == manual_player
+
+    # queue a bid of SHOOT_THE_MOON and select trump of DIAMONDS
+    queue_action(
+        client,
+        game["id"],
+        DEFAULT_ID,
+        {"type": "BID", "amount": BidAmount.SHOOT_THE_MOON},
+    )
+    queue_action(
+        client,
+        game["id"],
+        DEFAULT_ID,
+        {"type": "SELECT_TRUMP", "suit": SelectableSuit.DIAMONDS},
+    )
+
+    # manual player bids FIFTEEN
+    results = client.post(
+        f"/players/{manual_player}/games/{game['id']}/act",
+        json={"type": "BID", "amount": BidAmount.FIFTEEN},
+        headers={"authorization": f"Bearer {manual_player}"},
+    ).json()
+
+    # DEFAULT_ID's SHOOT_THE_MOON was consumed and appears in results
+    assert {
+        "type": "BID",
+        "amount": BidAmount.SHOOT_THE_MOON,
+        "player_id": DEFAULT_ID,
+    } in results
+
+    # The queued SHOOT_THE_MOON is consumed (valid); SELECT_TRUMP is then checked
+    # against available_actions during BIDDING and is not valid, so it is dropped.
+    # SELECT_TRUMP survives in the queue since it was not the action consumed.
+    game = get_game(client, game["id"], DEFAULT_ID)
+    assert game["status"] == "BIDDING"
+    player = next(p for p in game["players"] if p["id"] == DEFAULT_ID)
+    assert player["queued_actions"] == [
+        {
+            "type": "SELECT_TRUMP",
+            "suit": SelectableSuit.DIAMONDS,
+            "player_id": DEFAULT_ID,
+        },
+    ]

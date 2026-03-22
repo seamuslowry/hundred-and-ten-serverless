@@ -64,12 +64,12 @@ def test_perform_round_actions(client: TestClient):
 
     # assert that current suggestion is a discard
     suggested_discard = get_suggestion(client, created_game["id"])
-    assert "discards" in suggested_discard
+    assert "cards" in suggested_discard
 
     # discard
     results = client.post(
         f"/players/{DEFAULT_ID}/games/{created_game['id']}/act",
-        json={"type": "DISCARD", "cards": suggested_discard["discards"]},
+        json={"type": "DISCARD", "cards": suggested_discard["cards"]},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     ).json()
 
@@ -77,7 +77,7 @@ def test_perform_round_actions(client: TestClient):
     assert {
         "type": "DISCARD",
         "player_id": DEFAULT_ID,
-        "discards": suggested_discard["discards"],
+        "cards": suggested_discard["cards"],
     } in results
     assert {"type": "TRICK_START"} in results
 
@@ -116,13 +116,13 @@ def test_prepass_and_rescind_prepass(client: TestClient):
 
     # rescind prepass
     results = client.delete(
-        f"/players/{DEFAULT_ID}/games/{game['id']}/queued-action",
+        f"/players/{DEFAULT_ID}/games/{game['id']}/queued-actions",
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     ).json()
     assert len(results) == 0  # removing a queued action has no results
     game = get_game(client, game["id"], DEFAULT_ID)
     player = next(p for p in game["players"] if p["id"] == DEFAULT_ID)
-    assert "queued_action" in player and player["queued_action"] is None
+    assert player["queued_actions"] == []
 
 
 def test_leave_playing_game_as_organizer(client: TestClient):
@@ -137,7 +137,7 @@ def test_leave_playing_game_as_organizer(client: TestClient):
 
     # leave
     results = client.post(
-        f"/players/{active_player["id"]}/games/{original_game['id']}/leave",
+        f"/players/{active_player['id']}/games/{original_game['id']}/leave",
         headers={"authorization": f"Bearer {active_player['id']}"},
     ).json()
 

@@ -39,7 +39,7 @@ class DiscardAction(BaseModel):
 
     type: Literal["DISCARD"]
     player_id: str
-    discards: Union[list[Card], int]
+    cards: Union[list[Card], int]
 
 
 class PlayCardAction(BaseModel):
@@ -135,7 +135,7 @@ class PlayerInGame(BaseModel):
 
     id: str
     automate: bool
-    queued_action: Optional[GameAction]
+    queued_actions: list[GameAction]
 
 
 class OtherPlayerInRound(BaseModel):

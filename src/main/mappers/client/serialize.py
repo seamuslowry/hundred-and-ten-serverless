@@ -88,7 +88,7 @@ def action(m_action: internal.Action) -> responses.GameAction:
     if isinstance(m_action, internal.Discard):
         return responses.DiscardAction(
             type="DISCARD",
-            discards=[__card(c) for c in m_action.cards],
+            cards=[__card(c) for c in m_action.cards],
             player_id=m_action.identifier,
         )
     if isinstance(m_action, internal.Play):
@@ -140,11 +140,10 @@ def __player_in_game(player_in_game: internal.PlayerInGame) -> responses.PlayerI
     return responses.PlayerInGame(
         id=player_in_game.id,
         automate=isinstance(player_in_game, internal.NaiveCpu),
-        queued_action=(
-            action(player_in_game.queued_action)
+        queued_actions=(
+            [action(a) for a in player_in_game.queued_actions]
             if isinstance(player_in_game, internal.Human)
-            and player_in_game.queued_action is not None
-            else None
+            else []
         ),
     )
 
@@ -244,7 +243,7 @@ def __discard_event(
     return responses.DiscardAction(
         type="DISCARD",
         player_id=event.identifier,
-        discards=(
+        cards=(
             [__card(c) for c in event.cards]
             if client_player_id == event.identifier
             else len(event.cards)
