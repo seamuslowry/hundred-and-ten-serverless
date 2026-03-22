@@ -10,6 +10,9 @@ from fastapi import APIRouter
 from src.main.mappers.client import deserialize, serialize
 from src.main.models.client.requests import (
     ActRequest,
+    GamePlayerRequest,
+    KickGameRequest,
+    LeaveGameRequest,
     SearchGamesRequest,
 )
 from src.main.models.client.responses import (
@@ -21,6 +24,7 @@ from src.main.models.client.responses import (
 from src.main.models.internal import (
     NaiveAutomatedPlayer,
 )
+from src.main.models.internal.errors import AuthorizationError, BadRequestError
 from src.main.services import GameService
 
 # Type alias for game responses (can be started or completed)
@@ -97,13 +101,25 @@ async def remove_queued_action(player_id: str, game_id: PydanticObjectId):
     return serialize.events(game.events[initial_event_knowledge:], player_id)
 
 
-@router.post("/{game_id}/leave", response_model=list[Event])
-async def leave_game(player_id: str, game_id: PydanticObjectId):
+@router.post("/{game_id}/players", response_model=list[Event])
+async def leave_game(
+    player_id: str, game_id: PydanticObjectId, body: GamePlayerRequest
+):
     """Leave a 110 game (automates the player)"""
     game = await GameService.get(game_id)
     initial_event_knowledge = len(game.events)
 
-    game.leave(player_id)
+    match body:
+        case LeaveGameRequest():
+            game.leave(player_id)
+        case KickGameRequest():
+            if player_id != game.organizer.id:
+                raise AuthorizationError("Only the organizer may kick players")
+            game.leave(body.player_id)
+        case _:  # pragma: no cover
+            # type: ignore[unreachable]
+            raise BadRequestError(f"Invalid request {body}")
+
     game = await GameService.save(game)
 
     return serialize.events(game.events[initial_event_knowledge:], player_id)

@@ -7,7 +7,7 @@ from typing import Callable, Optional, Self
 
 from hundredandten import actions, player, state
 
-from src.main.models.internal.errors import BadRequestException
+from src.main.models.internal.errors import BadRequestError
 
 
 @dataclass
@@ -96,10 +96,10 @@ class NaiveCpu(PlayerInGame):
     """A naive CPU using the built-in automated player"""
 
     def queue_action(self, action: actions.Action) -> Self:
-        raise BadRequestException("Cannot queue an action for an automated player")
+        raise BadRequestError("Cannot queue an action for an automated player")
 
     def clear_queued_actions(self) -> Self:
-        raise BadRequestException("Cannot queue actions for an automated player")
+        raise BadRequestError("Cannot queue actions for an automated player")
 
     def as_engine_player(self) -> player.Player:
         return player.NaiveAutomatedPlayer(self.id)

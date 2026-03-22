@@ -62,7 +62,8 @@ def completed_game(test_client: TestClient) -> dict[str, Any]:
     assert active_player
 
     resp = test_client.post(
-        f"/players/{active_player['id']}/games/{game['id']}/leave",
+        f"/players/{active_player['id']}/games/{game['id']}/players",
+        json={"type": "LEAVE"},
         headers={"authorization": f"Bearer {active_player['id']}"},
     )
     assert len(resp.json()) > 0

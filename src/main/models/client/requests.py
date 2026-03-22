@@ -86,3 +86,21 @@ class SearchGamesRequest(BaseModel):
     statuses: Optional[list[str]] = None
     active_player_id: Optional[str] = Field(default=None, alias="activePlayer")
     winner_player_id: Optional[str] = Field(default=None, alias="winner")
+
+
+class LeaveGameRequest(BaseModel):
+    """Request to leave a game as a player"""
+
+    type: Literal["LEAVE"]
+
+
+class KickGameRequest(BaseModel):
+    """Request to kick a player from a game"""
+
+    type: Literal["KICK"]
+    player_id: str
+
+
+type GamePlayerRequest = Annotated[
+    Union[LeaveGameRequest, KickGameRequest], Field(discriminator="type")
+]

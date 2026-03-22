@@ -19,7 +19,7 @@ from src.main.models.internal import (
 from src.main.models.internal.errors import (
     AuthenticationError,
     AuthorizationError,
-    BadRequestException,
+    BadRequestError,
     NotFoundError,
 )
 from src.main.routers import games, lobbies, players
@@ -65,7 +65,7 @@ async def not_found_error_handler(_: Request, exc: NotFoundError) -> JSONRespons
     return JSONResponse(status_code=404, content=str(exc))
 
 
-@fastapi_app.exception_handler(BadRequestException)
+@fastapi_app.exception_handler(BadRequestError)
 async def bad_request_error_handler(_: Request, exc: NotFoundError) -> JSONResponse:
     """Return 404 for not found errors"""
     return JSONResponse(status_code=400, content=str(exc))

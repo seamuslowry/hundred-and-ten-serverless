@@ -133,7 +133,8 @@ def test_queue_multiple_actions(client: TestClient):
 
     # manual player leaves to automate themselves
     results = client.post(
-        f"/players/{manual_player}/games/{game['id']}/leave",
+        f"/players/{manual_player}/games/{game['id']}/players",
+        json={"type": "LEAVE"},
         headers={"authorization": f"Bearer {manual_player}"},
     ).json()
 
