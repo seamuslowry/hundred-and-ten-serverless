@@ -26,7 +26,6 @@ from src.main.models.internal import (
     NaiveAutomatedPlayer,
 )
 from src.main.models.internal.errors import AuthorizationError, BadRequestError
-from src.main.services import GameService
 from src.main.services import GameService, PlayerService
 
 # Type alias for game responses (can be started or completed)
