@@ -31,10 +31,11 @@ def test_queue_bid_action(client: TestClient):
         json={"type": "BID", "amount": BidAmount.PASS},
         headers={"authorization": f"Bearer {manual_player}"},
     ).json()
+
     assert {
         "type": "BID",
-        "player_id": DEFAULT_ID,
         "amount": BidAmount.SHOOT_THE_MOON,
+        "player_id": DEFAULT_ID,
     } in results
 
     game = get_game(client, game["id"], manual_player)
