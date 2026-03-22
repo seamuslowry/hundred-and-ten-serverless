@@ -55,12 +55,6 @@ class CreateLobbyRequest(BaseModel):
     accessibility: str = "PUBLIC"
 
 
-class InviteRequest(BaseModel):
-    """Request body for inviting players"""
-
-    invitees: list[str] = []
-
-
 class SearchPlayersRequest(BaseModel):
     """Request body for searching players"""
 
