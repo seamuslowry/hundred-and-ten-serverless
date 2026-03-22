@@ -8,8 +8,6 @@ from src.main.models.db import Player as DbPlayer
 from src.main.models.internal import Player
 from src.main.models.internal.errors import NotFoundError
 
-MAX = 20
-
 
 class PlayerService:
     """A service used to handle the business logic of players"""
@@ -38,7 +36,8 @@ class PlayerService:
                     RegEx(DbPlayer.name, search_request.search_text, "i"),
                     with_children=True,
                 )
-                .limit(MAX)
+                .skip(search_request.offset)
+                .limit(search_request.limit)
                 .to_list(),
             )
         )
