@@ -34,7 +34,7 @@ def player(test_client: TestClient, upsert_player: Player) -> dict[str, Any]:
         ),
     ):
         resp = test_client.put(
-            f"/players/{upsert_player.player_id}/self",
+            f"/players/{upsert_player.player_id}",
             headers={"authorization": f"Bearer {upsert_player.player_id}"},
         )
     return resp.json()

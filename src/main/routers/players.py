@@ -26,7 +26,7 @@ async def search_players(
     return [serialize.player(u) for u in await PlayerService.search(search_text or "")]
 
 
-@router.put("/self", response_model=Player)
+@router.put("", response_model=Player)
 async def refresh(identity: Identity = Depends(get_authorized_identity)):
     """Save the authenticated principal as a player in the DB"""
     return serialize.player(
