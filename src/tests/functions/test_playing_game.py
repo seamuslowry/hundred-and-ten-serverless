@@ -8,7 +8,6 @@ from src.tests.helpers import (
     game_with_manual_player,
     get_game,
     get_suggestion,
-    lobby_game,
     queue_action,
     started_game,
 )
@@ -153,23 +152,7 @@ def test_leave_playing_game_as_organizer(client: TestClient):
 
 def test_leave_playing_game_as_player(client: TestClient):
     """A player can leave an active game by automating themselves"""
-    lobby = lobby_game(client)
-    player = "player"
-
-    # join as player
-    client.post(
-        f"/players/{player}/lobbies/{lobby['id']}/join",
-        headers={"authorization": f"Bearer {player}"},
-    )
-
-    # start the game
-    resp = client.post(
-        f"/players/{lobby['organizer']['id']}/lobbies/{lobby['id']}/start",
-        headers={"authorization": f"Bearer {lobby['organizer']['id']}"},
-    )
-
-    game = resp.json()
-
+    game, player = game_with_manual_player(client)
     non_organizer_player = next(p for p in game["players"] if p["id"] == player)
     assert non_organizer_player
     assert not non_organizer_player["automate"]

@@ -46,11 +46,12 @@ def started_game(
     """Get a started game waiting for the first move"""
     created_lobby = lobby_game(test_client, organizer=organizer, name=name)
     organizer = created_lobby["organizer"]["id"]
-    resp = test_client.post(
+    results = test_client.post(
         f"/players/{organizer}/lobbies/{created_lobby['id']}/start",
         headers={"authorization": f"Bearer {organizer}"},
-    )
-    return resp.json()
+    ).json()
+    assert {"type": "GAME_START"} in results
+    return get_game(test_client, created_lobby["id"], organizer)
 
 
 def completed_game(test_client: TestClient) -> dict[str, Any]:
@@ -102,7 +103,8 @@ def game_with_manual_player(test_client: TestClient) -> tuple[dict[str, Any], st
         f"/players/{organizer}/lobbies/{lobby['id']}/start",
         headers={"authorization": f"Bearer {organizer}"},
     )
-    return resp.json(), manual_player
+    assert 200 == resp.status_code
+    return get_game(test_client, lobby["id"], organizer), manual_player
 
 
 def queue_action(

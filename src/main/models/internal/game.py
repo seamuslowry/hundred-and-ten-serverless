@@ -101,6 +101,7 @@ class Game(BaseGame):
     def from_lobby(lobby: Lobby) -> "Game":
         """Create a Game from a Lobby (starts the game)"""
         return Game(
+            id=lobby.id,
             name=lobby.name,
             seed=lobby.seed,
             accessibility=lobby.accessibility,
