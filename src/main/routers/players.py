@@ -25,6 +25,14 @@ async def search_players(
     return [serialize.player(u) for u in await PlayerService.search(body)]
 
 
+@router.get("/{player_id}", response_model=Player)
+async def get_player(
+    player_id: str,
+):
+    """Get player"""
+    return serialize.player(await PlayerService.by_player_id(player_id))
+
+
 @router.put("/{player_id}", response_model=Player)
 async def refresh(
     identity: Identity = Depends(get_authorized_identity_for_path_player),

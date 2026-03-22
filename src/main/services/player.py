@@ -6,6 +6,7 @@ from src.main.mappers.db import deserialize, serialize
 from src.main.models.client.requests import SearchPlayersRequest
 from src.main.models.db import Player as DbPlayer
 from src.main.models.internal import Player
+from src.main.models.internal.errors import NotFoundError
 
 MAX = 20
 
@@ -41,6 +42,15 @@ class PlayerService:
                 .to_list(),
             )
         )
+
+    @staticmethod
+    async def by_player_id(player_id: str) -> Player:
+        """Retrieve the player with the player ID provided"""
+        result = await DbPlayer.find_one(DbPlayer.player_id == player_id, with_children=True)
+        if not result:
+            raise NotFoundError(f"No player found with id {player_id}")
+
+        return deserialize.player(result)
 
     @staticmethod
     async def by_player_ids(player_ids: list[str]) -> list[Player]:

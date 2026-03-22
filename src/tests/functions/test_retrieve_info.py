@@ -193,6 +193,30 @@ def test_search_players(client: TestClient):
     assert player_three.player_id not in retrieved_player_ids
 
 
+def test_get_player(client: TestClient):
+    """Can retrieve player information"""
+    # create new unique player
+    p = player(client, Player(f"{time()}retrieve", f"{time()}retrieve"))
+
+    # get player
+    resp = client.get(
+        f"/players/{p['id']}",
+        headers={"authorization": f"Bearer {DEFAULT_ID}"},
+    )
+    retrieved_player = resp.json()
+    assert retrieved_player['id'] == p['id']
+
+
+def test_get_nonexistent_player(client: TestClient):
+    """404s on not found player"""
+    # get players
+    resp = client.get(
+        "/players/nonsense",
+        headers={"authorization": f"Bearer {DEFAULT_ID}"},
+    )
+    assert 404 == resp.status_code
+
+
 def test_get_suggestion_on_other_turn(client: TestClient):
     """The game will provide a suggestion on another player's turn"""
     game = started_game(client)
