@@ -88,13 +88,13 @@ class SearchGamesRequest(BaseModel):
     winner_player_id: Optional[str] = Field(default=None, alias="winner")
 
 
-class LeaveGameRequest(BaseModel):
+class GamePlayerLeaveRequest(BaseModel):
     """Request to leave a game as a player"""
 
     type: Literal["LEAVE"]
 
 
-class KickGameRequest(BaseModel):
+class GamePlayerKickRequest(BaseModel):
     """Request to kick a player from a game"""
 
     type: Literal["KICK"]
@@ -102,5 +102,5 @@ class KickGameRequest(BaseModel):
 
 
 type GamePlayerRequest = Annotated[
-    Union[LeaveGameRequest, KickGameRequest], Field(discriminator="type")
+    Union[GamePlayerLeaveRequest, GamePlayerKickRequest], Field(discriminator="type")
 ]

@@ -11,8 +11,8 @@ from src.main.mappers.client import deserialize, serialize
 from src.main.models.client.requests import (
     ActRequest,
     GamePlayerRequest,
-    KickGameRequest,
-    LeaveGameRequest,
+    GamePlayerKickRequest,
+    GamePlayerLeaveRequest,
     SearchGamesRequest,
 )
 from src.main.models.client.responses import (
@@ -110,9 +110,9 @@ async def leave_game(
     initial_event_knowledge = len(game.events)
 
     match body:
-        case LeaveGameRequest():
+        case GamePlayerLeaveRequest():
             game.leave(player_id)
-        case KickGameRequest():
+        case GamePlayerKickRequest():
             if player_id != game.organizer.id:
                 raise AuthorizationError("Only the organizer may kick players")
             game.leave(body.player_id)
