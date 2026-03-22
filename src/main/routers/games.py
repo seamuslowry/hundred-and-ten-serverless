@@ -69,7 +69,7 @@ async def suggestion(player_id: str, game_id: PydanticObjectId):
     )
 
 
-@router.post("/{game_id}/act", response_model=list[Event])
+@router.post("/{game_id}/actions", response_model=list[Event])
 async def act(player_id: str, game_id: PydanticObjectId, body: ActRequest):
     """Act in a 110 game"""
     game = await GameService.get(game_id)

@@ -28,7 +28,7 @@ def test_queue_bid_action(client: TestClient):
 
     # bid as manual player
     results = client.post(
-        f"/players/{manual_player}/games/{game['id']}/act",
+        f"/players/{manual_player}/games/{game['id']}/actions",
         json={"type": "BID", "amount": BidAmount.PASS},
         headers={"authorization": f"Bearer {manual_player}"},
     ).json()
@@ -59,7 +59,7 @@ def test_queue_pass_action(client: TestClient):
 
     # bid as manual player
     results = client.post(
-        f"/players/{manual_player}/games/{game['id']}/act",
+        f"/players/{manual_player}/games/{game['id']}/actions",
         json={"type": "BID", "amount": BidAmount.PASS},
         headers={"authorization": f"Bearer {manual_player}"},
     ).json()
@@ -167,7 +167,7 @@ def test_invalid_action_clears_queue(client: TestClient):
 
     # manual player bids higher; queued actions are checked against new game state
     results = client.post(
-        f"/players/{manual_player}/games/{game['id']}/act",
+        f"/players/{manual_player}/games/{game['id']}/actions",
         json={"type": "BID", "amount": BidAmount.SHOOT_THE_MOON},
         headers={"authorization": f"Bearer {manual_player}"},
     ).json()
@@ -204,7 +204,7 @@ def test_valid_queued_action_survives_other_players_turns(client: TestClient):
 
     # manual player bids FIFTEEN
     results = client.post(
-        f"/players/{manual_player}/games/{game['id']}/act",
+        f"/players/{manual_player}/games/{game['id']}/actions",
         json={"type": "BID", "amount": BidAmount.FIFTEEN},
         headers={"authorization": f"Bearer {manual_player}"},
     ).json()

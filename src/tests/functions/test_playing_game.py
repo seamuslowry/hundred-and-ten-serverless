@@ -24,7 +24,7 @@ def test_perform_round_actions(client: TestClient):
 
     # bid
     resp = client.post(
-        f"/players/{DEFAULT_ID}/games/{created_game['id']}/act",
+        f"/players/{DEFAULT_ID}/games/{created_game['id']}/actions",
         json={"type": "BID", "amount": BidAmount.SHOOT_THE_MOON},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
@@ -47,7 +47,7 @@ def test_perform_round_actions(client: TestClient):
 
     # select trump
     results = client.post(
-        f"/players/{DEFAULT_ID}/games/{created_game['id']}/act",
+        f"/players/{DEFAULT_ID}/games/{created_game['id']}/actions",
         json={"type": "SELECT_TRUMP", "suit": suggested_trump["suit"]},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     ).json()
@@ -68,7 +68,7 @@ def test_perform_round_actions(client: TestClient):
 
     # discard
     results = client.post(
-        f"/players/{DEFAULT_ID}/games/{created_game['id']}/act",
+        f"/players/{DEFAULT_ID}/games/{created_game['id']}/actions",
         json={"type": "DISCARD", "cards": suggested_discard["cards"]},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     ).json()
@@ -90,7 +90,7 @@ def test_perform_round_actions(client: TestClient):
 
     # play
     results = client.post(
-        f"/players/{DEFAULT_ID}/games/{created_game['id']}/act",
+        f"/players/{DEFAULT_ID}/games/{created_game['id']}/actions",
         json={"type": "PLAY", "card": suggested_play["card"]},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     ).json()
