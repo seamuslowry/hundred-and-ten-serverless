@@ -6,13 +6,24 @@ from typing import Optional, Union, override
 from uuid import uuid4
 
 from hundredandten import HundredAndTen
-from hundredandten.actions import Action
-from hundredandten.constants import RoundStatus
-from hundredandten.round import Round
+from hundredandten.actions import (
+    Action as EngineAction,
+)
+from hundredandten.actions import (
+    Play as EnginePlay,
+)
+from hundredandten.constants import (
+    RoundStatus,
+)
+from hundredandten.deck import Card as EngineCard
 from hundredandten.state import GameState
 
-from .constants import Accessibility, GameStatus
-from .player import NaiveCpu, PlayerInGame
+from src.main.mappers.engine import serialize
+
+from .actions import Action, Card, Play
+from .constants import Accessibility, CardNumber, CardSuit, GameStatus
+from .player import NaiveCpu, PlayerInGame, PlayerInRound
+from .trick import Trick
 
 
 class PlayerGroup(list[PlayerInGame]):
@@ -95,7 +106,9 @@ class Game(BaseGame):
     _game: HundredAndTen = field(init=False, repr=False)
 
     def __post_init__(self, initial_moves: Optional[list[Action]]):
-        self._game = self._initialize_game(initial_moves or [])
+        self._game = self._initialize_game(
+            [serialize.action(m) for m in (initial_moves or [])]
+        )
 
     @staticmethod
     def from_lobby(lobby: Lobby) -> "Game":
@@ -110,8 +123,14 @@ class Game(BaseGame):
             initial_moves=[],
         )
 
+    # TODO: uses internal actions
+    # note to self: this should be done by having this class
+    # maintain its own list of moves that can only be appended to after
+    # the engine has validated
+    # this lets the game moves be richer than the engine's without needing
+    # complex conversion logic
     @property
-    def moves(self) -> list[Action]:
+    def moves(self) -> list[EngineAction]:
         """Get all moves made in the game"""
         return self._game.moves
 
@@ -130,10 +149,59 @@ class Game(BaseGame):
         return None
 
     @property
-    def active_round(self) -> Round:
-        """Get the current active round"""
-        return self._game.active_round
+    def active_player_id(self) -> str:
+        """Get the current active player ID"""
+        return self._game.active_round.active_player.identifier
 
+    @property
+    def dealer_player_id(self) -> str:
+        """Get the current dealer player ID"""
+        return self._game.active_round.dealer.identifier
+
+    @property
+    def bidder_player_id(self) -> Optional[str]:
+        """Get the current bidding player ID"""
+        return (
+            self._game.active_round.active_bidder.identifier
+            if self._game.active_round.active_bidder
+            else None
+        )
+
+    @property
+    def active_bid(self) -> Optional[int]:
+        """Get the current bidding player ID"""
+        return (
+            self._game.active_round.active_bid.value
+            if self._game.active_round.active_bid
+            else None
+        )
+
+    @property
+    def trump(self) -> Optional[CardSuit]:
+        """Get the selected trump"""
+        return (
+            CardSuit[self._game.active_round.trump.name]
+            if self._game.active_round.trump
+            else None
+        )
+
+    @property
+    def current_round_tricks(self) -> list[Trick]:
+        """The tricks in the current round"""
+        return [
+            Trick(
+                bleeding=t.bleeding,
+                plays=[self.__convert_engine_play(p) for p in t.plays],
+                winning_play=(
+                    self.__convert_engine_play(t.winning_play)
+                    if t.winning_play
+                    else None
+                ),
+            )
+            for t in self._game.active_round.tricks
+        ]
+
+    # TODO: uses internal events (generate non-move events)
     @property
     def events(self) -> list:
         """Get all game events"""
@@ -151,7 +219,19 @@ class Game(BaseGame):
 
     def act(self, action: Action) -> None:
         """Perform a game action"""
-        self._game.act(action)
+        self._game.act(serialize.action(action))
+
+    def get_player_in_round(self, player_id: str) -> PlayerInRound:
+        """Return the representation of this player as they are in the round"""
+        return PlayerInRound(
+            id=player_id,
+            hand=[
+                self.__convert_engine_card(c)
+                for c in next(
+                    p for p in self._game.active_round.players if p == player_id
+                ).hand
+            ],
+        )
 
     def queue_action_for(self, player_id: str, action: Action) -> None:
         """Queue an action for a player"""
@@ -180,9 +260,15 @@ class Game(BaseGame):
         """Return the game state known for a particular player"""
         return self._game.game_state_for(player_id)
 
-    def _initialize_game(self, moves: list[Action]) -> HundredAndTen:
+    def _initialize_game(self, moves: list[EngineAction]) -> HundredAndTen:
         return HundredAndTen(
             players=[p.as_engine_player() for p in self.ordered_players],
             seed=self.seed,
             initial_moves=moves,
         )
+
+    def __convert_engine_card(self, c: EngineCard) -> Card:
+        return Card(suit=CardSuit[c.suit.name], number=CardNumber(c.number.name))
+
+    def __convert_engine_play(self, p: EnginePlay) -> Play:
+        return Play(player_id=p.identifier, card=self.__convert_engine_card(p.card))

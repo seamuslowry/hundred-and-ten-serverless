@@ -191,22 +191,20 @@ class PlayerInGame(BaseModel):
     """A class to model the client format of a Hundred and Ten person"""
 
     id: str
-    automate: bool
-    queued_actions: list[UnorderedActionResponse]
 
 
-class OtherPlayerInRound(BaseModel):
+class OtherPlayerInRound(PlayerInGame):
     """A class to model the client format of another Hundred and Ten player"""
 
-    id: str
     hand_size: int
+    automate: bool
 
 
-class SelfInRound(BaseModel):
+class SelfInRound(PlayerInGame):
     """A class to model the client format of the logged in Hundred and Ten player"""
 
-    id: str
     hand: list[Card]
+    queued_actions: list[UnorderedActionResponse]
 
 
 type PlayerInRound = Union[SelfInRound, OtherPlayerInRound]
@@ -224,16 +222,16 @@ class Trick(BaseModel):
     winning_play: Optional[QueuedPlayCard] = None
 
 
-class Round(BaseModel):
-    """A class to model the client format of a Hundred and Ten round"""
+# class Round(BaseModel):
+#     """A class to model the client format of a Hundred and Ten round"""
 
-    players: list[PlayerInRound]
-    dealer: PlayerInRound
-    bidder: Optional[PlayerInRound] = None
-    bid: Optional[int] = None
-    trump: Optional[SelectableSuit] = None
-    tricks: list[Trick]
-    active_player: Optional[PlayerInRound] = None
+#     # players: list[PlayerInRound]
+#     dealer: PlayerInRound
+#     bidder: Optional[PlayerInRound] = None
+#     bid: Optional[int] = None
+#     trump: Optional[SelectableSuit] = None
+#     tricks: list[Trick]
+#     active_player: Optional[PlayerInRound] = None
 
 
 class Game(BaseModel):
@@ -256,9 +254,14 @@ class WaitingGame(Game):
 class StartedGame(Game):
     """A class to model the client format of a started Hundred and Ten game"""
 
-    round: Optional[Round] = None
     scores: dict[str, int]
-    players: list[PlayerInGame]
+    dealer_player_id: str
+    bidder_player_id: Optional[str]
+    active_player_id: Optional[str]
+    bid_amount: Optional[int]
+    trump: Optional[SelectableSuit]
+    tricks: list[Trick]
+    players: list[PlayerInRound]
 
 
 class CompletedGame(Game):

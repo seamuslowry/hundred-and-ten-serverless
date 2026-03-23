@@ -23,9 +23,7 @@ def game(m_game: internal.Game) -> db.Game:
     """Convert a Game model to its DB DTO"""
     winner = m_game.winner.id if m_game.winner else None
     active_player = (
-        m_game.active_round.active_player.identifier
-        if m_game.status != internal.GameStatus.WON
-        else None
+        m_game.active_player_id if m_game.status != internal.GameStatus.WON else None
     )
 
     return db.GameV0(
@@ -78,25 +76,25 @@ def __move(move: internal.Action) -> db.Move:
     if isinstance(move, internal.Bid):
         return db.BidMove(
             type="bid",
-            player_id=move.identifier,
-            amount=move.amount.value,
+            player_id=move.player_id,
+            amount=move.amount,
         )
     if isinstance(move, internal.SelectTrump):
         return db.SelectTrumpMove(
             type="select_trump",
-            player_id=move.identifier,
+            player_id=move.player_id,
             suit=db.SelectableSuit[move.suit.name],
         )
     if isinstance(move, internal.Discard):
         return db.DiscardMove(
             type="discard",
-            player_id=move.identifier,
+            player_id=move.player_id,
             cards=list(map(__card, move.cards)),
         )
     if isinstance(move, internal.Play):
         return db.PlayMove(
             type="play",
-            player_id=move.identifier,
+            player_id=move.player_id,
             card=__card(move.card),
         )
     raise ValueError(f"Unknown move type: {type(move)}")  # pragma: no cover

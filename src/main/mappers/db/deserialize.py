@@ -58,22 +58,22 @@ def __move(db_move: db.Move) -> internal.Action:
     match db_move:
         case db.BidMove():
             return internal.Bid(
-                identifier=player_id,
+                player_id=player_id,
                 amount=internal.BidAmount(db_move.amount),
             )
         case db.SelectTrumpMove():
             return internal.SelectTrump(
-                identifier=player_id,
-                suit=internal.SelectableSuit[db_move.suit],
+                player_id=player_id,
+                suit=internal.CardSuit[db_move.suit],
             )
         case db.DiscardMove():
             return internal.Discard(
-                identifier=player_id,
+                player_id=player_id,
                 cards=list(map(__card, db_move.cards)),
             )
         case db.PlayMove():
             return internal.Play(
-                identifier=player_id,
+                player_id=player_id,
                 card=__card(db_move.card),
             )
         # type: ignore[unreachable]
@@ -83,18 +83,8 @@ def __move(db_move: db.Move) -> internal.Action:
 
 def __card(db_card: db.Card) -> internal.Card:
     """Convert a card from the DB to its model"""
-    suit = None
 
-    try:
-        suit = internal.SelectableSuit[db_card.suit.name]
-    except KeyError:
-        pass
-
-    try:
-        suit = internal.UnselectableSuit[db_card.suit.name]
-    except KeyError:
-        pass
-
-    assert suit
-
-    return internal.Card(suit=suit, number=internal.CardNumber[db_card.number.name])
+    return internal.Card(
+        suit=internal.CardSuit[db_card.suit.name],
+        number=internal.CardNumber[db_card.number.name],
+    )

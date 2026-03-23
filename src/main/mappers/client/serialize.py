@@ -60,9 +60,17 @@ def game(
         id=m_game.id,
         name=m_game.name,
         status=m_game.status.name,
-        round=__round(m_game.active_round, client_player_id),
         scores=m_game.scores,
-        players=[__player_in_game(p) for p in m_game.ordered_players],
+        dealer_player_id=m_game.dealer_player_id,
+        bidder_player_id=m_game.bidder_player_id,
+        active_player_id=m_game.active_player_id,
+        bid_amount=m_game.active_bid,
+        trump=responses.SelectableSuit[m_game.trump.name] if m_game.trump else None,
+        tricks=[__trick(t) for t in m_game.current_round_tricks],
+        players=[
+            __player_in_round(p, m_game.get_player_in_round(p.id), client_player_id)
+            for p in m_game.ordered_players
+        ],
     )
 
 
@@ -79,30 +87,30 @@ def suggestion(m_action: internal.Action) -> responses.UnorderedActionResponse:
     """Return a suggested action as it can be provided to the client"""
     if isinstance(m_action, internal.Bid):
         return responses.QueuedBid(
-            type="BID", amount=m_action.amount, player_id=m_action.identifier
+            type="BID", amount=m_action.amount, player_id=m_action.player_id
         )
     if isinstance(m_action, internal.SelectTrump):
         return responses.QueuedSelectTrump(
             type="SELECT_TRUMP",
             suit=SelectableSuit[m_action.suit.name],
-            player_id=m_action.identifier,
+            player_id=m_action.player_id,
         )
     if isinstance(m_action, internal.Discard):
         return responses.QueuedDiscard(
             type="DISCARD",
             cards=[__card(c) for c in m_action.cards],
-            player_id=m_action.identifier,
+            player_id=m_action.player_id,
         )
     if isinstance(m_action, internal.Play):
         return responses.QueuedPlayCard(
-            type="PLAY", card=__card(m_action.card), player_id=m_action.identifier
+            type="PLAY", card=__card(m_action.card), player_id=m_action.player_id
         )
     raise ValueError("No suggestion available at this time")
 
 
 def __play(play: internal.Play) -> responses.QueuedPlayCard:
     return responses.QueuedPlayCard(
-        type="PLAY", player_id=play.identifier, card=__card(play.card)
+        type="PLAY", player_id=play.player_id, card=__card(play.card)
     )
 
 
@@ -114,54 +122,32 @@ def __trick(trick: internal.Trick) -> responses.Trick:
     )
 
 
-def __round(m_round: internal.Round, client_player_id: str) -> responses.Round:
-    non_zero_bids = [bid for bid in m_round.bids if bid.amount > 0]
-    current_bid = (
-        non_zero_bids[-1]
-        if non_zero_bids
-        else internal.Bid("", internal.BidAmount.PASS)
-    )
-    bidder = m_round.active_bidder
-
-    return responses.Round(
-        players=[__player_in_round(p, client_player_id) for p in m_round.players],
-        dealer=__player_in_round(m_round.dealer, client_player_id),
-        bidder=__player_in_round(bidder, client_player_id) if bidder else None,
-        bid=current_bid.amount.value if current_bid.amount else None,
-        trump=SelectableSuit[m_round.trump.name] if m_round.trump else None,
-        tricks=[__trick(t) for t in m_round.tricks],
-        active_player=(
-            __player_in_round(m_round.active_player, client_player_id)
-            if not m_round.completed
-            else None
-        ),
-    )
-
-
 def __player_in_game(player_in_game: internal.PlayerInGame) -> responses.PlayerInGame:
     return responses.PlayerInGame(
         id=player_in_game.id,
-        automate=isinstance(player_in_game, internal.NaiveCpu),
-        queued_actions=(
-            [suggestion(a) for a in player_in_game.queued_actions]
-            if isinstance(player_in_game, internal.Human)
-            else []
-        ),
     )
 
 
 def __player_in_round(
-    round_player: internal.RoundPlayer, client_player_id: str
+    player_in_game: internal.PlayerInGame,
+    player_in_round: internal.PlayerInRound,
+    client_player_id: str,
 ) -> responses.PlayerInRound:
-    if round_player.identifier == client_player_id:
+    if player_in_round.id == client_player_id:
         return responses.SelfInRound(
-            id=round_player.identifier,
-            hand=[__card(c) for c in round_player.hand],
+            id=player_in_round.id,
+            hand=[__card(c) for c in player_in_round.hand],
+            queued_actions=(
+                [suggestion(a) for a in player_in_game.queued_actions]
+                if isinstance(player_in_game, internal.Human)
+                else []
+            ),
         )
 
     return responses.OtherPlayerInRound(
-        id=round_player.identifier,
-        hand_size=len(round_player.hand),
+        id=player_in_round.id,
+        hand_size=len(player_in_round.hand),
+        automate=isinstance(player_in_game, internal.NaiveCpu),
     )
 
 
@@ -171,6 +157,7 @@ def __card(card: internal.Card) -> responses.Card:
     )
 
 
+# TODO: need to verify this works with internal events
 def __event(
     event: internal.Event, sequence: int, client_player_id: str
 ) -> responses.Event:
@@ -197,25 +184,25 @@ def __event(
         result = responses.BidAction(
             type="BID",
             sequence=sequence,
-            player_id=event.identifier,
-            amount=event.amount.value,
+            player_id=event.player_id,
+            amount=event.amount,
         )
 
     elif isinstance(event, internal.SelectTrump):
         result = responses.SelectTrumpAction(
             type="SELECT_TRUMP",
             sequence=sequence,
-            player_id=event.identifier,
+            player_id=event.player_id,
             suit=SelectableSuit[event.suit.name],
         )
     elif isinstance(event, internal.Discard):
         result = responses.DiscardAction(
             type="DISCARD",
             sequence=sequence,
-            player_id=event.identifier,
+            player_id=event.player_id,
             cards=(
                 [__card(c) for c in event.cards]
-                if client_player_id == event.identifier
+                if client_player_id == event.player_id
                 else len(event.cards)
             ),
         )
@@ -225,7 +212,7 @@ def __event(
         result = responses.PlayCardAction(
             type="PLAY",
             sequence=sequence,
-            player_id=event.identifier,
+            player_id=event.player_id,
             card=__card(event.card),
         )
     elif isinstance(event, internal.TrickEnd):
@@ -238,7 +225,10 @@ def __event(
         result = responses.RoundEnd(
             type="ROUND_END",
             sequence=sequence,
-            scores=[__score(s) for s in event.scores],
+            scores=[
+                responses.Score(player_id=identifier, value=score)
+                for identifier, score in event.scores.items()
+            ],
         )
     elif isinstance(event, internal.GameEnd):
         result = responses.GameEnd(
@@ -251,7 +241,3 @@ def __event(
         raise ValueError(f"Unknown event type: {type(event).__name__}")
 
     return result
-
-
-def __score(score: internal.Score) -> responses.Score:
-    return responses.Score(player_id=score.identifier, value=score.value)
