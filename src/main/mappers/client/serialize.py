@@ -78,30 +78,30 @@ def events(
 def suggestion(m_action: internal.Action) -> responses.UnorderedActionResponse:
     """Return a suggested action as it can be provided to the client"""
     if isinstance(m_action, internal.Bid):
-        return responses.UnorderedBid(
+        return responses.QueuedBid(
             type="BID", amount=m_action.amount, player_id=m_action.identifier
         )
     if isinstance(m_action, internal.SelectTrump):
-        return responses.UnorderedSelectTrump(
+        return responses.QueuedSelectTrump(
             type="SELECT_TRUMP",
             suit=SelectableSuit[m_action.suit.name],
             player_id=m_action.identifier,
         )
     if isinstance(m_action, internal.Discard):
-        return responses.UnorderedDiscard(
+        return responses.QueuedDiscard(
             type="DISCARD",
             cards=[__card(c) for c in m_action.cards],
             player_id=m_action.identifier,
         )
     if isinstance(m_action, internal.Play):
-        return responses.UnorderedPlayCard(
+        return responses.QueuedPlayCard(
             type="PLAY", card=__card(m_action.card), player_id=m_action.identifier
         )
     raise ValueError("No suggestion available at this time")
 
 
-def __play(play: internal.Play) -> responses.UnorderedPlayCard:
-    return responses.UnorderedPlayCard(
+def __play(play: internal.Play) -> responses.QueuedPlayCard:
+    return responses.QueuedPlayCard(
         type="PLAY", player_id=play.identifier, card=__card(play.card)
     )
 

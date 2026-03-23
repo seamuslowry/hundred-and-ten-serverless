@@ -120,11 +120,11 @@ type Event = Annotated[
 ]
 
 # =============================================================================
-# Unordered Actions
+#  Queued Actions
 # =============================================================================
 
 
-class UnorderedBid(BaseModel):
+class QueuedBid(BaseModel):
     """
     A class to model the client format of a Hundred and Ten bid action without context of sequence
     """
@@ -134,7 +134,7 @@ class UnorderedBid(BaseModel):
     amount: int
 
 
-class UnorderedSelectTrump(BaseModel):
+class QueuedSelectTrump(BaseModel):
     """
     A class to model the client format of a Hundred and Ten select trump action
     without context of sequence
@@ -145,7 +145,7 @@ class UnorderedSelectTrump(BaseModel):
     suit: SelectableSuit
 
 
-class UnorderedDiscard(BaseModel):
+class QueuedDiscard(BaseModel):
     """
     A class to model the client format of a Hundred and Ten discard action
     without context of sequence
@@ -156,7 +156,7 @@ class UnorderedDiscard(BaseModel):
     cards: Union[list[Card], int]
 
 
-class UnorderedPlayCard(BaseModel):
+class QueuedPlayCard(BaseModel):
     """
     A class to model the client format of a Hundred and Ten play action without context of sequence
     """
@@ -167,9 +167,9 @@ class UnorderedPlayCard(BaseModel):
 
 
 # Union type for all unordered action types
-# (used for suggestions, queued actions, and round internal actions)
+# (used for suggestions and queued actions)
 type UnorderedActionResponse = Annotated[
-    Union[UnorderedBid, UnorderedSelectTrump, UnorderedDiscard, UnorderedPlayCard],
+    Union[QueuedBid, QueuedSelectTrump, QueuedDiscard, QueuedPlayCard],
     Field(discriminator="type"),
 ]
 
@@ -220,8 +220,8 @@ class Trick(BaseModel):
     """A class to model the client format of a Hundred and Ten trick"""
 
     bleeding: bool
-    plays: list[UnorderedPlayCard]
-    winning_play: Optional[UnorderedPlayCard] = None
+    plays: list[QueuedPlayCard]
+    winning_play: Optional[QueuedPlayCard] = None
 
 
 class Round(BaseModel):
