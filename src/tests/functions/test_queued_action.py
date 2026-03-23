@@ -37,8 +37,8 @@ def test_queue_bid_action(client: TestClient):
     contains_unsequenced(
         results,
         {
-            "type": "BID",
             "player_id": DEFAULT_ID,
+            "type": "BID",
             "amount": BidAmount.SHOOT_THE_MOON,
         },
     )
@@ -152,8 +152,8 @@ def test_queue_multiple_actions(client: TestClient):
         results,
         {
             "type": "PLAY",
-            "player_id": DEFAULT_ID,
             "card": card,
+            "player_id": DEFAULT_ID,
         },
     )
 
@@ -228,9 +228,9 @@ def test_valid_queued_action_survives_other_players_turns(client: TestClient):
     contains_unsequenced(
         results,
         {
+            "amount": BidAmount.SHOOT_THE_MOON,
             "type": "BID",
             "player_id": DEFAULT_ID,
-            "amount": BidAmount.SHOOT_THE_MOON,
         },
     )
 

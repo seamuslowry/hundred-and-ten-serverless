@@ -104,6 +104,7 @@ def test_perform_round_actions(client: TestClient):
         json={"type": "PLAY", "card": suggested_play["card"]},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     ).json()
+
     contains_unsequenced(
         results,
         {

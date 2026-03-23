@@ -125,7 +125,9 @@ type Event = Annotated[
 
 
 class UnorderedBid(BaseModel):
-    """A class to model the client format of a Hundred and Ten bid action without context of sequence"""
+    """
+    A class to model the client format of a Hundred and Ten bid action without context of sequence
+    """
 
     type: Literal["BID"]
     player_id: str
@@ -133,7 +135,10 @@ class UnorderedBid(BaseModel):
 
 
 class UnorderedSelectTrump(BaseModel):
-    """A class to model the client format of a Hundred and Ten select trump action without context of sequence"""
+    """
+    A class to model the client format of a Hundred and Ten select trump action
+    without context of sequence
+    """
 
     type: Literal["SELECT_TRUMP"]
     player_id: str
@@ -141,7 +146,10 @@ class UnorderedSelectTrump(BaseModel):
 
 
 class UnorderedDiscard(BaseModel):
-    """A class to model the client format of a Hundred and Ten discard action without context of sequence"""
+    """
+    A class to model the client format of a Hundred and Ten discard action
+    without context of sequence
+    """
 
     type: Literal["DISCARD"]
     player_id: str
@@ -149,7 +157,9 @@ class UnorderedDiscard(BaseModel):
 
 
 class UnorderedPlayCard(BaseModel):
-    """A class to model the client format of a Hundred and Ten play action without context of sequence"""
+    """
+    A class to model the client format of a Hundred and Ten play action without context of sequence
+    """
 
     type: Literal["PLAY"]
     player_id: str
