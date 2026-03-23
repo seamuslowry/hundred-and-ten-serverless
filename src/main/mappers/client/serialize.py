@@ -70,36 +70,38 @@ def events(
     m_events: list[internal.Event], client_player_id: str
 ) -> list[responses.Event]:
     """Return a list of events as they can be provided to the client"""
-    return [__event(e, client_player_id) for e in m_events]
+    return [
+        __event(event, index, client_player_id) for index, event in enumerate(m_events)
+    ]
 
 
-def action(m_action: internal.Action) -> responses.GameAction:
+def suggestion(m_action: internal.Action) -> responses.UnorderedActionResponse:
     """Return a suggested action as it can be provided to the client"""
     if isinstance(m_action, internal.Bid):
-        return responses.BidAction(
+        return responses.QueuedBid(
             type="BID", amount=m_action.amount, player_id=m_action.identifier
         )
     if isinstance(m_action, internal.SelectTrump):
-        return responses.SelectTrumpAction(
+        return responses.QueuedSelectTrump(
             type="SELECT_TRUMP",
             suit=SelectableSuit[m_action.suit.name],
             player_id=m_action.identifier,
         )
     if isinstance(m_action, internal.Discard):
-        return responses.DiscardAction(
+        return responses.QueuedDiscard(
             type="DISCARD",
             cards=[__card(c) for c in m_action.cards],
             player_id=m_action.identifier,
         )
     if isinstance(m_action, internal.Play):
-        return responses.PlayCardAction(
+        return responses.QueuedPlayCard(
             type="PLAY", card=__card(m_action.card), player_id=m_action.identifier
         )
     raise ValueError("No suggestion available at this time")
 
 
-def __play(play: internal.Play) -> responses.PlayCardAction:
-    return responses.PlayCardAction(
+def __play(play: internal.Play) -> responses.QueuedPlayCard:
+    return responses.QueuedPlayCard(
         type="PLAY", player_id=play.identifier, card=__card(play.card)
     )
 
@@ -141,7 +143,7 @@ def __player_in_game(player_in_game: internal.PlayerInGame) -> responses.PlayerI
         id=player_in_game.id,
         automate=isinstance(player_in_game, internal.NaiveCpu),
         queued_actions=(
-            [action(a) for a in player_in_game.queued_actions]
+            [suggestion(a) for a in player_in_game.queued_actions]
             if isinstance(player_in_game, internal.Human)
             else []
         ),
@@ -169,30 +171,81 @@ def __card(card: internal.Card) -> responses.Card:
     )
 
 
-def __event(event: internal.Event, client_player_id: str) -> responses.Event:
+def __event(
+    event: internal.Event, sequence: int, client_player_id: str
+) -> responses.Event:
     """Convert the provided event into the structure it should provide the client"""
     result: Optional[responses.Event] = None
 
     if isinstance(event, internal.GameStart):
-        result = __game_start_event()
+        result = responses.GameStart(type="GAME_START", sequence=sequence)
     elif isinstance(event, internal.RoundStart):
-        result = __round_start_event(event, client_player_id)
+        result = responses.RoundStart(
+            type="ROUND_START",
+            sequence=sequence,
+            dealer=event.dealer,
+            hands={
+                player_id: (
+                    [__card(c) for c in hand]
+                    if player_id == client_player_id
+                    else len(hand)
+                )
+                for player_id, hand in event.hands.items()
+            },
+        )
     elif isinstance(event, internal.Bid):
-        result = __bid_event(event)
+        result = responses.BidAction(
+            type="BID",
+            sequence=sequence,
+            player_id=event.identifier,
+            amount=event.amount.value,
+        )
+
     elif isinstance(event, internal.SelectTrump):
-        result = __select_trump_event(event)
+        result = responses.SelectTrumpAction(
+            type="SELECT_TRUMP",
+            sequence=sequence,
+            player_id=event.identifier,
+            suit=SelectableSuit[event.suit.name],
+        )
     elif isinstance(event, internal.Discard):
-        result = __discard_event(event, client_player_id)
+        result = responses.DiscardAction(
+            type="DISCARD",
+            sequence=sequence,
+            player_id=event.identifier,
+            cards=(
+                [__card(c) for c in event.cards]
+                if client_player_id == event.identifier
+                else len(event.cards)
+            ),
+        )
     elif isinstance(event, internal.TrickStart):
-        result = __trick_start_event()
+        result = responses.TrickStart(type="TRICK_START", sequence=sequence)
     elif isinstance(event, internal.Play):
-        result = __play_event(event)
+        result = responses.PlayCardAction(
+            type="PLAY",
+            sequence=sequence,
+            player_id=event.identifier,
+            card=__card(event.card),
+        )
     elif isinstance(event, internal.TrickEnd):
-        result = __trick_end_event(event)
+        result = responses.TrickEnd(
+            type="TRICK_END",
+            sequence=sequence,
+            winner_player_id=event.winner,
+        )
     elif isinstance(event, internal.RoundEnd):
-        result = __round_end_event(event)
+        result = responses.RoundEnd(
+            type="ROUND_END",
+            sequence=sequence,
+            scores=[__score(s) for s in event.scores],
+        )
     elif isinstance(event, internal.GameEnd):
-        result = __game_end_event(event)
+        result = responses.GameEnd(
+            type="GAME_END",
+            sequence=sequence,
+            winner_player_id=event.winner,
+        )
 
     if result is None:
         raise ValueError(f"Unknown event type: {type(event).__name__}")
@@ -200,89 +253,5 @@ def __event(event: internal.Event, client_player_id: str) -> responses.Event:
     return result
 
 
-def __game_start_event() -> responses.GameStart:
-    return responses.GameStart(type="GAME_START")
-
-
-def __round_start_event(
-    event: internal.RoundStart, client_player_id: str
-) -> responses.RoundStart:
-    return responses.RoundStart(
-        type="ROUND_START",
-        dealer=event.dealer,
-        hands={
-            player_id: (
-                [__card(c) for c in hand]
-                if player_id == client_player_id
-                else len(hand)
-            )
-            for player_id, hand in event.hands.items()
-        },
-    )
-
-
-def __bid_event(event: internal.Bid) -> responses.BidAction:
-    return responses.BidAction(
-        type="BID",
-        player_id=event.identifier,
-        amount=event.amount.value,
-    )
-
-
-def __select_trump_event(event: internal.SelectTrump) -> responses.SelectTrumpAction:
-    return responses.SelectTrumpAction(
-        type="SELECT_TRUMP",
-        player_id=event.identifier,
-        suit=SelectableSuit[event.suit.name],
-    )
-
-
-def __discard_event(
-    event: internal.Discard, client_player_id: str
-) -> responses.DiscardAction:
-    return responses.DiscardAction(
-        type="DISCARD",
-        player_id=event.identifier,
-        cards=(
-            [__card(c) for c in event.cards]
-            if client_player_id == event.identifier
-            else len(event.cards)
-        ),
-    )
-
-
-def __trick_start_event() -> responses.TrickStart:
-    return responses.TrickStart(type="TRICK_START")
-
-
-def __play_event(event: internal.Play) -> responses.PlayCardAction:
-    return responses.PlayCardAction(
-        type="PLAY",
-        player_id=event.identifier,
-        card=__card(event.card),
-    )
-
-
-def __trick_end_event(event: internal.TrickEnd) -> responses.TrickEnd:
-    return responses.TrickEnd(
-        type="TRICK_END",
-        winner_player_id=event.winner,
-    )
-
-
 def __score(score: internal.Score) -> responses.Score:
     return responses.Score(player_id=score.identifier, value=score.value)
-
-
-def __round_end_event(event: internal.RoundEnd) -> responses.RoundEnd:
-    return responses.RoundEnd(
-        type="ROUND_END",
-        scores=[__score(s) for s in event.scores],
-    )
-
-
-def __game_end_event(event: internal.GameEnd) -> responses.GameEnd:
-    return responses.GameEnd(
-        type="GAME_END",
-        winner_player_id=event.winner,
-    )

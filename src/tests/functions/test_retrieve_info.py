@@ -229,3 +229,33 @@ def test_get_suggestion_on_other_turn(client: TestClient):
     resp = request_suggestion(client, game["id"], non_active_player["id"])
 
     assert 200 == resp.status_code
+    assert resp.json()["type"] is not None
+
+
+def test_get_all_events(client: TestClient):
+    """The game will provide all events"""
+    game = completed_game(client)
+
+    events = client.get(
+        f"/players/{DEFAULT_ID}/games/{game['id']}/events",
+        headers={"authorization": f"Bearer {DEFAULT_ID}"},
+    ).json()
+
+    assert events[0]["type"] == "GAME_START"
+    assert events[0]["sequence"] == 0
+    assert events[-1]["type"] == "GAME_END"
+    assert events[-1]["sequence"] == len(events) - 1
+
+
+def test_get_some_events(client: TestClient):
+    """The game will provide some events"""
+    game = completed_game(client)
+
+    events = client.get(
+        f"/players/{DEFAULT_ID}/games/{game['id']}/events",
+        params={"skip": 20, "limit": 20},
+        headers={"authorization": f"Bearer {DEFAULT_ID}"},
+    ).json()
+
+    assert events[0]["sequence"] == 20
+    assert events[-1]["sequence"] == 39

@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 from src.main.models.internal import BidAmount, RoundStatus
 from src.tests.helpers import (
     DEFAULT_ID,
+    contains_unsequenced,
     game_with_manual_player,
     get_game,
     get_suggestion,
@@ -31,11 +32,14 @@ def test_perform_round_actions(client: TestClient):
     results = resp.json()
 
     # assert bid event in results
-    assert {
-        "type": "BID",
-        "player_id": DEFAULT_ID,
-        "amount": BidAmount.SHOOT_THE_MOON,
-    } in results
+    contains_unsequenced(
+        results,
+        {
+            "type": "BID",
+            "player_id": DEFAULT_ID,
+            "amount": BidAmount.SHOOT_THE_MOON,
+        },
+    )
 
     # assert that now in trump selection
     game = get_game(client, created_game["id"], DEFAULT_ID)
@@ -53,11 +57,14 @@ def test_perform_round_actions(client: TestClient):
     ).json()
 
     # assert trump selection event in results
-    assert {
-        "type": "SELECT_TRUMP",
-        "player_id": DEFAULT_ID,
-        "suit": suggested_trump["suit"],
-    } in results
+    contains_unsequenced(
+        results,
+        {
+            "type": "SELECT_TRUMP",
+            "player_id": DEFAULT_ID,
+            "suit": suggested_trump["suit"],
+        },
+    )
 
     game = get_game(client, created_game["id"], DEFAULT_ID)
     assert RoundStatus.DISCARD.name == game["status"]
@@ -74,12 +81,15 @@ def test_perform_round_actions(client: TestClient):
     ).json()
 
     # assert discard and trick start event in results
-    assert {
-        "type": "DISCARD",
-        "player_id": DEFAULT_ID,
-        "cards": suggested_discard["cards"],
-    } in results
-    assert {"type": "TRICK_START"} in results
+    contains_unsequenced(
+        results,
+        {
+            "type": "DISCARD",
+            "player_id": DEFAULT_ID,
+            "cards": suggested_discard["cards"],
+        },
+    )
+    contains_unsequenced(results, {"type": "TRICK_START"})
 
     game = get_game(client, created_game["id"], DEFAULT_ID)
     assert RoundStatus.TRICKS.name == game["status"]
@@ -94,11 +104,15 @@ def test_perform_round_actions(client: TestClient):
         json={"type": "PLAY", "card": suggested_play["card"]},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     ).json()
-    assert {
-        "type": "PLAY",
-        "player_id": DEFAULT_ID,
-        "card": suggested_play["card"],
-    } in results
+
+    contains_unsequenced(
+        results,
+        {
+            "type": "PLAY",
+            "player_id": DEFAULT_ID,
+            "card": suggested_play["card"],
+        },
+    )
 
     game = get_game(client, created_game["id"], DEFAULT_ID)
     assert RoundStatus.TRICKS.name == game["status"]

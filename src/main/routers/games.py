@@ -2,7 +2,7 @@
 The router for game operations.
 """
 
-from typing import Union
+from typing import Optional, Union
 
 from beanie import PydanticObjectId
 from fastapi import APIRouter
@@ -20,7 +20,7 @@ from src.main.models.client.responses import (
     Event,
     Player,
     StartedGame,
-    SuggestionResponse,
+    UnorderedActionResponse,
 )
 from src.main.models.internal import (
     NaiveAutomatedPlayer,
@@ -118,12 +118,27 @@ async def remove_queued_action(player_id: str, game_id: PydanticObjectId):
     return serialize.events(game.events[initial_event_knowledge:], player_id)
 
 
-@router.get("/{game_id}/suggestion", response_model=SuggestionResponse)
+@router.get("/{game_id}/events", response_model=list[Event])
+async def events(
+    player_id: str,
+    game_id: PydanticObjectId,
+    skip: int = 0,
+    limit: Optional[int] = None,
+):
+    """Retrieve the events in a 110 game."""
+    game = await GameService.get(game_id)
+
+    return serialize.events(game.events, player_id)[
+        skip : (skip + limit) if limit else None
+    ]
+
+
+@router.get("/{game_id}/suggestion", response_model=UnorderedActionResponse)
 async def suggestion(player_id: str, game_id: PydanticObjectId):
     """Ask for a suggestion in a 110 game"""
     game = await GameService.get(game_id)
 
-    return serialize.action(
+    return serialize.suggestion(
         NaiveAutomatedPlayer(player_id).act(game.game_state_for(player_id))
     )
 
