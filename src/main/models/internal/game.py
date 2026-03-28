@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import InitVar, dataclass, field
-from typing import Optional, Union, override
+from typing import Optional, override
 from uuid import uuid4
 
 from hundredandten import HundredAndTen
@@ -11,9 +11,6 @@ from hundredandten.actions import (
 )
 from hundredandten.actions import (
     Play as EnginePlay,
-)
-from hundredandten.constants import (
-    RoundStatus,
 )
 from hundredandten.deck import Card as EngineCard
 from hundredandten.state import GameState
@@ -135,11 +132,11 @@ class Game(BaseGame):
         return self._game.moves
 
     @property
-    def status(self) -> Union[GameStatus, RoundStatus]:
+    def status(self) -> GameStatus:
         """Get the current game status"""
         if self._game.winner:
             return GameStatus.WON
-        return self._game.active_round.status
+        return GameStatus[self._game.active_round.status.name]
 
     @property
     def winner(self) -> Optional[PlayerInGame]:

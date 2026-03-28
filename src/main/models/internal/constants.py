@@ -11,10 +11,12 @@ class Accessibility(str, Enum):
 
 
 class GameStatus(str, Enum):
-    """Status of a game at the app level (includes lobby phase)"""
+    """Status of a game"""
 
-    WAITING_FOR_PLAYERS = "WAITING_FOR_PLAYERS"
-    PLAYING = "PLAYING"
+    BIDDING = "BIDDING"
+    TRUMP_SELECTION = "TRUMP_SELECTION"
+    TRICKS = "TRICKS"
+    DISCARD = "DISCARD"
     WON = "WON"
 
 
