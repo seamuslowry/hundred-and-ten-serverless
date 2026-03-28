@@ -100,7 +100,7 @@ class Game(BaseGame):
     # The underlying game engine (always exists for a Game)
     _game: HundredAndTen = field(init=False, repr=False)
 
-    _actions: list[Action] = []
+    _actions: list[Action] = field(init=False, repr=False, default_factory=list)
 
     def __post_init__(self, initial_moves: Optional[list[Action]]):
         self._game = self._initialize_game(initial_moves or [])
