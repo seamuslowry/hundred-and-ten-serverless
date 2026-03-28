@@ -227,7 +227,9 @@ class Game(BaseGame):
             hand=[
                 self.__convert_engine_card(c)
                 for c in next(
-                    p for p in self._game.active_round.players if p == player_id
+                    p
+                    for p in self._game.active_round.players
+                    if p.identifier == player_id
                 ).hand
             ],
         )
