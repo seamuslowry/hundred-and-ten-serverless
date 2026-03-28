@@ -23,7 +23,7 @@ dependencies = [
     "hundredandten==4.0.1",
     "pymongo==4.16.0",
     "pyjwt==2.12.1",
-    "requests==2.32.5",
+    "requests==2.33.0",
 ]
 
 [project.optional-dependencies]
