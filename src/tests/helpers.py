@@ -58,16 +58,16 @@ def completed_game(test_client: TestClient) -> dict[str, Any]:
     """Get a completed game"""
     game = started_game(test_client)
 
-    active_player = game["round"]["active_player"]
-    assert active_player
+    active_player_id = game["active_player_id"]
+    assert active_player_id
 
     resp = test_client.post(
-        f"/players/{active_player['id']}/games/{game['id']}/players",
+        f"/players/{active_player_id}/games/{game['id']}/players",
         json={"type": "LEAVE"},
-        headers={"authorization": f"Bearer {active_player['id']}"},
+        headers={"authorization": f"Bearer {active_player_id}"},
     )
     assert len(resp.json()) > 0
-    return get_game(test_client, game["id"], active_player["id"])
+    return get_game(test_client, game["id"], active_player_id)
 
 
 def request_suggestion(
