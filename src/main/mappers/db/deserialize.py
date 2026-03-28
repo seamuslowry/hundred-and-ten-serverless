@@ -34,7 +34,7 @@ def game(db_game: db.Game) -> internal.Game:
         accessibility=internal.Accessibility[db_game.accessibility.name],
         organizer=__person(db_game.organizer),
         players=internal.PlayerGroup(map(__person, db_game.players)),
-        initial_moves=list(map(__move, db_game.moves)),
+        initial_actions=list(map(__move, db_game.moves)),
     )
 
 

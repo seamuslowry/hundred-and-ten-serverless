@@ -239,7 +239,6 @@ class Game(BaseModel):
 
     id: str
     name: str
-    status: str
 
 
 class WaitingGame(Game):
@@ -254,6 +253,7 @@ class WaitingGame(Game):
 class StartedGame(Game):
     """A class to model the client format of a started Hundred and Ten game"""
 
+    status: str
     scores: dict[str, int]
     dealer_player_id: str
     bidder_player_id: Optional[str]
@@ -267,6 +267,7 @@ class StartedGame(Game):
 class CompletedGame(Game):
     """A class to model the client format of a completed Hundred and Ten game"""
 
+    status: str
     winner: PlayerInGame
     organizer: PlayerInGame
     players: list[PlayerInGame]

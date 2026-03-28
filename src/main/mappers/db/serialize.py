@@ -35,7 +35,7 @@ def game(m_game: internal.Game) -> db.Game:
         players=list(map(__player_in_game, m_game.players)),
         winner_player_id=winner,
         active_player_id=active_player,
-        moves=list(map(__move, m_game.moves)),
+        moves=list(map(__move, m_game.actions)),
         status=db.Status[m_game.status.name],
     )
 

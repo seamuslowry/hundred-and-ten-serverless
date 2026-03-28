@@ -25,7 +25,6 @@ def lobby(
     return responses.WaitingGame(
         id=m_lobby.id,
         name=m_lobby.name,
-        status=internal.GameStatus.WAITING_FOR_PLAYERS.name,
         accessibility=m_lobby.accessibility.name,
         organizer=__player_in_game(m_lobby.organizer),
         players=[

@@ -7,9 +7,6 @@ from uuid import uuid4
 
 from hundredandten import HundredAndTen
 from hundredandten.actions import (
-    Action as EngineAction,
-)
-from hundredandten.actions import (
     Play as EnginePlay,
 )
 from hundredandten.deck import Card as EngineCard
@@ -97,15 +94,18 @@ class Lobby(BaseGame):
 class Game(BaseGame):
     """A class to model an in-progress or completed Hundred and Ten game"""
 
-    initial_moves: InitVar[Optional[list[Action]]] = None
+    initial_actions: InitVar[Optional[list[Action]]] = None
 
     # The underlying game engine (always exists for a Game)
     _game: HundredAndTen = field(init=False, repr=False)
 
+    _actions: list[Action] = []
+
     def __post_init__(self, initial_moves: Optional[list[Action]]):
         self._game = self._initialize_game(
-            [serialize.action(m) for m in (initial_moves or [])]
+            initial_moves or []
         )
+        self._actions = initial_moves or []  # if all actions are valid, add them to the list
 
     @staticmethod
     def from_lobby(lobby: Lobby) -> "Game":
@@ -117,19 +117,13 @@ class Game(BaseGame):
             accessibility=lobby.accessibility,
             organizer=lobby.organizer,
             players=lobby.players,
-            initial_moves=[],
+            initial_actions=[],
         )
 
-    # TODO: uses internal actions
-    # note to self: this should be done by having this class
-    # maintain its own list of moves that can only be appended to after
-    # the engine has validated
-    # this lets the game moves be richer than the engine's without needing
-    # complex conversion logic
     @property
-    def moves(self) -> list[EngineAction]:
+    def actions(self) -> list[Action]:
         """Get all moves made in the game"""
-        return self._game.moves
+        return self._actions
 
     @property
     def status(self) -> GameStatus:
@@ -217,6 +211,7 @@ class Game(BaseGame):
     def act(self, action: Action) -> None:
         """Perform a game action"""
         self._game.act(serialize.action(action))
+        self._actions.append(action)
 
     def get_player_in_round(self, player_id: str) -> PlayerInRound:
         """Return the representation of this player as they are in the round"""
@@ -251,17 +246,17 @@ class Game(BaseGame):
         else:
             self.players[self.players.index(original_player)] = new_player
 
-        self._game = self._initialize_game(self.moves)
+        self._game = self._initialize_game(self.actions)
 
     def game_state_for(self, player_id: str) -> GameState:
         """Return the game state known for a particular player"""
         return self._game.game_state_for(player_id)
 
-    def _initialize_game(self, moves: list[EngineAction]) -> HundredAndTen:
+    def _initialize_game(self, actions: list[Action]) -> HundredAndTen:
         return HundredAndTen(
             players=[p.as_engine_player() for p in self.ordered_players],
             seed=self.seed,
-            initial_moves=moves,
+            initial_moves=[serialize.action(m) for m in (actions or [])],
         )
 
     def __convert_engine_card(self, c: EngineCard) -> Card:
