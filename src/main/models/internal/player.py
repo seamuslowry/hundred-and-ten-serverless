@@ -99,7 +99,7 @@ class Human(PlayerInGame):
             on_consume_actions=lambda consumed: setattr(
                 self,
                 "queued_actions",
-                self.queued_actions[len(consumed):],
+                self.queued_actions[len(consumed) :],
             ),
         )
 
