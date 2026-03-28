@@ -123,7 +123,7 @@ def __trick(trick: internal.Trick) -> responses.Trick:
 
 def __player_in_game(player_in_game: internal.PlayerInGame) -> responses.PlayerInGame:
     return responses.PlayerInGame(
-        id=player_in_game.id,
+        id=player_in_game.id, type=__player_type(player_in_game)
     )
 
 
@@ -135,6 +135,7 @@ def __player_in_round(
     if player_in_round.id == client_player_id:
         return responses.SelfInRound(
             id=player_in_round.id,
+            type=__player_type(player_in_game),
             hand=[__card(c) for c in player_in_round.hand],
             queued_actions=(
                 [suggestion(a) for a in player_in_game.queued_actions]
@@ -145,9 +146,19 @@ def __player_in_round(
 
     return responses.OtherPlayerInRound(
         id=player_in_round.id,
+        type=__player_type(player_in_game),
         hand_size=len(player_in_round.hand),
-        automate=isinstance(player_in_game, internal.NaiveCpu),
     )
+
+
+def __player_type(player_in_game: internal.PlayerInGame) -> str:
+    match player_in_game:
+        case internal.Human():
+            return "human"
+        case internal.NaiveCpu():
+            return "cpu-easy"
+
+    return "unknown"
 
 
 def __card(card: internal.Card) -> responses.Card:

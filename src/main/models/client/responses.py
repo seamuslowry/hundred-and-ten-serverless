@@ -191,18 +191,22 @@ class PlayerInGame(BaseModel):
     """A class to model the client format of a Hundred and Ten person"""
 
     id: str
+    type: str  # TODO: enum
 
 
-class OtherPlayerInRound(PlayerInGame):
+class OtherPlayerInRound(BaseModel):
     """A class to model the client format of another Hundred and Ten player"""
 
+    id: str
     hand_size: int
-    automate: bool
+    type: str  # TODO: enum
 
 
-class SelfInRound(PlayerInGame):
+class SelfInRound(BaseModel):
     """A class to model the client format of the logged in Hundred and Ten player"""
 
+    id: str
+    type: str
     hand: list[Card]
     queued_actions: list[UnorderedActionResponse]
 

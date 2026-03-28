@@ -142,12 +142,12 @@ def test_prepass_and_rescind_prepass(client: TestClient):
 def test_leave_playing_game_as_organizer(client: TestClient):
     """A player can leave an active game by automating themselves"""
     original_game = started_game(client)
-    active_round_player = original_game["round"]["active_player"]
+    active_round_player_id = original_game["active_player_id"]
     active_player = next(
-        p for p in original_game["players"] if p["id"] == active_round_player["id"]
+        p for p in original_game["players"] if p["id"] == active_round_player_id
     )
     assert active_player
-    assert not active_player["automate"]
+    assert active_player["type"] == "human"
 
     # leave
     results = client.post(
@@ -162,7 +162,7 @@ def test_leave_playing_game_as_organizer(client: TestClient):
     game = get_game(client, original_game["id"], active_player["id"])
     active_player = next(p for p in game["players"] if p["id"] == active_player["id"])
 
-    assert active_player["automate"]
+    assert active_player["type"] == "cpu-easy"
 
 
 def test_leave_playing_game_as_player(client: TestClient):
@@ -170,7 +170,7 @@ def test_leave_playing_game_as_player(client: TestClient):
     game, player = game_with_manual_player(client)
     non_organizer_player = next(p for p in game["players"] if p["id"] == player)
     assert non_organizer_player
-    assert not non_organizer_player["automate"]
+    assert non_organizer_player["type"] == "human"
 
     # leave
     results = client.post(
@@ -186,7 +186,7 @@ def test_leave_playing_game_as_player(client: TestClient):
         p for p in game["players"] if p["id"] == non_organizer_player["id"]
     )
 
-    assert non_organizer_player["automate"]
+    assert non_organizer_player["type"] == "cpu-easy"
 
 
 def test_kick_player_as_organizer(client: TestClient):
@@ -203,9 +203,10 @@ def test_kick_player_as_organizer(client: TestClient):
         r["player_id"] == non_organizer_player for r in results
     )  # leaving makes them take a turn
     game = get_game(client, game["id"], non_organizer_player)
-    assert next(p for p in game["players"] if p["id"] == non_organizer_player)[
-        "automate"
-    ]
+    assert (
+        next(p for p in game["players"] if p["id"] == non_organizer_player)["type"]
+        == "cpu-easy"
+    )
 
 
 def test_kick_player_as_player(client: TestClient):

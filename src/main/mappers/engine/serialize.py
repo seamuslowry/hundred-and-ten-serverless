@@ -13,9 +13,7 @@ def card(c: internal.Card) -> deck.Card:
     else:
         suit = constants.SelectableSuit[c.suit.name]
 
-    return deck.Card(
-        suit=suit, number=constants.CardNumber[c.number.name]
-    )
+    return deck.Card(suit=suit, number=constants.CardNumber[c.number.name])
 
 
 def action(a: internal.Action) -> actions.Action:

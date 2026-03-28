@@ -220,7 +220,9 @@ class Game(BaseGame):
         self._game.act(serialize.action(action))
         # TODO: act needs to return all the actions that occured as part of this action
         # _those_ should be appended to the internal actions array
-        self._actions.extend([deserialize.action(a) for a in self._game.moves[initial:]])
+        self._actions.extend(
+            [deserialize.action(a) for a in self._game.moves[initial:]]
+        )
 
     def get_player_in_round(self, player_id: str) -> PlayerInRound:
         """Return the representation of this player as they are in the round"""
