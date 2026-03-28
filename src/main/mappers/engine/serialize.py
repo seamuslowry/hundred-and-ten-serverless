@@ -7,8 +7,14 @@ from src.main.models import internal
 
 def card(c: internal.Card) -> deck.Card:
     """Convert an internal card model to an engine card model"""
+    # TODO: engine shouldn't make this so painful
+    if c.suit == internal.CardSuit.JOKER:
+        suit = constants.UnselectableSuit.JOKER
+    else:
+        suit = constants.SelectableSuit[c.suit.name]
+
     return deck.Card(
-        suit=constants.CardSuit[c.suit.name], number=constants.CardNumber(c.number.name)
+        suit=suit, number=constants.CardNumber[c.number.name]
     )
 
 

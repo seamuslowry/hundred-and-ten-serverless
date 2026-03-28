@@ -116,7 +116,7 @@ def test_perform_round_actions(client: TestClient):
 
     game = get_game(client, created_game["id"], DEFAULT_ID)
     assert GameStatus.TRICKS.name == game["status"]
-    assert 2 == len(game["round"]["tricks"])
+    assert 2 == len(game["tricks"])
 
 
 def test_prepass_and_rescind_prepass(client: TestClient):

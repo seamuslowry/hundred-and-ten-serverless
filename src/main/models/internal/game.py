@@ -11,7 +11,7 @@ from hundredandten.actions import (
     Play as EnginePlay,
 )
 from hundredandten.deck import Card as EngineCard
-from hundredandten.state import GameState
+from hundredandten.player import NaiveAutomatedPlayer
 
 from src.main.mappers.engine import deserialize, serialize
 
@@ -104,9 +104,7 @@ class Game(BaseGame):
 
     def __post_init__(self, initial_moves: Optional[list[Action]]):
         self._game = self._initialize_game(initial_moves or [])
-        self._actions = (
-            initial_moves or []
-        )  # if all actions are valid, add them to the list
+        self._actions = [deserialize.action(a) for a in self._game.moves]
 
     @staticmethod
     def from_lobby(lobby: Lobby) -> "Game":
@@ -217,8 +215,12 @@ class Game(BaseGame):
 
     def act(self, action: Action) -> None:
         """Perform a game action"""
+        # TODO: this is a hack. the library should return this value
+        initial = len(self._game.moves)
         self._game.act(serialize.action(action))
-        self._actions.append(action)
+        # TODO: act needs to return all the actions that occured as part of this action
+        # _those_ should be appended to the internal actions array
+        self._actions.extend([deserialize.action(a) for a in self._game.moves[initial:]])
 
     def get_player_in_round(self, player_id: str) -> PlayerInRound:
         """Return the representation of this player as they are in the round"""
@@ -257,9 +259,11 @@ class Game(BaseGame):
 
         self._game = self._initialize_game(self.actions)
 
-    def game_state_for(self, player_id: str) -> GameState:
-        """Return the game state known for a particular player"""
-        return self._game.game_state_for(player_id)
+    def suggestion_for(self, player_id: str) -> Action:
+        """Return a suggested action for the given player"""
+        return deserialize.action(
+            NaiveAutomatedPlayer(player_id).act(self._game.game_state_for(player_id))
+        )
 
     def _initialize_game(self, actions: list[Action]) -> HundredAndTen:
         return HundredAndTen(
