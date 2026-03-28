@@ -95,12 +95,11 @@ class Human(PlayerInGame):
     def as_engine_player(self) -> EnginePlayer:
         return QueuedActionPlayer(
             self.id,
-            # TODO: need a mapping from internal actions to engine actions
             queued_actions=deque([serialize.action(a) for a in self.queued_actions]),
             on_consume_actions=lambda consumed: setattr(
                 self,
                 "queued_actions",
-                self.queued_actions[len(consumed) :],
+                self.queued_actions[len(consumed):],
             ),
         )
 

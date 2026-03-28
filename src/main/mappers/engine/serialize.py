@@ -12,7 +12,7 @@ def card(c: internal.Card) -> deck.Card:
     )
 
 
-def action(a: internal.Action):
+def action(a: internal.Action) -> actions.Action:
     """Convert an internal action model to an engine action model"""
     match a:
         case internal.Bid():

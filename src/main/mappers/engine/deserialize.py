@@ -1,6 +1,7 @@
 """A mapper to convert internal models to engine models"""
 
-from hundredandten import actions, deck, round as engine_round
+from hundredandten import actions, deck
+from hundredandten import round as engine_round
 
 from src.main.models import internal
 
