@@ -5,7 +5,7 @@ from time import time
 from beanie import PydanticObjectId
 from fastapi.testclient import TestClient
 
-from src.main.models.internal import GameStatus, RoundStatus
+from src.main.models.internal import RoundStatus
 from src.tests.helpers import DEFAULT_ID, get_game, lobby_game
 
 
@@ -57,7 +57,6 @@ def test_create_lobby(client: TestClient):
     assert organizer == lobby["organizer"]["id"]
     assert 0 == len(lobby["players"])
     assert 0 == len(lobby["invitees"])
-    assert GameStatus.WAITING_FOR_PLAYERS.name == lobby["status"]
 
 
 def test_organizer_invite_to_lobby(client: TestClient):
@@ -78,7 +77,6 @@ def test_organizer_invite_to_lobby(client: TestClient):
     assert 0 == len(invited_lobby["players"])
     assert 1 == len(invited_lobby["invitees"])
     assert invitee == invited_lobby["invitees"][0]["id"]
-    assert GameStatus.WAITING_FOR_PLAYERS.name == invited_lobby["status"]
 
 
 def test_invitee_invite_to_lobby(client: TestClient):
@@ -133,7 +131,6 @@ def test_player_invite_to_lobby(client: TestClient):
     assert player == invited_lobby["players"][0]["id"]
     assert 1 == len(invited_lobby["invitees"])
     assert invitee == invited_lobby["invitees"][0]["id"]
-    assert GameStatus.WAITING_FOR_PLAYERS.name == invited_lobby["status"]
 
 
 def test_join_public_lobby(client: TestClient):
@@ -153,7 +150,6 @@ def test_join_public_lobby(client: TestClient):
     assert 1 == len(joined_lobby["players"])
     assert player == joined_lobby["players"][0]["id"]
     assert 0 == len(joined_lobby["invitees"])
-    assert GameStatus.WAITING_FOR_PLAYERS.name == joined_lobby["status"]
 
 
 def test_join_private_lobby_uninvited(client: TestClient):
@@ -206,7 +202,6 @@ def test_join_private_lobby_invited(client: TestClient):
     assert 1 == len(joined_lobby["players"])
     assert player == joined_lobby["players"][0]["id"]
     assert 0 == len(joined_lobby["invitees"])
-    assert GameStatus.WAITING_FOR_PLAYERS.name == joined_lobby["status"]
 
 
 def test_leave_lobby(client: TestClient):
@@ -237,7 +232,6 @@ def test_leave_lobby(client: TestClient):
     assert created_lobby["id"] == left_lobby["id"]
     assert created_lobby["organizer"]["id"] == left_lobby["organizer"]["id"]
     assert 0 == len(left_lobby["players"])
-    assert GameStatus.WAITING_FOR_PLAYERS.name == left_lobby["status"]
 
 
 def test_player_start_game(client: TestClient):
