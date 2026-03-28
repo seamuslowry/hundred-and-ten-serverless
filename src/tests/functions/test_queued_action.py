@@ -1,4 +1,4 @@
-""" "Unit tests to ensure games that are in progress behave as expected"""
+"""Unit tests to ensure games that are in progress behave as expected"""
 
 from fastapi.testclient import TestClient
 
