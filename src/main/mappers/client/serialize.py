@@ -104,7 +104,8 @@ def suggestion(m_action: internal.Action) -> responses.UnorderedActionResponse:
         return responses.QueuedPlayCard(
             type="PLAY", card=__card(m_action.card), player_id=m_action.player_id
         )
-    raise ValueError("No suggestion available at this time")
+    # type: ignore[unreachable]
+    raise ValueError("No suggestion available at this time")  # pragma: no cover
 
 
 def __play(play: internal.Play) -> responses.QueuedPlayCard:
@@ -248,6 +249,9 @@ def __event(
         )
 
     if result is None:
-        raise ValueError(f"Unknown event type: {type(event).__name__}")
+        # type: ignore[unreachable]
+        raise ValueError(
+            f"Unknown event type: {type(event).__name__}"
+        )  # pragma: no cover
 
     return result

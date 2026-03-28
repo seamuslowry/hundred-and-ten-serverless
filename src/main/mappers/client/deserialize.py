@@ -6,21 +6,11 @@ from src.main.models.client import requests
 
 def __card(c_card: requests.CardRequest) -> internal.Card:
     """Create a card object from a passed client card"""
-    suit = None
 
-    try:
-        suit = internal.SelectableSuit[c_card.suit.value]
-    except KeyError:
-        pass
-
-    try:
-        suit = internal.UnselectableSuit[c_card.suit.value]
-    except KeyError:
-        pass
-
-    assert suit
-
-    return internal.Card(suit=suit, number=internal.CardNumber[c_card.number.value])
+    return internal.Card(
+        suit=internal.CardSuit[c_card.suit.value],
+        number=internal.CardNumber[c_card.number.value],
+    )
 
 
 def action(player_id: str, c_action: requests.ActRequest) -> internal.Action:
@@ -30,7 +20,7 @@ def action(player_id: str, c_action: requests.ActRequest) -> internal.Action:
             return internal.Bid(player_id, internal.BidAmount(c_action.amount))
         case requests.SelectTrumpRequest():
             return internal.SelectTrump(
-                player_id, internal.SelectableSuit[c_action.suit.value]
+                player_id, internal.CardSuit[c_action.suit.value]
             )
         case requests.DiscardRequest():
             return internal.Discard(player_id, [__card(c) for c in c_action.cards])
