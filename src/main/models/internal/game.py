@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import InitVar, dataclass, field
+from itertools import chain
 from typing import Optional, override
 from uuid import uuid4
 
@@ -12,9 +13,9 @@ from hundredandten.actions import (
 from hundredandten.deck import Card as EngineCard
 from hundredandten.state import GameState
 
-from src.main.mappers.engine import serialize
+from src.main.mappers.engine import deserialize, serialize
 
-from .actions import Action, Card, Play
+from .actions import Action, Card, Event, GameEnd, GameStart, Play
 from .constants import Accessibility, CardNumber, CardSuit, GameStatus
 from .player import NaiveCpu, PlayerInGame, PlayerInRound
 from .trick import Trick
@@ -102,10 +103,10 @@ class Game(BaseGame):
     _actions: list[Action] = []
 
     def __post_init__(self, initial_moves: Optional[list[Action]]):
-        self._game = self._initialize_game(
+        self._game = self._initialize_game(initial_moves or [])
+        self._actions = (
             initial_moves or []
-        )
-        self._actions = initial_moves or []  # if all actions are valid, add them to the list
+        )  # if all actions are valid, add them to the list
 
     @staticmethod
     def from_lobby(lobby: Lobby) -> "Game":
@@ -192,11 +193,17 @@ class Game(BaseGame):
             for t in self._game.active_round.tricks
         ]
 
-    # TODO: uses internal events (generate non-move events)
     @property
-    def events(self) -> list:
+    def events(self) -> list[Event]:
         """Get all game events"""
-        return self._game.events
+
+        return [
+            GameStart(),
+            *chain.from_iterable(
+                deserialize.round_events(r) for r in self._game.rounds
+            ),
+            *([] if not self.winner else [GameEnd(self.winner.id)]),
+        ]
 
     @property
     def scores(self) -> dict[str, int]:
