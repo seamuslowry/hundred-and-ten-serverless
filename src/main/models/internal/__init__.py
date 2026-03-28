@@ -15,7 +15,7 @@ from hundredandten.constants import (
     BidAmount,
     # CardNumber,
     RoundRole,
-    RoundStatus,
+    # RoundStatus,
     SelectableSuit,
     UnselectableSuit,
 )
@@ -71,7 +71,6 @@ __all__ = [
     "BidAmount",
     "CardNumber",
     "RoundRole",
-    "RoundStatus",
     "SelectableSuit",
     "UnselectableSuit",
     # Deck

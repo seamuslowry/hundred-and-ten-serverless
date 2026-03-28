@@ -2,7 +2,7 @@
 
 from fastapi.testclient import TestClient
 
-from src.main.models.internal import BidAmount, RoundStatus
+from src.main.models.internal import BidAmount, GameStatus
 from src.tests.helpers import (
     DEFAULT_ID,
     contains_unsequenced,
@@ -17,7 +17,7 @@ from src.tests.helpers import (
 def test_perform_round_actions(client: TestClient):
     """A round of the game can be played"""
     created_game = started_game(client)
-    assert RoundStatus.BIDDING.name == created_game["status"]
+    assert GameStatus.BIDDING.name == created_game["status"]
 
     # assert that current suggestion is a bid
     suggested_bid = get_suggestion(client, created_game["id"])
@@ -43,7 +43,7 @@ def test_perform_round_actions(client: TestClient):
 
     # assert that now in trump selection
     game = get_game(client, created_game["id"], DEFAULT_ID)
-    assert RoundStatus.TRUMP_SELECTION.name == game["status"]
+    assert GameStatus.TRUMP_SELECTION.name == game["status"]
 
     # assert that current suggestion is a trump selection
     suggested_trump = get_suggestion(client, created_game["id"])
@@ -67,7 +67,7 @@ def test_perform_round_actions(client: TestClient):
     )
 
     game = get_game(client, created_game["id"], DEFAULT_ID)
-    assert RoundStatus.DISCARD.name == game["status"]
+    assert GameStatus.DISCARD.name == game["status"]
 
     # assert that current suggestion is a discard
     suggested_discard = get_suggestion(client, created_game["id"])
@@ -92,7 +92,7 @@ def test_perform_round_actions(client: TestClient):
     contains_unsequenced(results, {"type": "TRICK_START"})
 
     game = get_game(client, created_game["id"], DEFAULT_ID)
-    assert RoundStatus.TRICKS.name == game["status"]
+    assert GameStatus.TRICKS.name == game["status"]
 
     # ask for a suggestion so we know what card we can play
     suggested_play = get_suggestion(client, created_game["id"])
@@ -115,7 +115,7 @@ def test_perform_round_actions(client: TestClient):
     )
 
     game = get_game(client, created_game["id"], DEFAULT_ID)
-    assert RoundStatus.TRICKS.name == game["status"]
+    assert GameStatus.TRICKS.name == game["status"]
     assert 2 == len(game["round"]["tricks"])
 
 
