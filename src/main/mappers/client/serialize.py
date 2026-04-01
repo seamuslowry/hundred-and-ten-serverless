@@ -247,8 +247,7 @@ def __event(
             sequence=sequence,
             winner_player_id=event.winner,
         )
-
-    if result is None:
+    else:
         # type: ignore[unreachable]
         raise ValueError(
             f"Unknown event type: {type(event).__name__}"
