@@ -27,3 +27,5 @@ def action(a: internal.Action) -> actions.Action:
             )
         case internal.Play():
             return actions.Play(identifier=a.player_id, card=card(a.card))
+        
+    raise ValueError(f"Unable to serialize unrecognized {a}") # pragma: no cover
