@@ -9,14 +9,14 @@ from src.main.models import internal
 def action(a: actions.Action) -> internal.Action:
     match (a):
         case actions.Bid():
-            return internal.Bid(a.identifier, a.amount.value)
+            return internal.Bid(a.identifier, internal.BidAmount(a.amount.value))
         case actions.SelectTrump():
             return internal.SelectTrump(a.identifier, internal.CardSuit[a.suit.name])
         case actions.Discard() | actions.DetailedDiscard():
             return internal.Discard(a.identifier, [card(c) for c in a.cards])
         case actions.Play():
             return internal.Play(a.identifier, card(a.card))
-    raise ValueError(f"Could not convert engine action {a} to an internal action")
+    raise ValueError(f"Could not convert engine action {a} to an internal action") # pragma: nocover
 
 
 def round_events(r: engine_round.Round) -> list[internal.Event]:
