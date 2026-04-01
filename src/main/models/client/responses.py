@@ -1,6 +1,7 @@
 """Format of a game of Hundred and Ten on the client"""
 
 from abc import ABC
+from enum import Enum
 from typing import Annotated, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
@@ -186,12 +187,16 @@ class Player(BaseModel):
     name: str
     picture_url: Optional[str] = None
 
+class PlayerType(Enum):
+    HUMAN = 'human'
+    CPU_EASY = 'cpu-easy'
+
 
 class PlayerInGame(BaseModel):
     """A class to model the client format of a Hundred and Ten person"""
 
     id: str
-    type: str  # TODO: enum
+    type: PlayerType
 
 
 class OtherPlayerInRound(BaseModel):
@@ -199,14 +204,14 @@ class OtherPlayerInRound(BaseModel):
 
     id: str
     hand_size: int
-    type: str  # TODO: enum
+    type: PlayerType
 
 
 class SelfInRound(BaseModel):
     """A class to model the client format of the logged in Hundred and Ten player"""
 
     id: str
-    type: str
+    type: PlayerType
     hand: list[Card]
     queued_actions: list[UnorderedActionResponse]
 

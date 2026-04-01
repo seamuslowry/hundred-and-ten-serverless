@@ -152,12 +152,12 @@ def __player_in_round(
     )
 
 
-def __player_type(player_in_game: internal.PlayerInGame) -> str:
+def __player_type(player_in_game: internal.PlayerInGame) -> responses.PlayerType:
     match player_in_game:
         case internal.Human():
-            return "human"
+            return responses.PlayerType.HUMAN
         case internal.NaiveCpu():
-            return "cpu-easy"
+            return responses.PlayerType.CPU_EASY
 
     raise ValueError(f"Unrecognized player type {player_in_game}")
 
