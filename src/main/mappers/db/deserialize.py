@@ -48,7 +48,7 @@ def __person(person: db.PlayerInGame) -> internal.PlayerInGame:
         )
 
     # type: ignore[unreachable]
-    raise ValueError(f"Unknown player type ${person}")  # pragma: no cover
+    raise ValueError(f"Unknown player type {person}")  # pragma: no cover
 
 
 def __move(db_move: db.Move) -> internal.Action:

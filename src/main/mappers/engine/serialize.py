@@ -7,7 +7,9 @@ from src.main.models import internal
 
 def card(c: internal.Card) -> deck.Card:
     """Convert an internal card model to an engine card model"""
-    return deck.Card(suit=constants.CardSuit[c.suit.name], number=constants.CardNumber[c.number.name])
+    return deck.Card(
+        suit=constants.CardSuit[c.suit.name], number=constants.CardNumber[c.number.name]
+    )
 
 
 def action(a: internal.Action) -> actions.Action:
@@ -27,5 +29,5 @@ def action(a: internal.Action) -> actions.Action:
             )
         case internal.Play():
             return actions.Play(identifier=a.player_id, card=card(a.card))
-        
-    raise ValueError(f"Unable to serialize unrecognized {a}") # pragma: no cover
+
+    raise ValueError(f"Unable to serialize unrecognized {a}")  # pragma: no cover

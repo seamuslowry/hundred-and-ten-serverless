@@ -28,4 +28,4 @@ def action(player_id: str, c_action: requests.ActRequest) -> internal.Action:
             return internal.Play(player_id, __card(c_action.card))
 
     # type: ignore[unreachable]
-    raise ValueError(f"Unknown action type ${c_action}")  # pragma: no cover
+    raise ValueError(f"Unknown action type {c_action}")  # pragma: no cover

@@ -61,7 +61,7 @@ def __player_in_game(person: internal.PlayerInGame) -> db.PlayerInGame:
         case internal.NaiveCpu():
             return db.NaiveCpuPlayer(player_id=person.id)
 
-    raise ValueError(f"Unrecognized player type ${person}")
+    raise ValueError(f"Unrecognized player type {person}")
 
 
 def __human(person: internal.Human) -> db.HumanPlayer:

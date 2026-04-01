@@ -159,7 +159,7 @@ def __player_type(player_in_game: internal.PlayerInGame) -> str:
         case internal.NaiveCpu():
             return "cpu-easy"
 
-    return "unknown"
+    raise ValueError(f"Unrecognized player type {player_in_game}")
 
 
 def __card(card: internal.Card) -> responses.Card:

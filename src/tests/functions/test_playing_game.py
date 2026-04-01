@@ -220,3 +220,33 @@ def test_kick_player_as_player(client: TestClient):
         headers={"authorization": f"Bearer {non_organizer_player}"},
     )
     assert 403 == resp.status_code
+
+
+def test_cannot_violate_engine_rule(client: TestClient):
+    """Server will not allow violating an engine rule (playing out of order)"""
+    original_game, _ = game_with_manual_player(client)
+
+    original_events = client.get(
+        f"/players/{DEFAULT_ID}/games/{original_game['id']}/events",
+        headers={"authorization": f"Bearer {DEFAULT_ID}"},
+    ).json()
+
+    # play before turn
+    resp = client.post(
+        f"/players/{DEFAULT_ID}/games/{original_game['id']}/actions",
+        json={"type": "BID", "amount": 0},
+        headers={"authorization": f"Bearer {DEFAULT_ID}"},
+    )
+
+    # rejected
+    assert 400 == resp.status_code
+
+    game = get_game(client, original_game["id"], DEFAULT_ID)
+
+    after_events = client.get(
+        f"/players/{DEFAULT_ID}/games/{original_game['id']}/events",
+        headers={"authorization": f"Bearer {DEFAULT_ID}"},
+    ).json()
+
+    assert original_game == game
+    assert original_events == after_events

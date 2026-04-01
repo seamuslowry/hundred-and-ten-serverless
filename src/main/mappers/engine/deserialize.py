@@ -16,7 +16,9 @@ def action(a: actions.Action) -> internal.Action:
             return internal.Discard(a.identifier, [card(c) for c in a.cards])
         case actions.Play():
             return internal.Play(a.identifier, card(a.card))
-    raise ValueError(f"Could not convert engine action {a} to an internal action") # pragma: nocover
+    raise ValueError(
+        f"Could not convert engine action {a} to an internal action"
+    )  # pragma: nocover
 
 
 def round_events(r: engine_round.Round) -> list[internal.Event]:

@@ -1,10 +1,13 @@
 """Ensure edge cases of mapping are unit tested"""
 
 import pytest
+from hundredandten.player import HumanPlayer
 
+from src.main.mappers.client import serialize as client_serialize
 from src.main.mappers.db import serialize as db_serialize
 from src.main.models.internal import (
     Accessibility,
+    Game,
     Lobby,
     PlayerGroup,
     PlayerInGame,
@@ -24,7 +27,7 @@ def test_unknown_internal_person_type_error():
             raise NotImplementedError()
 
         def as_engine_player(self):
-            raise NotImplementedError()
+            return HumanPlayer(self.id)
 
     with pytest.raises(ValueError):
         db_serialize.lobby(
@@ -35,4 +38,16 @@ def test_unknown_internal_person_type_error():
                 players=PlayerGroup([]),
                 invitees=PlayerGroup([]),
             )
+        )
+
+    with pytest.raises(ValueError):
+        client_serialize.game(
+            Game(
+                id="test",
+                name="",
+                accessibility=Accessibility.PUBLIC,
+                organizer=UnknownPerson("o"),
+                players=PlayerGroup([UnknownPerson("p")]),
+            ),
+            "o",
         )
