@@ -1,6 +1,17 @@
 """App-level constants removed from hundredandten v2"""
 
-from enum import Enum
+from enum import Enum, IntEnum
+
+
+class BidAmount(IntEnum):
+    """Valid bid amount"""
+
+    PASS = 0
+    FIFTEEN = 15
+    TWENTY = 20
+    TWENTY_FIVE = 25
+    THIRTY = 30
+    SHOOT_THE_MOON = 60
 
 
 class Accessibility(str, Enum):

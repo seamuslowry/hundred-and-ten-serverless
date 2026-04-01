@@ -20,7 +20,7 @@ dependencies = [
     "cachecontrol==0.14.4",
     "fastapi==0.135.2",
     "google-auth==2.49.1",
-    "hundredandten==5.0.0.dev62",
+    "hundredandten==5.0.0.dev64",
     "pymongo==4.16.0",
     "pyjwt==2.12.1",
     "requests==2.33.0",

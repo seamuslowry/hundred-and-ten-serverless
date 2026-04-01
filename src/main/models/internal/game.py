@@ -6,7 +6,7 @@ from itertools import chain
 from typing import Optional, override
 from uuid import uuid4
 
-from hundredandten import HundredAndTen
+from hundredandten import Game as Engine
 from hundredandten.actions import (
     Play as EnginePlay,
 )
@@ -98,13 +98,13 @@ class Game(BaseGame):
     initial_actions: InitVar[Optional[list[Action]]] = None
 
     # The underlying game engine (always exists for a Game)
-    _game: HundredAndTen = field(init=False, repr=False)
+    _engine: Engine = field(init=False, repr=False)
 
     _actions: list[Action] = field(init=False, repr=False, default_factory=list)
 
-    def __post_init__(self, initial_moves: Optional[list[Action]]):
-        self._game = self._initialize_game(initial_moves or [])
-        self._actions = [deserialize.action(a) for a in self._game.moves]
+    def __post_init__(self, initial_actions: Optional[list[Action]]):
+        self._engine = self._initialize_engine(initial_actions or [])
+        self._actions = [deserialize.action(a) for a in self._engine.actions]
 
     @staticmethod
     def from_lobby(lobby: Lobby) -> "Game":
@@ -127,33 +127,33 @@ class Game(BaseGame):
     @property
     def status(self) -> GameStatus:
         """Get the current game status"""
-        if self._game.winner:
+        if self._engine.winner:
             return GameStatus.WON
-        return GameStatus[self._game.active_round.status.name]
+        return GameStatus[self._engine.active_round.status.name]
 
     @property
     def winner(self) -> Optional[PlayerInGame]:
         """Get the winner of the game"""
-        if self._game.winner:
-            return self.ordered_players.find_or_throw(self._game.winner.identifier)
+        if self._engine.winner:
+            return self.ordered_players.find_or_throw(self._engine.winner.identifier)
         return None
 
     @property
     def active_player_id(self) -> str:
         """Get the current active player ID"""
-        return self._game.active_round.active_player.identifier
+        return self._engine.active_round.active_player.identifier
 
     @property
     def dealer_player_id(self) -> str:
         """Get the current dealer player ID"""
-        return self._game.active_round.dealer.identifier
+        return self._engine.active_round.dealer.identifier
 
     @property
     def bidder_player_id(self) -> Optional[str]:
         """Get the current bidding player ID"""
         return (
-            self._game.active_round.active_bidder.identifier
-            if self._game.active_round.active_bidder
+            self._engine.active_round.active_bidder.identifier
+            if self._engine.active_round.active_bidder
             else None
         )
 
@@ -161,8 +161,8 @@ class Game(BaseGame):
     def active_bid(self) -> Optional[int]:
         """Get the current bidding player ID"""
         return (
-            self._game.active_round.active_bid.value
-            if self._game.active_round.active_bid
+            self._engine.active_round.active_bid.value
+            if self._engine.active_round.active_bid
             else None
         )
 
@@ -170,8 +170,8 @@ class Game(BaseGame):
     def trump(self) -> Optional[CardSuit]:
         """Get the selected trump"""
         return (
-            CardSuit[self._game.active_round.trump.name]
-            if self._game.active_round.trump
+            CardSuit[self._engine.active_round.trump.name]
+            if self._engine.active_round.trump
             else None
         )
 
@@ -188,7 +188,7 @@ class Game(BaseGame):
                     else None
                 ),
             )
-            for t in self._game.active_round.tricks
+            for t in self._engine.active_round.tricks
         ]
 
     @property
@@ -198,7 +198,7 @@ class Game(BaseGame):
         return [
             GameStart(),
             *chain.from_iterable(
-                deserialize.round_events(r) for r in self._game.rounds
+                deserialize.round_events(r) for r in self._engine.rounds
             ),
             *([] if not self.winner else [GameEnd(self.winner.id)]),
         ]
@@ -206,7 +206,7 @@ class Game(BaseGame):
     @property
     def scores(self) -> dict[str, int]:
         """Get current scores"""
-        return self._game.scores
+        return self._engine.scores
 
     @override
     def leave(self, player_id: str) -> None:
@@ -215,13 +215,8 @@ class Game(BaseGame):
 
     def act(self, action: Action) -> None:
         """Perform a game action"""
-        # TODO: this is a hack. the library should return this value
-        initial = len(self._game.moves)
-        self._game.act(serialize.action(action))
-        # TODO: act needs to return all the actions that occured as part of this action
-        # _those_ should be appended to the internal actions array
         self._actions.extend(
-            [deserialize.action(a) for a in self._game.moves[initial:]]
+            [deserialize.action(a) for a in self._engine.act(serialize.action(action))]
         )
 
     def get_player_in_round(self, player_id: str) -> PlayerInRound:
@@ -232,7 +227,7 @@ class Game(BaseGame):
                 self.__convert_engine_card(c)
                 for c in next(
                     p
-                    for p in self._game.active_round.players
+                    for p in self._engine.active_round.players
                     if p.identifier == player_id
                 ).hand
             ],
@@ -259,19 +254,19 @@ class Game(BaseGame):
         else:
             self.players[self.players.index(original_player)] = new_player
 
-        self._game = self._initialize_game(self.actions)
+        self._engine = self._initialize_engine(self.actions)
 
     def suggestion_for(self, player_id: str) -> Action:
         """Return a suggested action for the given player"""
         return deserialize.action(
-            NaiveAutomatedPlayer(player_id).act(self._game.game_state_for(player_id))
+            NaiveAutomatedPlayer(player_id).act(self._engine.game_state_for(player_id))
         )
 
-    def _initialize_game(self, actions: list[Action]) -> HundredAndTen:
-        return HundredAndTen(
+    def _initialize_engine(self, actions: list[Action]) -> Engine:
+        return Engine(
             players=[p.as_engine_player() for p in self.ordered_players],
             seed=self.seed,
-            initial_moves=[serialize.action(m) for m in (actions or [])],
+            initial_actions=[serialize.action(m) for m in (actions or [])],
         )
 
     def __convert_engine_card(self, c: EngineCard) -> Card:

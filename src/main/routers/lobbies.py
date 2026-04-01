@@ -21,7 +21,6 @@ from src.main.models.client.responses import Event, Player, WaitingGame
 from src.main.models.internal import (
     Accessibility,
     Human,
-    HundredAndTenError,
     Lobby,
     NaiveCpu,
 )
@@ -108,7 +107,7 @@ async def start_game(player_id: str, lobby_id: PydanticObjectId):
     lobby = await LobbyService.get(lobby_id)
 
     if player_id != lobby.organizer.id:
-        raise HundredAndTenError("Only the organizer can start the game")
+        raise BadRequestError("Only the organizer can start the game")
 
     # Add CPU players if needed
     for num in range(len(lobby.ordered_players), MIN_PLAYERS):

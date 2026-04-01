@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Union
 
-from .constants import CardNumber, CardSuit
+from .constants import BidAmount, CardNumber, CardSuit
 
 
 @dataclass
@@ -27,7 +27,7 @@ class Bid:
     """A class to keep track of bid information"""
 
     player_id: str
-    amount: int
+    amount: BidAmount
 
 
 @dataclass
