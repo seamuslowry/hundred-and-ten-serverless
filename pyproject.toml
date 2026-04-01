@@ -26,7 +26,7 @@ dependencies = [
     "requests==2.33.0",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 lint = [
     "pylint==4.0.5",
     "pyright==1.1.408",
@@ -63,9 +63,12 @@ max-parents = 15
 min-public-methods = 0
 
 [tool.ruff]
-target-version = "py313"
+target-version = "py314"
 line-length = 100
 lint.extend-select = ["I"]
+
+[tool.black]
+target-version = ["py314"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

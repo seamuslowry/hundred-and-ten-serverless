@@ -6,20 +6,12 @@
       "command": "host start",
       "problemMatcher": "$func-python-watch",
       "isBackground": true,
-      "dependsOn": "pip install (functions)"
+      "dependsOn": "uv sync"
     },
     {
-      "label": "pip install (functions)",
+      "label": "uv sync",
       "type": "shell",
-      "osx": {
-        "command": "${config:azureFunctions.pythonVenv}/bin/python -m pip install ."
-      },
-      "windows": {
-        "command": "${config:azureFunctions.pythonVenv}\\Scripts\\python -m pip install ."
-      },
-      "linux": {
-        "command": "${config:azureFunctions.pythonVenv}/bin/python -m pip install ."
-      },
+      "command": "uv sync",
       "problemMatcher": []
     }
   ]
