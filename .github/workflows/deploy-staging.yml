@@ -20,7 +20,7 @@ jobs:
           enable-cache: true
 
       - name: Install dependencies
-        run: uv sync --target=".python_packages"
+        run: uv sync --locked --target=".python_packages"
 
       - name: Login to Azure
         uses: azure/login@v3

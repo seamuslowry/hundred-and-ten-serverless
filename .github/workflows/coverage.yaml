@@ -14,7 +14,7 @@ jobs:
 
       - run: docker compose -f docker-compose.test.yml up -d --build
 
-      - run: uv sync --group test
+      - run: uv sync --locked --group test
 
       - name: Run tests with coverage
         run: uv run coverage run --branch --source=. -m pytest src/tests

@@ -12,7 +12,7 @@ jobs:
         with:
           enable-cache: true
 
-      - run: uv sync --group lint --group test
+      - run: uv sync --locked --group lint --group test
 
       - name: PyLint
         run: |
