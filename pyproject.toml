@@ -20,7 +20,7 @@ dependencies = [
     "cachecontrol==0.14.4",
     "fastapi==0.135.2",
     "google-auth==2.49.1",
-    "hundredandten==4.0.1",
+    "hundredandten==5.0.0.dev62",
     "pymongo==4.16.0",
     "pyjwt==2.12.1",
     "requests==2.33.0",
@@ -72,6 +72,9 @@ target-version = ["py314"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+
+[tool.uv.sources]
+hundredandten = { index = "testpypi" }
 
 [[tool.uv.index]]
 name = "testpypi"
