@@ -187,10 +187,12 @@ class Player(BaseModel):
     name: str
     picture_url: Optional[str] = None
 
+
 class PlayerType(Enum):
     """The type of players that may be in a game"""
-    HUMAN = 'human'
-    CPU_EASY = 'cpu-easy'
+
+    HUMAN = "human"
+    CPU_EASY = "cpu-easy"
 
 
 class PlayerInGame(BaseModel):

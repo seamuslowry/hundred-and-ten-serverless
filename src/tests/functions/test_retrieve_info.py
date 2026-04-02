@@ -9,6 +9,7 @@ from src.main.models.internal import Player
 from src.tests.helpers import (
     DEFAULT_ID,
     completed_game,
+    get_events,
     lobby_game,
     player,
     request_suggestion,
@@ -234,10 +235,7 @@ def test_get_all_events(client: TestClient):
     """The game will provide all events"""
     game = completed_game(client)
 
-    events = client.get(
-        f"/players/{DEFAULT_ID}/games/{game['id']}/events",
-        headers={"authorization": f"Bearer {DEFAULT_ID}"},
-    ).json()
+    events = get_events(client, game["id"], DEFAULT_ID)
 
     assert events[0]["type"] == "GAME_START"
     assert events[0]["sequence"] == 0

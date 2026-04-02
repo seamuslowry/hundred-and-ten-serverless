@@ -103,8 +103,7 @@ class Game(BaseGame):
     _actions: list[Action] = field(init=False, repr=False, default_factory=list)
 
     def __post_init__(self, initial_actions: Optional[list[Action]]):
-        self._engine = self._initialize_engine(initial_actions or [])
-        self._actions = [deserialize.action(a) for a in self._engine.actions]
+        self.__initialize_engine(initial_actions or [])
 
     @staticmethod
     def from_lobby(lobby: Lobby) -> "Game":
@@ -254,7 +253,7 @@ class Game(BaseGame):
         else:
             self.players[self.players.index(original_player)] = new_player
 
-        self._engine = self._initialize_engine(self.actions)
+        self.__initialize_engine(self.actions)
 
     def suggestion_for(self, player_id: str) -> Action:
         """Return a suggested action for the given player"""
@@ -262,12 +261,13 @@ class Game(BaseGame):
             NaiveAutomatedPlayer(player_id).act(self._engine.game_state_for(player_id))
         )
 
-    def _initialize_engine(self, actions: list[Action]) -> Engine:
-        return Engine(
+    def __initialize_engine(self, actions: list[Action]) -> None:
+        self._engine = Engine(
             players=[p.as_engine_player() for p in self.ordered_players],
             seed=self.seed,
             initial_actions=[serialize.action(m) for m in (actions or [])],
         )
+        self._actions = [deserialize.action(a) for a in self._engine.actions]
 
     def __convert_engine_card(self, c: EngineCard) -> Card:
         return Card(suit=CardSuit[c.suit.name], number=CardNumber(c.number.name))

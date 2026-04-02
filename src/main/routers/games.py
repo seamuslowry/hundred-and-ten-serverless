@@ -97,7 +97,7 @@ async def queued_action(player_id: str, game_id: PydanticObjectId, body: ActRequ
 
     game.queue_action_for(player_id, deserialize.action(player_id, body))
 
-    await GameService.save(game)
+    game = await GameService.save(game)
 
     return serialize.events(game.events[initial_event_knowledge:], player_id)
 

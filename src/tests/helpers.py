@@ -152,3 +152,11 @@ def contains_unsequenced(
         )
         for item in events
     )
+
+
+def get_events(client: TestClient, game_id: str, player_id: str) -> list[dict]:
+    """Retrieve events for a game"""
+    return client.get(
+        f"/players/{player_id}/games/{game_id}/events",
+        headers={"authorization": f"Bearer {player_id}"},
+    ).json()

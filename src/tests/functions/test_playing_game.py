@@ -7,6 +7,7 @@ from src.tests.helpers import (
     DEFAULT_ID,
     contains_unsequenced,
     game_with_manual_player,
+    get_events,
     get_game,
     get_suggestion,
     queue_action,
@@ -226,10 +227,7 @@ def test_cannot_violate_engine_rule(client: TestClient):
     """Server will not allow violating an engine rule (playing out of order)"""
     original_game, _ = game_with_manual_player(client)
 
-    original_events = client.get(
-        f"/players/{DEFAULT_ID}/games/{original_game['id']}/events",
-        headers={"authorization": f"Bearer {DEFAULT_ID}"},
-    ).json()
+    original_events = get_events(client, original_game["id"], DEFAULT_ID)
 
     # play before turn
     resp = client.post(
@@ -243,10 +241,7 @@ def test_cannot_violate_engine_rule(client: TestClient):
 
     game = get_game(client, original_game["id"], DEFAULT_ID)
 
-    after_events = client.get(
-        f"/players/{DEFAULT_ID}/games/{original_game['id']}/events",
-        headers={"authorization": f"Bearer {DEFAULT_ID}"},
-    ).json()
+    after_events = get_events(client, original_game["id"], DEFAULT_ID)
 
     assert original_game == game
     assert original_events == after_events

@@ -168,7 +168,6 @@ def __card(card: internal.Card) -> responses.Card:
     )
 
 
-# TODO: need to verify this works with internal events
 def __event(
     event: internal.Event, sequence: int, client_player_id: str
 ) -> responses.Event:
