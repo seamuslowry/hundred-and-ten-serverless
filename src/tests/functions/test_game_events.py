@@ -34,7 +34,7 @@ def test_partial_trick(client: TestClient):
         client,
         game["id"],
         DEFAULT_ID,
-        {"type": "BID", "amount": BidAmount.SHOOT_THE_MOON},
+        {"amount": BidAmount.SHOOT_THE_MOON, "type": "BID"},
     )
     queue_action(
         client,
