@@ -7,6 +7,7 @@ from src.main.models import internal
 
 
 def action(a: actions.Action) -> internal.Action:
+    """Deserialize an engine action to an internal action"""
     match (a):
         case actions.Bid():
             return internal.Bid(a.identifier, internal.BidAmount(a.amount.value))
@@ -22,6 +23,7 @@ def action(a: actions.Action) -> internal.Action:
 
 
 def round_events(r: engine_round.Round) -> list[internal.Event]:
+    """Deserialize an engine round to the corresponding events"""
     trick_events: list[list[internal.Event]] = [
         [
             internal.TrickStart(),
