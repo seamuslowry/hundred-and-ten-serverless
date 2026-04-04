@@ -8,6 +8,7 @@ from hundredandten.constants import (
     CardSuit as EngineCardSuit,
 )
 from hundredandten.deck import Card as EngineCard
+from hundredandten.trick import Play as EnginePlay
 
 from .constants import BidAmount, CardNumber, CardSuit
 
@@ -39,6 +40,17 @@ class Play:
 
     player_id: str
     card: Card
+
+    @classmethod
+    def from_engine(cls, engine_play: EnginePlay) -> Self:
+        return cls(
+            player_id=engine_play.identifier, card=Card.from_engine(engine_play.card)
+        )
+
+    def to_engine(self) -> EnginePlay:
+        return EnginePlay(
+            identifier=self.player_id, card=self.card.to_engine()
+        )
 
 
 @dataclass

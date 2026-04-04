@@ -7,9 +7,6 @@ from typing import Optional, override
 from uuid import uuid4
 
 from hundredandten import Game as Engine
-from hundredandten.actions import (
-    Play as EnginePlay,
-)
 from hundredandten.player import NaiveAutomatedPlayer
 
 from src.main.mappers.engine import deserialize, serialize
@@ -177,9 +174,9 @@ class Game(BaseGame):
         return [
             Trick(
                 bleeding=t.bleeding,
-                plays=[self.__convert_engine_play(p) for p in t.plays],
+                plays=[Play.from_engine(p) for p in t.plays],
                 winning_play=(
-                    self.__convert_engine_play(t.winning_play)
+                    Play.from_engine(t.winning_play)
                     if t.winning_play
                     else None
                 ),
@@ -262,6 +259,3 @@ class Game(BaseGame):
             seed=self.seed,
             initial_actions=[serialize.action(m) for m in (actions or [])],
         )
-
-    def __convert_engine_play(self, p: EnginePlay) -> Play:
-        return Play(player_id=p.identifier, card=Card.from_engine(p.card))
