@@ -1,17 +1,26 @@
 """Internal models for actions"""
 
+from abc import ABC
 from dataclasses import dataclass
 from typing import Self, Union
 
 from hundredandten.constants import (
     CardNumber as EngineCardNumber,
     CardSuit as EngineCardSuit,
+    SelectableSuit as EngineSelectableSuit,
+    BidAmount as EngineBidAmount
 )
 from hundredandten.deck import Card as EngineCard
-from hundredandten.trick import Play as EnginePlay
+from hundredandten.actions import (
+    Action as EngineAction,
+    Play as EnginePlay,
+    Bid as EngineBid,
+    SelectTrump as EngineSelectTrump,
+    Discard as EngineDiscard,
+    DetailedDiscard as EngineDetailedDiscard
+)
 
 from .constants import BidAmount, CardNumber, CardSuit
-
 
 @dataclass
 class Card:
@@ -60,6 +69,17 @@ class Bid:
     player_id: str
     amount: BidAmount
 
+    @classmethod
+    def from_engine(cls, engine_bid: EngineBid) -> Self:
+        return cls(
+            player_id=engine_bid.identifier, amount=BidAmount(engine_bid.amount.value)
+        )
+
+    def to_engine(self) -> EngineBid:
+        return EngineBid(
+            identifier=self.player_id, amount=EngineBidAmount(self.amount.value)
+        )
+
 
 @dataclass
 class SelectTrump:
@@ -67,6 +87,17 @@ class SelectTrump:
 
     player_id: str
     suit: CardSuit
+
+    @classmethod
+    def from_engine(cls, engine_select: EngineSelectTrump) -> Self:
+        return cls(
+            player_id=engine_select.identifier, suit=CardSuit[engine_select.suit.name]
+        )
+
+    def to_engine(self) -> EngineSelectTrump:
+        return EngineSelectTrump(
+            identifier=self.player_id, suit=EngineSelectableSuit[self.suit.name]
+        )
 
 
 @dataclass
@@ -76,9 +107,35 @@ class Discard:
     player_id: str
     cards: list[Card]
 
+    @classmethod
+    def from_engine(cls, engine_discard: EngineDiscard) -> Self:
+        return cls(
+            player_id=engine_discard.identifier, cards = [Card.from_engine(c) for c in engine_discard.cards]
+        )
+
+    def to_engine(self) -> EngineDiscard:
+        return EngineDiscard(
+            identifier=self.player_id, cards=[c.to_engine() for c in self.cards]
+        )
 
 type Action = Union[Bid, SelectTrump, Discard, Play]
 
+
+class ActionFactory:
+    @staticmethod
+    def from_engine(a: EngineAction) -> Action:
+        match (a):
+            case EngineBid():
+                return Bid.from_engine(a)
+            case EngineSelectTrump():
+                return SelectTrump.from_engine(a)
+            case EngineDiscard() | EngineDetailedDiscard():
+                return Discard.from_engine(a)
+            case EnginePlay():
+                return Play.from_engine(a)
+        raise ValueError(
+            f"Could not convert engine action {a} to an internal action"
+        )  # pragma: nocover
 
 @dataclass
 class GameStart:

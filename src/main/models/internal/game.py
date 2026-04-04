@@ -9,9 +9,9 @@ from uuid import uuid4
 from hundredandten import Game as Engine
 from hundredandten.player import NaiveAutomatedPlayer
 
-from src.main.mappers.engine import deserialize, serialize
+from src.main.mappers.engine import deserialize
 
-from .actions import Action, Card, Event, GameEnd, GameStart, Play
+from .actions import Action, ActionFactory, Card, Event, GameEnd, GameStart, Play
 from .constants import Accessibility, CardSuit, GameStatus
 from .player import NaiveCpu, PlayerInGame, PlayerInRound
 from .trick import Trick
@@ -115,7 +115,7 @@ class Game(BaseGame):
     @property
     def actions(self) -> list[Action]:
         """Get all moves made in the game"""
-        return list(deserialize.action(a) for a in self._engine.actions)
+        return list(ActionFactory.from_engine(a) for a in self._engine.actions)
 
     @property
     def status(self) -> GameStatus:
@@ -208,7 +208,7 @@ class Game(BaseGame):
 
     def act(self, action: Action) -> None:
         """Perform a game action"""
-        self._engine.act(serialize.action(action))
+        self._engine.act(action.to_engine())
 
     def get_player_in_round(self, player_id: str) -> PlayerInRound:
         """Return the representation of this player as they are in the round"""
@@ -249,7 +249,7 @@ class Game(BaseGame):
 
     def suggestion_for(self, player_id: str) -> Action:
         """Return a suggested action for the given player"""
-        return deserialize.action(
+        return ActionFactory.from_engine(
             NaiveAutomatedPlayer(player_id).act(self._engine.game_state_for(player_id))
         )
 
@@ -257,5 +257,5 @@ class Game(BaseGame):
         return Engine(
             players=[p.as_engine_player() for p in self.ordered_players],
             seed=self.seed,
-            initial_actions=[serialize.action(m) for m in (actions or [])],
+            initial_actions=[a.to_engine() for a in (actions or [])],
         )

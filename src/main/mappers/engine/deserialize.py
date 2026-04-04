@@ -1,27 +1,8 @@
 """A mapper to convert internal models to engine models"""
 
-from hundredandten import actions
 from hundredandten import round as engine_round
 
 from src.main.models import internal
-
-
-def action(a: actions.Action) -> internal.Action:
-    """Deserialize an engine action to an internal action"""
-    match (a):
-        case actions.Bid():
-            return internal.Bid(a.identifier, internal.BidAmount(a.amount.value))
-        case actions.SelectTrump():
-            return internal.SelectTrump(a.identifier, internal.CardSuit[a.suit.name])
-        case actions.Discard() | actions.DetailedDiscard():
-            return internal.Discard(
-                a.identifier, [internal.Card.from_engine(c) for c in a.cards]
-            )
-        case actions.Play():
-            return internal.Play(a.identifier, internal.Card.from_engine(a.card))
-    raise ValueError(
-        f"Could not convert engine action {a} to an internal action"
-    )  # pragma: nocover
 
 
 def round_events(r: engine_round.Round) -> list[internal.Event]:
@@ -29,7 +10,7 @@ def round_events(r: engine_round.Round) -> list[internal.Event]:
     trick_events: list[list[internal.Event]] = [
         [
             internal.TrickStart(),
-            *[action(p) for p in trick.plays],
+            *[internal.Play.from_engine(p) for p in trick.plays],
             # don't include the trick end event if it hasn't ended
             *(
                 [internal.TrickEnd(trick.winning_play.identifier)]
@@ -45,9 +26,9 @@ def round_events(r: engine_round.Round) -> list[internal.Event]:
             r.dealer.identifier,
             {p.identifier: _original_hand(r, p.identifier) for p in r.players},
         ),
-        *[action(b) for b in r.bids],
-        *([action(r.selection)] if r.selection else []),
-        *[action(b) for b in r.discards],
+        *[internal.Bid.from_engine(b) for b in r.bids],
+        *([internal.SelectTrump.from_engine(r.selection)] if r.selection else []),
+        *[internal.Discard.from_engine(b) for b in r.discards],
         *[trick_event for event_list in trick_events for trick_event in event_list],
         # don't include the round end event if it hasn't ended
         *(

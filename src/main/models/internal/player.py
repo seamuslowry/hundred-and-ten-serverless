@@ -17,7 +17,6 @@ from hundredandten.player import (
 )
 from hundredandten.state import GameState
 
-from src.main.mappers.engine import serialize
 from src.main.models.internal.errors import BadRequestError
 
 from .actions import Action, Card
@@ -95,7 +94,7 @@ class Human(PlayerInGame):
     def as_engine_player(self) -> EnginePlayer:
         return QueuedActionPlayer(
             self.id,
-            queued_actions=deque([serialize.action(a) for a in self.queued_actions]),
+            queued_actions=deque([a.to_engine() for a in self.queued_actions]),
             on_consume_actions=lambda consumed: setattr(
                 self,
                 "queued_actions",
