@@ -233,19 +233,6 @@ class Trick(BaseModel):
     plays: list[QueuedPlayCard]
     winning_play: Optional[QueuedPlayCard] = None
 
-
-# class Round(BaseModel):
-#     """A class to model the client format of a Hundred and Ten round"""
-
-#     # players: list[PlayerInRound]
-#     dealer: PlayerInRound
-#     bidder: Optional[PlayerInRound] = None
-#     bid: Optional[int] = None
-#     trump: Optional[SelectableSuit] = None
-#     tricks: list[Trick]
-#     active_player: Optional[PlayerInRound] = None
-
-
 class Game(BaseModel):
     """A class to model the client format of a Hundred and Ten game"""
 
