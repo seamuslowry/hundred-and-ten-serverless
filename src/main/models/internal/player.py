@@ -8,11 +8,7 @@ from typing import Callable, Optional, Self
 from hundredandten.actions import Action as EngineAction
 from hundredandten.player import (
     AutomatedPlayer as EngineAutomatedPlayer,
-)
-from hundredandten.player import (
     NaiveAutomatedPlayer as EngineNaivePlayer,
-)
-from hundredandten.player import (
     Player as EnginePlayer,
 )
 from hundredandten.state import GameState

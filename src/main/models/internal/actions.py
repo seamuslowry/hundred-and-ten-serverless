@@ -6,10 +6,10 @@ from typing import Self, Union
 from hundredandten.actions import (
     Action as EngineAction,
     Bid as EngineBid,
+    BidAmount as EngineBidAmount,
     DetailedDiscard as EngineDetailedDiscard,
     Discard as EngineDiscard,
     Play as EnginePlay,
-    BidAmount as EngineBidAmount,
     SelectTrump as EngineSelectTrump,
 )
 from hundredandten.constants import (
