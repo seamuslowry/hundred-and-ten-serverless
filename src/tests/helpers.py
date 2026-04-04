@@ -43,7 +43,7 @@ def player(test_client: TestClient, upsert_player: Player) -> dict[str, Any]:
 def started_game(
     test_client: TestClient, organizer=DEFAULT_ID, name="test game"
 ) -> dict[str, Any]:
-    """Get a started game waiting for the first move"""
+    """Get a started game waiting for the first action"""
     created_lobby = lobby_game(test_client, organizer=organizer, name=name)
     organizer = created_lobby["organizer"]["id"]
     results = test_client.post(
