@@ -47,12 +47,14 @@ class Card:
 
     @classmethod
     def from_engine(cls, engine_card: EngineCard) -> Self:
+        """Create an internal Card from an engine Card."""
         return cls(
             suit=CardSuit[engine_card.suit.name],
             number=CardNumber(engine_card.number.name),
         )
 
     def to_engine(self) -> EngineCard:
+        """Convert this internal Card to an engine Card."""
         return EngineCard(
             suit=EngineCardSuit[self.suit.name],
             number=EngineCardNumber(self.number.name),
@@ -68,11 +70,13 @@ class Play:
 
     @classmethod
     def from_engine(cls, engine_play: EnginePlay) -> Self:
+        """Create an internal Play from an engine Play."""
         return cls(
             player_id=engine_play.identifier, card=Card.from_engine(engine_play.card)
         )
 
     def to_engine(self) -> EnginePlay:
+        """Convert this internal Play to an engine Play."""
         return EnginePlay(identifier=self.player_id, card=self.card.to_engine())
 
 
@@ -85,11 +89,13 @@ class Bid:
 
     @classmethod
     def from_engine(cls, engine_bid: EngineBid) -> Self:
+        """Create an internal Bid from an engine Bid."""
         return cls(
             player_id=engine_bid.identifier, amount=BidAmount(engine_bid.amount.value)
         )
 
     def to_engine(self) -> EngineBid:
+        """Convert this internal Bid to an engine Bid."""
         return EngineBid(
             identifier=self.player_id, amount=EngineBidAmount(self.amount.value)
         )
@@ -104,11 +110,13 @@ class SelectTrump:
 
     @classmethod
     def from_engine(cls, engine_select: EngineSelectTrump) -> Self:
+        """Create an internal SelectTrump from an engine SelectTrump."""
         return cls(
             player_id=engine_select.identifier, suit=CardSuit[engine_select.suit.name]
         )
 
     def to_engine(self) -> EngineSelectTrump:
+        """Convert this internal SelectTrump to an engine SelectTrump."""
         return EngineSelectTrump(
             identifier=self.player_id, suit=EngineSelectableSuit[self.suit.name]
         )
@@ -123,12 +131,14 @@ class Discard:
 
     @classmethod
     def from_engine(cls, engine_discard: EngineDiscard) -> Self:
+        """Create an internal Discard from an engine Discard."""
         return cls(
             player_id=engine_discard.identifier,
             cards=[Card.from_engine(c) for c in engine_discard.cards],
         )
 
     def to_engine(self) -> EngineDiscard:
+        """Convert this internal Discard to an engine Discard."""
         return EngineDiscard(
             identifier=self.player_id, cards=[c.to_engine() for c in self.cards]
         )
@@ -138,9 +148,12 @@ type Action = Union[Bid, SelectTrump, Discard, Play]
 
 
 class ActionFactory:
+    """Factory class for creating internal actions from engine actions."""
+
     @staticmethod
     def from_engine(a: EngineAction) -> Action:
-        match (a):
+        """Create an internal Action from an engine Action."""
+        match a:
             case EngineBid():
                 return Bid.from_engine(a)
             case EngineSelectTrump():
