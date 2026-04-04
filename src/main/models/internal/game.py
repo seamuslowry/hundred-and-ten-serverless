@@ -8,10 +8,9 @@ from uuid import uuid4
 
 from hundredandten import Game as Engine
 from hundredandten.player import NaiveAutomatedPlayer
+from hundredandten.round import Round as EngineRound
 
-from src.main.mappers.engine import deserialize
-
-from .actions import Action, ActionFactory, Card, Event, GameEnd, GameStart, Play
+from .actions import Action, ActionFactory, Bid, Card, Discard, Event, GameEnd, GameStart, Play, RoundEnd, RoundStart, SelectTrump, TrickEnd, TrickStart
 from .constants import Accessibility, CardSuit, GameStatus
 from .player import NaiveCpu, PlayerInGame, PlayerInRound
 from .trick import Trick
@@ -191,7 +190,7 @@ class Game(BaseGame):
         return [
             GameStart(),
             *chain.from_iterable(
-                deserialize.round_events(r) for r in self._engine.rounds
+                Game.__round_events(r) for r in self._engine.rounds
             ),
             *([] if not self.winner else [GameEnd(self.winner.id)]),
         ]
@@ -252,6 +251,53 @@ class Game(BaseGame):
         return ActionFactory.from_engine(
             NaiveAutomatedPlayer(player_id).act(self._engine.game_state_for(player_id))
         )
+    
+    @staticmethod
+    def __round_events(r: EngineRound) -> list[Event]:
+        """Deserialize an engine round to the corresponding events"""
+        trick_events: list[list[Event]] = [
+            [
+                TrickStart(),
+                *[Play.from_engine(p) for p in trick.plays],
+                # don't include the trick end event if it hasn't ended
+                *(
+                    [TrickEnd(trick.winning_play.identifier)]
+                    if (trick.winning_play and len(trick.plays) == len(r.players))
+                    else []
+                ),
+            ]
+            for trick in r.tricks
+        ]
+
+        return [
+            RoundStart(
+                r.dealer.identifier,
+                {p.identifier: Game.__original_hand(r, p.identifier) for p in r.players},
+            ),
+            *[Bid.from_engine(b) for b in r.bids],
+            *([SelectTrump.from_engine(r.selection)] if r.selection else []),
+            *[Discard.from_engine(b) for b in r.discards],
+            *[trick_event for event_list in trick_events for trick_event in event_list],
+            # don't include the round end event if it hasn't ended
+            *(
+                [RoundEnd(scores={s.identifier: s.value for s in r.scores})]
+                if r.completed
+                else []
+            ),
+        ]
+
+
+    @staticmethod
+    def __original_hand(r: EngineRound, player_id: str) -> list[Card]:
+        """Return the identified player's original hand"""
+        player = next(p for p in r.players if p.identifier == player_id)
+        discard = next((d for d in r.discards if d.identifier == player_id), None)
+
+        return [
+            Card.from_engine(c)
+            for c in (discard.cards + discard.kept if discard else player.hand)
+        ]
+
 
     def __initialize_engine(self, actions: list[Action]) -> Engine:
         return Engine(
