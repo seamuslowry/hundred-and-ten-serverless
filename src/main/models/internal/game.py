@@ -10,7 +10,22 @@ from hundredandten import Game as Engine
 from hundredandten.player import NaiveAutomatedPlayer
 from hundredandten.round import Round as EngineRound
 
-from .actions import Action, ActionFactory, Bid, Card, Discard, Event, GameEnd, GameStart, Play, RoundEnd, RoundStart, SelectTrump, TrickEnd, TrickStart
+from .actions import (
+    Action,
+    ActionFactory,
+    Bid,
+    Card,
+    Discard,
+    Event,
+    GameEnd,
+    GameStart,
+    Play,
+    RoundEnd,
+    RoundStart,
+    SelectTrump,
+    TrickEnd,
+    TrickStart,
+)
 from .constants import Accessibility, CardSuit, GameStatus
 from .player import NaiveCpu, PlayerInGame, PlayerInRound
 from .trick import Trick
@@ -175,9 +190,7 @@ class Game(BaseGame):
                 bleeding=t.bleeding,
                 plays=[Play.from_engine(p) for p in t.plays],
                 winning_play=(
-                    Play.from_engine(t.winning_play)
-                    if t.winning_play
-                    else None
+                    Play.from_engine(t.winning_play) if t.winning_play else None
                 ),
             )
             for t in self._engine.active_round.tricks
@@ -189,9 +202,7 @@ class Game(BaseGame):
 
         return [
             GameStart(),
-            *chain.from_iterable(
-                Game.__round_events(r) for r in self._engine.rounds
-            ),
+            *chain.from_iterable(Game.__round_events(r) for r in self._engine.rounds),
             *([] if not self.winner else [GameEnd(self.winner.id)]),
         ]
 
@@ -251,7 +262,7 @@ class Game(BaseGame):
         return ActionFactory.from_engine(
             NaiveAutomatedPlayer(player_id).act(self._engine.game_state_for(player_id))
         )
-    
+
     @staticmethod
     def __round_events(r: EngineRound) -> list[Event]:
         """Deserialize an engine round to the corresponding events"""
@@ -272,7 +283,10 @@ class Game(BaseGame):
         return [
             RoundStart(
                 r.dealer.identifier,
-                {p.identifier: Game.__original_hand(r, p.identifier) for p in r.players},
+                {
+                    p.identifier: Game.__original_hand(r, p.identifier)
+                    for p in r.players
+                },
             ),
             *[Bid.from_engine(b) for b in r.bids],
             *([SelectTrump.from_engine(r.selection)] if r.selection else []),
@@ -286,7 +300,6 @@ class Game(BaseGame):
             ),
         ]
 
-
     @staticmethod
     def __original_hand(r: EngineRound, player_id: str) -> list[Card]:
         """Return the identified player's original hand"""
@@ -297,7 +310,6 @@ class Game(BaseGame):
             Card.from_engine(c)
             for c in (discard.cards + discard.kept if discard else player.hand)
         ]
-
 
     def __initialize_engine(self, actions: list[Action]) -> Engine:
         return Engine(
