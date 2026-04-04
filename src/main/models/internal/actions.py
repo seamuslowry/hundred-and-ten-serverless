@@ -1,7 +1,13 @@
 """Internal models for actions"""
 
 from dataclasses import dataclass
-from typing import Union
+from typing import Self, Union
+
+from hundredandten.constants import (
+    CardNumber as EngineCardNumber,
+    CardSuit as EngineCardSuit,
+)
+from hundredandten.deck import Card as EngineCard
 
 from .constants import BidAmount, CardNumber, CardSuit
 
@@ -12,6 +18,19 @@ class Card:
 
     suit: CardSuit
     number: CardNumber
+
+    @classmethod
+    def from_engine(cls, engine_card: EngineCard) -> Self:
+        return cls(
+            suit=CardSuit[engine_card.suit.name],
+            number=CardNumber(engine_card.number.name),
+        )
+
+    def to_engine(self) -> EngineCard:
+        return EngineCard(
+            suit=EngineCardSuit[self.suit.name],
+            number=EngineCardNumber(self.number.name),
+        )
 
 
 @dataclass

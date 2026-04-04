@@ -1,6 +1,6 @@
 """A mapper to convert internal models to engine models"""
 
-from hundredandten import actions, deck
+from hundredandten import actions
 from hundredandten import round as engine_round
 
 from src.main.models import internal
@@ -14,9 +14,11 @@ def action(a: actions.Action) -> internal.Action:
         case actions.SelectTrump():
             return internal.SelectTrump(a.identifier, internal.CardSuit[a.suit.name])
         case actions.Discard() | actions.DetailedDiscard():
-            return internal.Discard(a.identifier, [card(c) for c in a.cards])
+            return internal.Discard(
+                a.identifier, [internal.Card.from_engine(c) for c in a.cards]
+            )
         case actions.Play():
-            return internal.Play(a.identifier, card(a.card))
+            return internal.Play(a.identifier, internal.Card.from_engine(a.card))
     raise ValueError(
         f"Could not convert engine action {a} to an internal action"
     )  # pragma: nocover
@@ -61,11 +63,7 @@ def _original_hand(r: engine_round.Round, player_id: str) -> list[internal.Card]
     player = next(p for p in r.players if p.identifier == player_id)
     discard = next((d for d in r.discards if d.identifier == player_id), None)
 
-    return [card(c) for c in (discard.cards + discard.kept if discard else player.hand)]
-
-
-def card(c: deck.Card) -> internal.Card:
-    """Convert an engine card model to an internal card model"""
-    return internal.Card(
-        suit=internal.CardSuit[c.suit.name], number=internal.CardNumber(c.number.name)
-    )
+    return [
+        internal.Card.from_engine(c)
+        for c in (discard.cards + discard.kept if discard else player.hand)
+    ]

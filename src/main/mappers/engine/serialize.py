@@ -1,15 +1,8 @@
 """A mapper to convert internal models to engine models"""
 
-from hundredandten import actions, constants, deck
+from hundredandten import actions, constants
 
 from src.main.models import internal
-
-
-def card(c: internal.Card) -> deck.Card:
-    """Convert an internal card model to an engine card model"""
-    return deck.Card(
-        suit=constants.CardSuit[c.suit.name], number=constants.CardNumber[c.number.name]
-    )
 
 
 def action(a: internal.Action) -> actions.Action:
@@ -25,9 +18,9 @@ def action(a: internal.Action) -> actions.Action:
             )
         case internal.Discard():
             return actions.Discard(
-                identifier=a.player_id, cards=[card(c) for c in a.cards]
+                identifier=a.player_id, cards=[c.to_engine() for c in a.cards]
             )
         case internal.Play():
-            return actions.Play(identifier=a.player_id, card=card(a.card))
+            return actions.Play(identifier=a.player_id, card=a.card.to_engine())
 
     raise ValueError(f"Unable to serialize unrecognized {a}")  # pragma: no cover

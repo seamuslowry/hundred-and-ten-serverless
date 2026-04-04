@@ -10,13 +10,12 @@ from hundredandten import Game as Engine
 from hundredandten.actions import (
     Play as EnginePlay,
 )
-from hundredandten.deck import Card as EngineCard
 from hundredandten.player import NaiveAutomatedPlayer
 
 from src.main.mappers.engine import deserialize, serialize
 
 from .actions import Action, Card, Event, GameEnd, GameStart, Play
-from .constants import Accessibility, CardNumber, CardSuit, GameStatus
+from .constants import Accessibility, CardSuit, GameStatus
 from .player import NaiveCpu, PlayerInGame, PlayerInRound
 from .trick import Trick
 
@@ -219,7 +218,7 @@ class Game(BaseGame):
         return PlayerInRound(
             id=player_id,
             hand=[
-                self.__convert_engine_card(c)
+                Card.from_engine(c)
                 for c in next(
                     p
                     for p in self._engine.active_round.players
@@ -264,8 +263,5 @@ class Game(BaseGame):
             initial_actions=[serialize.action(m) for m in (actions or [])],
         )
 
-    def __convert_engine_card(self, c: EngineCard) -> Card:
-        return Card(suit=CardSuit[c.suit.name], number=CardNumber(c.number.name))
-
     def __convert_engine_play(self, p: EnginePlay) -> Play:
-        return Play(player_id=p.identifier, card=self.__convert_engine_card(p.card))
+        return Play(player_id=p.identifier, card=Card.from_engine(p.card))

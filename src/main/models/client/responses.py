@@ -233,6 +233,7 @@ class Trick(BaseModel):
     plays: list[QueuedPlayCard]
     winning_play: Optional[QueuedPlayCard] = None
 
+
 class Game(BaseModel):
     """A class to model the client format of a Hundred and Ten game"""
 
