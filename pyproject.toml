@@ -23,7 +23,7 @@ dependencies = [
     "hundredandten==5.0.0",
     "pymongo==4.16.0",
     "pyjwt==2.12.1",
-    "requests==2.33.0",
+    "requests==2.33.1",
 ]
 
 [dependency-groups]
