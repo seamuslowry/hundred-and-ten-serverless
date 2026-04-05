@@ -557,11 +557,11 @@ wheels = [
 
 [[package]]
 name = "hundredandten"
-version = "5.0.0.dev64"
-source = { registry = "https://test.pypi.org/simple/" }
-sdist = { url = "https://test-files.pythonhosted.org/packages/9b/92/9d945b6ee94e8951847b404d496fd9ddace6e1b4f91a9a09add87602777f/hundredandten-5.0.0.dev64.tar.gz", hash = "sha256:654046d068a4d4232bad730358e7fe3d748b24d6733182846ef11604a46e3d18", size = 18353, upload-time = "2026-04-01T21:11:59.261Z" }
+version = "5.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/f1/85/2754be4cafbab9ddb4391f1cc695311c1535d30ba3d492421afc2afc8f9e/hundredandten-5.0.0.tar.gz", hash = "sha256:770cdc1a61d3250d1e2772f6ec90a84ed0629d8c9bf5fd5a7d1f672f60e703e6", size = 18347, upload-time = "2026-04-04T23:50:21.253Z" }
 wheels = [
-    { url = "https://test-files.pythonhosted.org/packages/06/8f/cc6c1f228eb661bd7d01b500b160ed5e2bff243e726e06352571ee38ce5a/hundredandten-5.0.0.dev64-py3-none-any.whl", hash = "sha256:f1f81dd6b1dc21b90a207d8a9b18b3baf1f8d26df69353ad00cd105f056705b8", size = 22631, upload-time = "2026-04-01T21:11:58.364Z" },
+    { url = "https://files.pythonhosted.org/packages/95/92/e54a090e1a38554ccd3604896ae6d6df316348126e7a7708cdfd74836759/hundredandten-5.0.0-py3-none-any.whl", hash = "sha256:c4cf09ec0baa5b526698f324193a526d175dc0d29a874ea785441e0767bcf0cc", size = 22569, upload-time = "2026-04-04T23:50:22.494Z" },
 ]
 
 [[package]]
@@ -601,7 +601,7 @@ requires-dist = [
     { name = "cachecontrol", specifier = "==0.14.4" },
     { name = "fastapi", specifier = "==0.135.2" },
     { name = "google-auth", specifier = "==2.49.1" },
-    { name = "hundredandten", specifier = "==5.0.0.dev64", index = "https://test.pypi.org/simple/" },
+    { name = "hundredandten", specifier = "==5.0.0" },
     { name = "pyjwt", specifier = "==2.12.1" },
     { name = "pymongo", specifier = "==4.16.0" },
     { name = "requests", specifier = "==2.33.0" },
