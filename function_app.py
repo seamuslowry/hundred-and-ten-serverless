@@ -7,14 +7,12 @@ from contextlib import asynccontextmanager
 import azure.functions as func
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
+from hundredandten.errors import HundredAndTenError
 
 from src.main.auth import (
     get_authorized_identity_for_path_player,
 )
 from src.main.models.db.setup import initialize_odm
-from src.main.models.internal import (
-    HundredAndTenError,
-)
 from src.main.models.internal.errors import (
     AuthenticationError,
     AuthorizationError,

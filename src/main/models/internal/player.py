@@ -5,19 +5,27 @@ from collections import deque
 from dataclasses import dataclass, field
 from typing import Callable, Optional, Self
 
-from hundredandten import actions, player, state
+from hundredandten.actions import Action as EngineAction
+from hundredandten.player import (
+    AutomatedPlayer as EngineAutomatedPlayer,
+    NaiveAutomatedPlayer as EngineNaivePlayer,
+    Player as EnginePlayer,
+)
+from hundredandten.state import GameState
 
 from src.main.models.internal.errors import BadRequestError
 
+from .actions import Action, Card
+
 
 @dataclass
-class QueuedActionPlayer(player.AutomatedPlayer):
+class QueuedActionPlayer(EngineAutomatedPlayer):
     """Represent a player with queued actions to be played in FIFO order."""
 
-    on_consume_actions: Callable[[list[actions.Action]], None]
-    queued_actions: deque[actions.Action] = field(default_factory=deque)
+    on_consume_actions: Callable[[list[EngineAction]], None]
+    queued_actions: deque[EngineAction] = field(default_factory=deque)
 
-    def act(self, game_state: state.GameState) -> Optional[actions.Action]:
+    def act(self, game_state: GameState) -> Optional[EngineAction]:
         """Return the earliest queued action if it is available, dropping any expired ones."""
         if not self.queued_actions:
             return None
@@ -53,7 +61,7 @@ class PlayerInGame(ABC):
     id: str
 
     @abstractmethod
-    def queue_action(self, action: actions.Action) -> Self:
+    def queue_action(self, action: Action) -> Self:
         """Attempt to queue an action for the player"""
 
     @abstractmethod
@@ -61,7 +69,7 @@ class PlayerInGame(ABC):
         """Clear all queued actions for the player"""
 
     @abstractmethod
-    def as_engine_player(self) -> player.Player:
+    def as_engine_player(self) -> EnginePlayer:
         """Return this player as an engine player"""
 
 
@@ -69,9 +77,9 @@ class PlayerInGame(ABC):
 class Human(PlayerInGame):
     """A human; represents a real user that will provide input"""
 
-    queued_actions: list[actions.Action] = field(default_factory=list)
+    queued_actions: list[Action] = field(default_factory=list)
 
-    def queue_action(self, action: actions.Action) -> Self:
+    def queue_action(self, action: Action) -> Self:
         self.queued_actions.append(action)
         return self
 
@@ -79,14 +87,14 @@ class Human(PlayerInGame):
         self.queued_actions.clear()
         return self
 
-    def as_engine_player(self) -> player.Player:
+    def as_engine_player(self) -> EnginePlayer:
         return QueuedActionPlayer(
             self.id,
-            queued_actions=deque(self.queued_actions),
+            queued_actions=deque([a.to_engine() for a in self.queued_actions]),
             on_consume_actions=lambda consumed: setattr(
                 self,
                 "queued_actions",
-                [action for action in self.queued_actions if action not in consumed],
+                self.queued_actions[len(consumed) :],
             ),
         )
 
@@ -95,11 +103,19 @@ class Human(PlayerInGame):
 class NaiveCpu(PlayerInGame):
     """A naive CPU using the built-in automated player"""
 
-    def queue_action(self, action: actions.Action) -> Self:
+    def queue_action(self, action: Action) -> Self:
         raise BadRequestError("Cannot queue an action for an automated player")
 
     def clear_queued_actions(self) -> Self:
         raise BadRequestError("Cannot queue actions for an automated player")
 
-    def as_engine_player(self) -> player.Player:
-        return player.NaiveAutomatedPlayer(self.id)
+    def as_engine_player(self) -> EnginePlayer:
+        return EngineNaivePlayer(self.id)
+
+
+@dataclass
+class PlayerInRound:
+    """A player in a round"""
+
+    id: str
+    hand: list[Card]

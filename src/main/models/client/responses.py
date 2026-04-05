@@ -1,6 +1,7 @@
 """Format of a game of Hundred and Ten on the client"""
 
 from abc import ABC
+from enum import Enum
 from typing import Annotated, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
@@ -187,12 +188,18 @@ class Player(BaseModel):
     picture_url: Optional[str] = None
 
 
+class PlayerType(Enum):
+    """The type of players that may be in a game"""
+
+    HUMAN = "human"
+    CPU_EASY = "cpu-easy"
+
+
 class PlayerInGame(BaseModel):
     """A class to model the client format of a Hundred and Ten person"""
 
     id: str
-    automate: bool
-    queued_actions: list[UnorderedActionResponse]
+    type: PlayerType
 
 
 class OtherPlayerInRound(BaseModel):
@@ -200,13 +207,16 @@ class OtherPlayerInRound(BaseModel):
 
     id: str
     hand_size: int
+    type: PlayerType
 
 
 class SelfInRound(BaseModel):
     """A class to model the client format of the logged in Hundred and Ten player"""
 
     id: str
+    type: PlayerType
     hand: list[Card]
+    queued_actions: list[UnorderedActionResponse]
 
 
 type PlayerInRound = Union[SelfInRound, OtherPlayerInRound]
@@ -224,24 +234,11 @@ class Trick(BaseModel):
     winning_play: Optional[QueuedPlayCard] = None
 
 
-class Round(BaseModel):
-    """A class to model the client format of a Hundred and Ten round"""
-
-    players: list[PlayerInRound]
-    dealer: PlayerInRound
-    bidder: Optional[PlayerInRound] = None
-    bid: Optional[int] = None
-    trump: Optional[SelectableSuit] = None
-    tricks: list[Trick]
-    active_player: Optional[PlayerInRound] = None
-
-
 class Game(BaseModel):
     """A class to model the client format of a Hundred and Ten game"""
 
     id: str
     name: str
-    status: str
 
 
 class WaitingGame(Game):
@@ -256,14 +253,21 @@ class WaitingGame(Game):
 class StartedGame(Game):
     """A class to model the client format of a started Hundred and Ten game"""
 
-    round: Optional[Round] = None
+    status: str
     scores: dict[str, int]
-    players: list[PlayerInGame]
+    dealer_player_id: str
+    bidder_player_id: Optional[str]
+    active_player_id: Optional[str]
+    bid_amount: Optional[int]
+    trump: Optional[SelectableSuit]
+    tricks: list[Trick]
+    players: list[PlayerInRound]
 
 
 class CompletedGame(Game):
     """A class to model the client format of a completed Hundred and Ten game"""
 
+    status: str
     winner: PlayerInGame
     organizer: PlayerInGame
     players: list[PlayerInGame]

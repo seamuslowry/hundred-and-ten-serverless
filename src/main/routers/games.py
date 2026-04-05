@@ -22,9 +22,6 @@ from src.main.models.client.responses import (
     StartedGame,
     UnorderedActionResponse,
 )
-from src.main.models.internal import (
-    NaiveAutomatedPlayer,
-)
 from src.main.models.internal.errors import AuthorizationError, BadRequestError
 from src.main.services import GameService, PlayerService
 
@@ -100,7 +97,7 @@ async def queued_action(player_id: str, game_id: PydanticObjectId, body: ActRequ
 
     game.queue_action_for(player_id, deserialize.action(player_id, body))
 
-    await GameService.save(game)
+    game = await GameService.save(game)
 
     return serialize.events(game.events[initial_event_knowledge:], player_id)
 
@@ -138,9 +135,7 @@ async def suggestion(player_id: str, game_id: PydanticObjectId):
     """Ask for a suggestion in a 110 game"""
     game = await GameService.get(game_id)
 
-    return serialize.suggestion(
-        NaiveAutomatedPlayer(player_id).act(game.game_state_for(player_id))
-    )
+    return serialize.suggestion(game.suggestion_for(player_id))
 
 
 @router.post("/search", response_model=list[GameResponse])

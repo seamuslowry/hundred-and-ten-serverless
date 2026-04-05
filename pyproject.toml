@@ -20,13 +20,13 @@ dependencies = [
     "cachecontrol==0.14.4",
     "fastapi==0.135.2",
     "google-auth==2.49.1",
-    "hundredandten==4.0.1",
+    "hundredandten==5.0.0",
     "pymongo==4.16.0",
     "pyjwt==2.12.1",
     "requests==2.33.0",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 lint = [
     "pylint==4.0.5",
     "pyright==1.1.408",
@@ -52,10 +52,6 @@ exclude = ["tests", "tests.*"]
 [tool.pyright]
 useLibraryCodeForTypes = true
 
-[tool.isort]
-sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
-
-
 [tool.pylint.design]
 # Beanie's Document class has 9 ancestors due to mixin interfaces
 max-parents = 15
@@ -63,9 +59,19 @@ max-parents = 15
 min-public-methods = 0
 
 [tool.ruff]
-target-version = "py313"
+target-version = "py314"
 line-length = 100
 lint.extend-select = ["I"]
+lint.isort.combine-as-imports = true
+
+[tool.black]
+target-version = ["py314"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+publish-url = "https://test.pypi.org/legacy/"
+explicit = true

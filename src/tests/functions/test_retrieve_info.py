@@ -9,6 +9,7 @@ from src.main.models.internal import Player
 from src.tests.helpers import (
     DEFAULT_ID,
     completed_game,
+    get_events,
     lobby_game,
     player,
     request_suggestion,
@@ -221,11 +222,9 @@ def test_get_nonexistent_player(client: TestClient):
 def test_get_suggestion_on_other_turn(client: TestClient):
     """The game will provide a suggestion on another player's turn"""
     game = started_game(client)
-    active_player = game["round"]["active_player"]
-    assert active_player
-    non_active_player = next(
-        p for p in game["round"]["players"] if p["id"] != active_player["id"]
-    )
+    active_player_id = game["active_player_id"]
+    assert active_player_id
+    non_active_player = next(p for p in game["players"] if p["id"] != active_player_id)
     resp = request_suggestion(client, game["id"], non_active_player["id"])
 
     assert 200 == resp.status_code
@@ -236,10 +235,7 @@ def test_get_all_events(client: TestClient):
     """The game will provide all events"""
     game = completed_game(client)
 
-    events = client.get(
-        f"/players/{DEFAULT_ID}/games/{game['id']}/events",
-        headers={"authorization": f"Bearer {DEFAULT_ID}"},
-    ).json()
+    events = get_events(client, game["id"], DEFAULT_ID)
 
     assert events[0]["type"] == "GAME_START"
     assert events[0]["sequence"] == 0

@@ -43,7 +43,7 @@ def player(test_client: TestClient, upsert_player: Player) -> dict[str, Any]:
 def started_game(
     test_client: TestClient, organizer=DEFAULT_ID, name="test game"
 ) -> dict[str, Any]:
-    """Get a started game waiting for the first move"""
+    """Get a started game waiting for the first action"""
     created_lobby = lobby_game(test_client, organizer=organizer, name=name)
     organizer = created_lobby["organizer"]["id"]
     results = test_client.post(
@@ -58,16 +58,16 @@ def completed_game(test_client: TestClient) -> dict[str, Any]:
     """Get a completed game"""
     game = started_game(test_client)
 
-    active_player = game["round"]["active_player"]
-    assert active_player
+    active_player_id = game["active_player_id"]
+    assert active_player_id
 
     resp = test_client.post(
-        f"/players/{active_player['id']}/games/{game['id']}/players",
+        f"/players/{active_player_id}/games/{game['id']}/players",
         json={"type": "LEAVE"},
-        headers={"authorization": f"Bearer {active_player['id']}"},
+        headers={"authorization": f"Bearer {active_player_id}"},
     )
     assert len(resp.json()) > 0
-    return get_game(test_client, game["id"], active_player["id"])
+    return get_game(test_client, game["id"], active_player_id)
 
 
 def request_suggestion(
@@ -152,3 +152,11 @@ def contains_unsequenced(
         )
         for item in events
     )
+
+
+def get_events(client: TestClient, game_id: str, player_id: str) -> list[dict]:
+    """Retrieve events for a game"""
+    return client.get(
+        f"/players/{player_id}/games/{game_id}/events",
+        headers={"authorization": f"Bearer {player_id}"},
+    ).json()
