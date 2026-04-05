@@ -18,7 +18,7 @@ dependencies = [
     "azure-functions==1.24.0",
     "beanie==2.1.0",
     "cachecontrol==0.14.4",
-    "fastapi==0.135.2",
+    "fastapi==0.135.3",
     "google-auth==2.49.1",
     "hundredandten==5.0.0",
     "pymongo==4.16.0",
