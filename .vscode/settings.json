@@ -9,11 +9,6 @@
   "editor.codeActionsOnSave": {
     "source.organizeImports": "explicit"
   },
-  "autopep8.args": [
-    "--max-line-length",
-    "100",
-    "--experimental"
-  ],
   "python.testing.pytestArgs": [
     "src/tests"
   ],
