@@ -42,7 +42,7 @@ test = [
 
 [tool.coverage.run]
 omit = [
-    "src/tests/*"
+    "tests/*"
 ]
 
 [tool.setuptools.packages.find]
@@ -69,6 +69,7 @@ target-version = ["py314"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+testpaths = ["tests"]
 
 [[tool.uv.index]]
 name = "testpypi"
