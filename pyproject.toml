@@ -70,6 +70,7 @@ target-version = ["py314"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+addopts = ["--import-mode=importlib"]
 
 [[tool.uv.index]]
 name = "testpypi"
