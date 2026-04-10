@@ -41,7 +41,7 @@ def player(test_client: TestClient, upsert_player: Player) -> dict[str, Any]:
 
 
 def started_game(
-    test_client: TestClient, organizer=DEFAULT_ID, name="test game"
+    test_client: TestClient, organizer: str = DEFAULT_ID, name: str = "test game"
 ) -> dict[str, Any]:
     """Get a started game waiting for the first action"""
     created_lobby = lobby_game(test_client, organizer=organizer, name=name)
@@ -70,9 +70,7 @@ def completed_game(test_client: TestClient) -> dict[str, Any]:
     return get_game(test_client, game["id"], active_player_id)
 
 
-def request_suggestion(
-    test_client: TestClient, game_id: str, player_id: str = DEFAULT_ID
-):
+def request_suggestion(test_client: TestClient, game_id: str, player_id: str = DEFAULT_ID):
     """get the suggestion for the game"""
     return test_client.get(
         f"/players/{player_id}/games/{game_id}/suggestion",
@@ -142,15 +140,11 @@ def get_game(test_client: TestClient, game_id: str, player_id: str) -> dict[str,
     ).json()
 
 
-def contains_unsequenced(
-    events: list[dict[str, Any]], unordered_event: dict[str, Any]
-) -> bool:
+def contains_unsequenced(events: list[dict[str, Any]], unordered_event: dict[str, Any]) -> bool:
     """Tests if an event without order context exists in the list"""
     ignore_keys = {"sequence"}
     return any(
-        all(
-            item.get(k) == v for k, v in unordered_event.items() if k not in ignore_keys
-        )
+        all(item.get(k) == v for k, v in unordered_event.items() if k not in ignore_keys)
         for item in events
     )
 
