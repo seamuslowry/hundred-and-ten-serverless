@@ -57,9 +57,7 @@ def test_queue_pass_action(client: TestClient):
     assert game["active_player_id"] == manual_player
 
     # pre-pass on dealer
-    queue_action(
-        client, game["id"], DEFAULT_ID, {"type": "BID", "amount": BidAmount.PASS}
-    )
+    queue_action(client, game["id"], DEFAULT_ID, {"type": "BID", "amount": BidAmount.PASS})
 
     # bid as manual player
     results = client.post(
@@ -89,9 +87,7 @@ def test_other_players_cant_see_queue(client: TestClient):
     assert game["active_player_id"] == manual_player
 
     # pre-pass as default
-    queue_action(
-        client, game["id"], DEFAULT_ID, {"type": "BID", "amount": BidAmount.PASS}
-    )
+    queue_action(client, game["id"], DEFAULT_ID, {"type": "BID", "amount": BidAmount.PASS})
 
     manual_player_view = get_game(client, game["id"], manual_player)
     player = next(p for p in manual_player_view["players"] if p["id"] == DEFAULT_ID)
@@ -188,9 +184,7 @@ def test_invalid_action_clears_queue(client: TestClient):
     assert game["active_player_id"] == manual_player
 
     # queue a bid of FIFTEEN and a select trump of DIAMONDS
-    queue_action(
-        client, game["id"], DEFAULT_ID, {"type": "BID", "amount": BidAmount.FIFTEEN}
-    )
+    queue_action(client, game["id"], DEFAULT_ID, {"type": "BID", "amount": BidAmount.FIFTEEN})
     queue_action(
         client,
         game["id"],
@@ -259,11 +253,11 @@ def test_valid_queued_action_survives_other_players_turns(client: TestClient):
     game = get_game(client, game["id"], DEFAULT_ID)
     assert game["status"] == "BIDDING"
     player = next(p for p in game["players"] if p["id"] == DEFAULT_ID)
-    contains_unsequenced(
+    assert contains_unsequenced(
         player["queued_actions"],
         {
             "type": "SELECT_TRUMP",
             "player_id": DEFAULT_ID,
-            "suid": SelectableSuit.DIAMONDS,
+            "suit": SelectableSuit.DIAMONDS,
         },
     )
