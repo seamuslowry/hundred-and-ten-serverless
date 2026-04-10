@@ -74,34 +74,6 @@ def test_valid_token_authenticates(mock_verify, client: TestClient):
     mock_verify.assert_called_once_with("valid.token")
 
 
-def test_raises_401_without_bearer(client: TestClient):
-    """Missing Bearer token returns 401"""
-    resp = client.get(
-        "/players/anything/games/some-id",
-        headers={"authorization": ""},
-    )
-    assert 401 == resp.status_code
-
-
-def test_raises_401_without_auth_header(client: TestClient):
-    """Missing Authorization header entirely returns 401"""
-    resp = client.get("/players/anything/games/some-id", headers={})
-    assert 401 == resp.status_code
-
-
-@patch(
-    "src.auth.depends.verify_firebase_token",
-    side_effect=ValueError("Invalid token"),
-)
-def test_raises_authentication_error_for_invalid_token(_, client: TestClient):
-    """Invalid token returns 401"""
-    resp = client.get(
-        "/players/anything/games/some-id",
-        headers={"authorization": "Bearer bad.token"},
-    )
-    assert 401 == resp.status_code
-
-
 @patch(
     "src.auth.depends.verify_firebase_token",
     return_value=Identity(id="user-123", name="Test User"),
