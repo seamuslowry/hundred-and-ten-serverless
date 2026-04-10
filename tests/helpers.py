@@ -70,9 +70,7 @@ def completed_game(test_client: TestClient) -> dict[str, Any]:
     return get_game(test_client, game["id"], active_player_id)
 
 
-def request_suggestion(
-    test_client: TestClient, game_id: str, player_id: str = DEFAULT_ID
-):
+def request_suggestion(test_client: TestClient, game_id: str, player_id: str = DEFAULT_ID):
     """get the suggestion for the game"""
     return test_client.get(
         f"/players/{player_id}/games/{game_id}/suggestion",
@@ -110,7 +108,10 @@ def game_with_manual_player(test_client: TestClient) -> tuple[dict[str, Any], st
 
 
 def queue_action(
-    test_client: TestClient, game_id: str, player_id: str, action: dict[str, Any]
+    test_client: TestClient,
+    game_id: str,
+    player_id: str,
+    action: dict[str, Any],
 ) -> dict[str, Any]:
     """Queue an action and return the response."""
     results = test_client.post(
@@ -127,7 +128,7 @@ def queue_action(
         [*queued_player["queued_actions"][-1:], *results[:1]],
         {
             **action,
-            "player_id": DEFAULT_ID,
+            "player_id": player_id,
         },
     )
 
@@ -142,15 +143,11 @@ def get_game(test_client: TestClient, game_id: str, player_id: str) -> dict[str,
     ).json()
 
 
-def contains_unsequenced(
-    events: list[dict[str, Any]], unordered_event: dict[str, Any]
-) -> bool:
+def contains_unsequenced(events: list[dict[str, Any]], unordered_event: dict[str, Any]) -> bool:
     """Tests if an event without order context exists in the list"""
     ignore_keys = {"sequence"}
     return any(
-        all(
-            item.get(k) == v for k, v in unordered_event.items() if k not in ignore_keys
-        )
+        all(item.get(k) == v for k, v in unordered_event.items() if k not in ignore_keys)
         for item in events
     )
 
