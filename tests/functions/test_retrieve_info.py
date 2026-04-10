@@ -78,7 +78,9 @@ def test_search_game_by_active_player(client: TestClient):
     """Can find games by active player"""
     search = f"game{time()}"
     active_player = f"player{time()}"
-    original_games = [started_game(client, organizer=active_player, name=search) for _ in range(5)]
+    original_games = [
+        started_game(client, organizer=active_player, name=search) for _ in range(5)
+    ]
 
     resp = client.post(
         f"/players/{active_player}/games/search",
@@ -164,7 +166,9 @@ def test_lobby_players(client: TestClient):
     retrieved_players = resp.json()
 
     assert 4 == len(retrieved_players)
-    assert ([organizer["id"]] + other_player_ids) == list(map(lambda p: p["id"], retrieved_players))
+    assert ([organizer["id"]] + other_player_ids) == list(
+        map(lambda p: p["id"], retrieved_players)
+    )
 
 
 def test_search_players(client: TestClient):
