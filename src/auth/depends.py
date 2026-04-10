@@ -29,7 +29,7 @@ def get_authenticated_identity(
 
 def get_authorized_identity_for_path_player(
     player_id: str = Path(), identity: Identity = Depends(get_authenticated_identity)
-):
+) -> Identity:
     """Retrieve the authenticated identity and authorize it for the path"""
     if identity.id != player_id:
         raise AuthorizationError(f"{identity.id} cannot act as {player_id}")
