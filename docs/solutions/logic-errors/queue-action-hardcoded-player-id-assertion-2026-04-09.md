@@ -92,3 +92,4 @@ The parameter `player_id` was already threaded correctly into the HTTP request U
 ## Related Issues
 
 - PR #303 (`chore/split`) — structural refactor where the bug survived into the diff
+- See also: `docs/solutions/test-failures/silent-assert-and-wrong-slice-in-test-helpers-2026-04-09.md` — earlier compound bug in the same helper (missing `assert` + wrong `[:-1]` slice)
