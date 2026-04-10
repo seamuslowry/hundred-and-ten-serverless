@@ -33,7 +33,7 @@ def test_perform_round_actions(client: TestClient):
     results = resp.json()
 
     # assert bid event in results
-    contains_unsequenced(
+    assert contains_unsequenced(
         results,
         {
             "type": "BID",
@@ -58,7 +58,7 @@ def test_perform_round_actions(client: TestClient):
     ).json()
 
     # assert trump selection event in results
-    contains_unsequenced(
+    assert contains_unsequenced(
         results,
         {
             "type": "SELECT_TRUMP",
@@ -82,7 +82,7 @@ def test_perform_round_actions(client: TestClient):
     ).json()
 
     # assert discard and trick start event in results
-    contains_unsequenced(
+    assert contains_unsequenced(
         results,
         {
             "type": "DISCARD",
@@ -90,7 +90,7 @@ def test_perform_round_actions(client: TestClient):
             "cards": suggested_discard["cards"],
         },
     )
-    contains_unsequenced(results, {"type": "TRICK_START"})
+    assert contains_unsequenced(results, {"type": "TRICK_START"})
 
     game = get_game(client, created_game["id"], DEFAULT_ID)
     assert GameStatus.TRICKS.name == game["status"]
@@ -106,7 +106,7 @@ def test_perform_round_actions(client: TestClient):
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     ).json()
 
-    contains_unsequenced(
+    assert contains_unsequenced(
         results,
         {
             "type": "PLAY",
