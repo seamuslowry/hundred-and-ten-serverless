@@ -37,8 +37,8 @@ class QueuedActionPlayer(EngineAutomatedPlayer):
             return action
 
         # Invalid → flush entire queue (including this action)
-        self.queued_actions.clear()
         self.on_consume_actions([action, *self.queued_actions])
+        self.queued_actions.clear()
 
         return None
 
