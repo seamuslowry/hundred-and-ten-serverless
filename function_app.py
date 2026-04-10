@@ -9,17 +9,17 @@ from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 from hundredandten.errors import HundredAndTenError
 
-from src.main.auth import (
+from src.auth import (
     get_authorized_identity_for_path_player,
 )
-from src.main.models.db.setup import initialize_odm
-from src.main.models.internal.errors import (
+from src.models.db.setup import initialize_odm
+from src.models.internal.errors import (
     AuthenticationError,
     AuthorizationError,
     BadRequestError,
     NotFoundError,
 )
-from src.main.routers import games, lobbies, players
+from src.routers import games, lobbies, players
 
 # =============================================================================
 # Context manager

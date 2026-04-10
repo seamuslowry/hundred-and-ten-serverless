@@ -2,7 +2,6 @@
   "recommendations": [
     "ms-azuretools.vscode-azurefunctions",
     "ms-python.python",
-    "ms-python.pylint",
-    "ms-python.autopep8"
+    "ms-python.pylint"
   ]
 }

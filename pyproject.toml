@@ -42,12 +42,12 @@ test = [
 
 [tool.coverage.run]
 omit = [
-    "src/tests/*"
+    "tests/**"
 ]
 
 [tool.setuptools.packages.find]
 where = ["src"]
-exclude = ["tests", "tests.*"]
+# tests/ is at repo root, outside the src/ scan boundary — no exclude needed
 
 [tool.pyright]
 useLibraryCodeForTypes = true
@@ -69,6 +69,8 @@ target-version = ["py314"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = ["--import-mode=importlib"]
 
 [[tool.uv.index]]
 name = "testpypi"
