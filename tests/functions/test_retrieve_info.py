@@ -57,7 +57,7 @@ def test_search_game_by_status(client: TestClient):
 
     won_resp = client.post(
         f"/players/{p}/games/search",
-        json={"activePlayer": p, "statuses": ["WON"]},
+        json={"activePlayer": p, "statuses": ["WON"], "searchText": search},
         headers={"authorization": f"Bearer {p}"},
     )
 
@@ -65,22 +65,20 @@ def test_search_game_by_status(client: TestClient):
     assert 0 == len(won_games)
 
     bidding_resp = client.post(
-        f"/players/{p}/games",
-        json={"activePlayer": p, "statuses": ["BIDDING"]},
+        f"/players/{p}/games/search",
+        json={"activePlayer": p, "statuses": ["BIDDING"], "searchText": search},
         headers={"authorization": f"Bearer {p}"},
     )
 
-    bidding_resp = won_resp.json()
-    assert 0 == len(bidding_resp)
+    bidding_resp = bidding_resp.json()
+    assert 5 == len(bidding_resp)
 
 
 def test_search_game_by_active_player(client: TestClient):
     """Can find games by active player"""
     search = f"game{time()}"
     active_player = f"player{time()}"
-    original_games = [
-        started_game(client, organizer=active_player, name=search) for _ in range(5)
-    ]
+    original_games = [started_game(client, organizer=active_player, name=search) for _ in range(5)]
 
     resp = client.post(
         f"/players/{active_player}/games/search",
@@ -166,9 +164,7 @@ def test_lobby_players(client: TestClient):
     retrieved_players = resp.json()
 
     assert 4 == len(retrieved_players)
-    assert ([organizer["id"]] + other_player_ids) == list(
-        map(lambda p: p["id"], retrieved_players)
-    )
+    assert ([organizer["id"]] + other_player_ids) == list(map(lambda p: p["id"], retrieved_players))
 
 
 def test_search_players(client: TestClient):
