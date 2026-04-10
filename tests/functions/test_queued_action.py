@@ -254,8 +254,8 @@ def test_valid_queued_action_survives_other_players_turns(client: TestClient):
     )
 
     # The queued SHOOT_THE_MOON is consumed (valid); SELECT_TRUMP is then checked
-    # against available_actions during BIDDING and is not valid, so it is dropped.
-    # SELECT_TRUMP survives in the queue since it was not the action consumed.
+    # against available_actions during BIDDING and is not valid, so it is NOT consumed.
+    # SELECT_TRUMP survives in the queue waiting for a future state where it is valid.
     game = get_game(client, game["id"], DEFAULT_ID)
     assert game["status"] == "BIDDING"
     player = next(p for p in game["players"] if p["id"] == DEFAULT_ID)

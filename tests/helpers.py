@@ -126,7 +126,9 @@ def queue_action(
 
     queued_player = next(p for p in game["players"] if p["id"] == player_id)
     assert contains_unsequenced(
-        # either the last queued action or the first result is the queued action
+        # If the action was consumed immediately it appears in results[:1];
+        # if it is still pending it appears in queued_actions[-1:].
+        # Exactly one of the two lists will contain it.
         [*queued_player["queued_actions"][-1:], *results[:1]],
         {
             **action,
