@@ -42,12 +42,12 @@ test = [
 
 [tool.coverage.run]
 omit = [
-    "tests/*"
+    "tests/**"
 ]
 
 [tool.setuptools.packages.find]
 where = ["src"]
-exclude = ["tests", "tests.*"]
+# tests/ is at repo root, outside the src/ scan boundary — no exclude needed
 
 [tool.pyright]
 useLibraryCodeForTypes = true
