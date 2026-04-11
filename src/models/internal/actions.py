@@ -19,7 +19,7 @@ from hundredandten.engine import (
 from .constants import BidAmount, CardNumber, CardSuit
 
 
-@dataclass
+@dataclass(frozen=True)
 class Card:
     """Internal representation of a card"""
 
@@ -42,7 +42,7 @@ class Card:
         )
 
 
-@dataclass
+@dataclass(frozen=True)
 class Play:
     """Internal representation of a play"""
 
@@ -61,7 +61,7 @@ class Play:
         return EnginePlay(identifier=self.player_id, card=self.card.to_engine())
 
 
-@dataclass
+@dataclass(frozen=True)
 class Bid:
     """A class to keep track of bid information"""
 
@@ -82,7 +82,7 @@ class Bid:
         )
 
 
-@dataclass
+@dataclass(frozen=True)
 class SelectTrump:
     """A class to represent the select trump action"""
 
@@ -103,7 +103,7 @@ class SelectTrump:
         )
 
 
-@dataclass
+@dataclass(frozen=True)
 class Discard:
     """A class to keep track of one player's discard action"""
 
@@ -148,12 +148,12 @@ class ActionFactory:
         )  # pragma: nocover
 
 
-@dataclass
+@dataclass(frozen=True)
 class GameStart:
     """A class to represent the start of game event"""
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoundStart:
     """A class to represent the start of round event"""
 
@@ -161,26 +161,26 @@ class RoundStart:
     # hands: dict[str, list[Card]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class TrickStart:
     """A class to represent the start of trick event"""
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoundEnd:
     """A class to represent the end of round event"""
 
     scores: dict[str, int]
 
 
-@dataclass
+@dataclass(frozen=True)
 class TrickEnd:
     """A class to represent the end of trick event"""
 
     winner: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class GameEnd:
     """A class to represent the end of game event"""
 
