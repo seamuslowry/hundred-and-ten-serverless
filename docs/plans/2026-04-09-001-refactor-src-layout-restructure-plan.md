@@ -1,7 +1,7 @@
 ---
 title: "refactor: Restructure Python source layout — flatten src/main/, move tests to repo root"
 type: refactor
-status: active
+status: completed
 date: 2026-04-09
 origin: docs/brainstorms/src-layout-requirements.md
 ---
