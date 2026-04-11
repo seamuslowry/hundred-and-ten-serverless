@@ -120,8 +120,7 @@ class Game(BaseGame):
     _engine: Engine = field(init=False, repr=False)
 
     def __post_init__(self, initial_actions: Optional[list[Action]]):
-        self._engine = self.__initialize_engine(initial_actions or [])
-        self._automated_act()
+        self.__initialize_engine(initial_actions or [])
 
     @staticmethod
     def from_lobby(lobby: Lobby) -> "Game":
@@ -225,7 +224,6 @@ class Game(BaseGame):
     def leave(self, player_id: str) -> None:
         """Automate a player (used when leaving an active game)"""
         self._update_game_player(NaiveCpu(player_id))
-        self._automated_act()
 
     def act(self, action: Action) -> None:
         """Perform a game action"""
@@ -303,7 +301,7 @@ class Game(BaseGame):
         else:
             self.players[self.players.index(original_player)] = new_player
 
-        self._engine = self.__initialize_engine(self.actions)
+        self.__initialize_engine(self.actions)
 
     def suggestion_for(self, player_id: str) -> Action:
         """Return a suggested action for the given player"""
@@ -358,13 +356,13 @@ class Game(BaseGame):
     #         for c in (discard.cards + discard.kept if discard else player.hand)
     #     ]
 
-    def __initialize_engine(self, actions: list[Action]) -> Engine:
-        engine = Engine(
+    def __initialize_engine(self, actions: list[Action]) -> None:
+        self._engine = Engine(
             players=[EnginePlayer(p.id) for p in self.ordered_players],
             seed=self.seed,
         )
 
         for a in actions:
-            engine.act(a.to_engine())
+            self._engine.act(a.to_engine())
 
-        return engine
+        self._automated_act()
