@@ -229,39 +229,31 @@ class Game(BaseGame):
         """Perform a game action"""
         self._engine.act(action.to_engine())
 
-        self._automated_act()
+        self.__automated_act()
 
-    def _automated_act(self) -> None:
-        while True:
-            if self._engine.winner:
-                break
-
-            active_player_id = self.active_player_id
-            active_player = self.ordered_players.find_or_throw(active_player_id)
-
-            request = active_player.next_action()
-            match request:
-                case NoAction():
-                    break
+    def __automated_act(self) -> None:
+        while (
+            not self.winner
+            and (
+                active_player := self.ordered_players.find_or_throw(
+                    self.active_player_id
+                )
+            )
+            is not None
+            and (action_request := active_player.next_action()) != NoAction()
+        ):
+            match action_request:
                 case ConcreteAction(action):
                     engine_action = action.to_engine()
                     if engine_action not in self._engine.available_actions(
-                        active_player_id
-                    ):
-                        if not isinstance(active_player, Human):
-                            raise TypeError(
-                                f"Expected Human player for ConcreteAction, got {type(active_player).__name__}"
-                            )
+                        active_player.id
+                    ) and isinstance(active_player, Human):
                         self._update_game_player(active_player.clear_queued_actions())
-                        break
-                    self._engine.act(engine_action)
+                    else:
+                        self._engine.act(engine_action)
                 case RequestAutomation():
-                    naive_act = naive_action_for(self._engine, active_player_id)
+                    naive_act = naive_action_for(self._engine, active_player.id)
                     self._engine.act(naive_act)
-                case _:
-                    raise AssertionError(
-                        f"Unhandled ActionRequest variant: {request!r}"
-                    )
 
     def get_player_in_round(self, player_id: str) -> PlayerInRound:
         """Return the representation of this player as they are in the round"""
@@ -283,7 +275,6 @@ class Game(BaseGame):
         if not isinstance(player, Human):
             raise BadRequestError("Cannot queue an action for an automated player")
         self._update_game_player(player.queue_action(action))
-        self._automated_act()
 
     def clear_queued_actions_for(self, player_id: str) -> None:
         """Clear all queued actions for a player"""
@@ -365,4 +356,4 @@ class Game(BaseGame):
         for a in actions:
             self._engine.act(a.to_engine())
 
-        self._automated_act()
+        self.__automated_act()

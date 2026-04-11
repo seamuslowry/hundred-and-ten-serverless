@@ -66,10 +66,12 @@ class Human(PlayerInGame):
         return ConcreteAction(self.queued_actions.popleft())
 
     def queue_action(self, action: Action) -> Self:
+        """Queue an action for the player"""
         self.queued_actions.append(action)
         return self
 
     def clear_queued_actions(self) -> Self:
+        """Clear all queued actions for the player"""
         self.queued_actions.clear()
         return self
 
