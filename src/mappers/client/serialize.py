@@ -181,14 +181,14 @@ def __event(
             type="ROUND_START",
             sequence=sequence,
             dealer=event.dealer,
-            hands={
-                player_id: (
-                    [__card(c) for c in hand]
-                    if player_id == client_player_id
-                    else len(hand)
-                )
-                for player_id, hand in event.hands.items()
-            },
+            # hands={
+            #     player_id: (
+            #         [__card(c) for c in hand]
+            #         if player_id == client_player_id
+            #         else len(hand)
+            #     )
+            #     for player_id, hand in event.hands.items()
+            # },
         )
     elif isinstance(event, internal.Bid):
         result = responses.BidAction(

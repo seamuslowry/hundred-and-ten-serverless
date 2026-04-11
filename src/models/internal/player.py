@@ -3,44 +3,34 @@
 from abc import ABC, abstractmethod
 from collections import deque
 from dataclasses import dataclass, field
-from typing import Callable, Optional, Self
-
-from hundredandten.actions import Action as EngineAction
-from hundredandten.player import (
-    AutomatedPlayer as EngineAutomatedPlayer,
-    NaiveAutomatedPlayer as EngineNaivePlayer,
-    Player as EnginePlayer,
-)
-from hundredandten.state import GameState
-
-from src.models.internal.errors import BadRequestError
+from typing import Optional, Self
 
 from .actions import Action, Card
 
 
-@dataclass
-class QueuedActionPlayer(EngineAutomatedPlayer):
-    """Represent a player with queued actions to be played in FIFO order."""
+# ---------------------------------------------------------------------------
+# ActionRequest discriminated union
+# ---------------------------------------------------------------------------
 
-    on_consume_actions: Callable[[list[EngineAction]], None]
-    queued_actions: deque[EngineAction] = field(default_factory=deque)
 
-    def act(self, game_state: GameState) -> Optional[EngineAction]:
-        """Return the earliest queued action if it is available, dropping any expired ones."""
-        if not self.queued_actions:
-            return None
+@dataclass(frozen=True)
+class NoAction:
+    """Sentinel: the player has no action to take right now."""
 
-        action = self.queued_actions.popleft()
 
-        if action in game_state.available_actions:
-            self.on_consume_actions([action])
-            return action
+@dataclass(frozen=True)
+class ConcreteAction:
+    """Wraps a concrete action that should be played immediately."""
 
-        # Invalid → flush entire queue (including this action)
-        self.on_consume_actions([action, *self.queued_actions])
-        self.queued_actions.clear()
+    action: Action
 
-        return None
+
+@dataclass(frozen=True)
+class RequestAutomation:
+    """Sentinel: the player defers to automated action resolution (CPU)."""
+
+
+type ActionRequest = NoAction | ConcreteAction | RequestAutomation
 
 
 @dataclass
@@ -61,23 +51,20 @@ class PlayerInGame(ABC):
     id: str
 
     @abstractmethod
-    def queue_action(self, action: Action) -> Self:
-        """Attempt to queue an action for the player"""
-
-    @abstractmethod
-    def clear_queued_actions(self) -> Self:
-        """Clear all queued actions for the player"""
-
-    @abstractmethod
-    def as_engine_player(self) -> EnginePlayer:
-        """Return this player as an engine player"""
+    def next_action(self) -> ActionRequest:
+        """Return the next action for this player, or a sentinel indicating intent."""
 
 
 @dataclass
 class Human(PlayerInGame):
     """A human; represents a real user that will provide input"""
 
-    queued_actions: list[Action] = field(default_factory=list)
+    queued_actions: deque[Action] = field(default_factory=deque)
+
+    def next_action(self) -> ActionRequest:
+        if not self.queued_actions:
+            return NoAction()
+        return ConcreteAction(self.queued_actions.popleft())
 
     def queue_action(self, action: Action) -> Self:
         self.queued_actions.append(action)
@@ -87,30 +74,13 @@ class Human(PlayerInGame):
         self.queued_actions.clear()
         return self
 
-    def as_engine_player(self) -> EnginePlayer:
-        return QueuedActionPlayer(
-            self.id,
-            queued_actions=deque([a.to_engine() for a in self.queued_actions]),
-            on_consume_actions=lambda consumed: setattr(
-                self,
-                "queued_actions",
-                self.queued_actions[len(consumed) :],
-            ),
-        )
-
 
 @dataclass
 class NaiveCpu(PlayerInGame):
     """A naive CPU using the built-in automated player"""
 
-    def queue_action(self, action: Action) -> Self:
-        raise BadRequestError("Cannot queue an action for an automated player")
-
-    def clear_queued_actions(self) -> Self:
-        raise BadRequestError("Cannot queue actions for an automated player")
-
-    def as_engine_player(self) -> EnginePlayer:
-        return EngineNaivePlayer(self.id)
+    def next_action(self) -> ActionRequest:
+        return RequestAutomation()
 
 
 @dataclass

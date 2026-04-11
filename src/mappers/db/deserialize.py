@@ -1,5 +1,7 @@
 """A module to convert DB DTOs to models"""
 
+from collections import deque
+
 from src.models import db, internal
 
 
@@ -44,7 +46,7 @@ def __person(person: db.PlayerInGame) -> internal.PlayerInGame:
     if isinstance(person, db.HumanPlayer):
         return internal.Human(
             id=person.player_id,
-            queued_actions=[__move(move) for move in person.queued_actions],
+            queued_actions=deque(__move(move) for move in person.queued_actions),
         )
 
     # type: ignore[unreachable]

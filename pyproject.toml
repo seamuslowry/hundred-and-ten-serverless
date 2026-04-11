@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "hundredandtenserverless"
 version = "0.0.0"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 authors = [
     { name = "Seamus Lowry" },
 ]
@@ -20,10 +20,11 @@ dependencies = [
     "cachecontrol==0.14.4",
     "fastapi==0.135.3",
     "google-auth==2.49.1",
-    "hundredandten==5.0.0",
     "pymongo==4.16.0",
     "pyjwt==2.12.1",
     "requests==2.33.1",
+    "hundredandten-engine==0.0.1.dev87",
+    "hundredandten-automation==0.0.1.dev87"
 ]
 
 [dependency-groups]
@@ -71,6 +72,10 @@ target-version = ["py314"]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 addopts = ["--import-mode=importlib"]
+
+[tool.uv.sources]
+hundredandten-engine = { index = "testpypi" }
+hundredandten-automation = { index = "testpypi" }
 
 [[tool.uv.index]]
 name = "testpypi"
