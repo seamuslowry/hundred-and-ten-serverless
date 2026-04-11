@@ -15,3 +15,7 @@ class NotFoundError(Exception):
 
 class BadRequestError(Exception):
     """Raised when a request is incorrect (400)"""
+
+
+class InternalServerError(Exception):
+    """Raised when something went wrong internally (500)"""

@@ -22,7 +22,7 @@ from .actions import (
     TrickStart,
 )
 from .constants import Accessibility, CardSuit, GameStatus
-from .errors import BadRequestError
+from .errors import BadRequestError, InternalServerError
 from .player import (
     ConcreteAction,
     Human,
@@ -332,6 +332,11 @@ class Game(BaseGame):
                 case RequestAutomation():
                     naive_act = naive_action_for(self._engine, active_player.id)
                     self._engine.act(naive_act)
+                case _:  # pragma: no cover
+                    # type: ignore[unreachable]
+                    raise InternalServerError(
+                        f"Unable to process action request. Automation failing for {action_request}"
+                    )
 
     def get_player_in_round(self, player_id: str) -> PlayerInRound:
         """Return the representation of this player as they are in the round"""
