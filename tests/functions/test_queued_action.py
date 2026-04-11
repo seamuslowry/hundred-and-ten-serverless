@@ -57,7 +57,9 @@ def test_queue_pass_action(client: TestClient):
     assert game["active_player_id"] == manual_player
 
     # pre-pass on dealer
-    queue_action(client, game["id"], DEFAULT_ID, {"type": "BID", "amount": BidAmount.PASS})
+    queue_action(
+        client, game["id"], DEFAULT_ID, {"type": "BID", "amount": BidAmount.PASS}
+    )
 
     # bid as manual player
     results = client.post(
@@ -87,7 +89,9 @@ def test_other_players_cant_see_queue(client: TestClient):
     assert game["active_player_id"] == manual_player
 
     # pre-pass as default
-    queue_action(client, game["id"], DEFAULT_ID, {"type": "BID", "amount": BidAmount.PASS})
+    queue_action(
+        client, game["id"], DEFAULT_ID, {"type": "BID", "amount": BidAmount.PASS}
+    )
 
     manual_player_view = get_game(client, game["id"], manual_player)
     player = next(p for p in manual_player_view["players"] if p["id"] == DEFAULT_ID)
@@ -104,9 +108,9 @@ def test_only_human_players_queue(client: TestClient):
 
     # attempt queue action on automated player
     automated_player = game["players"][-1]
-    assert automated_player["type"] == "cpu-easy", (
-        f"Expected last player to be cpu-easy, got {automated_player['type']}"
-    )
+    assert (
+        automated_player["type"] == "cpu-easy"
+    ), f"Expected last player to be cpu-easy, got {automated_player['type']}"
     resp = client.post(
         f"/players/{automated_player['id']}/games/{game['id']}/queued-actions",
         json={"type": "BID", "amount": BidAmount.SHOOT_THE_MOON},
@@ -121,9 +125,9 @@ def test_only_human_players_clear_queue(client: TestClient):
 
     # attempt clear queue action on automated player
     automated_player = game["players"][-1]
-    assert automated_player["type"] == "cpu-easy", (
-        f"Expected last player to be cpu-easy, got {automated_player['type']}"
-    )
+    assert (
+        automated_player["type"] == "cpu-easy"
+    ), f"Expected last player to be cpu-easy, got {automated_player['type']}"
     resp = client.delete(
         f"/players/{automated_player['id']}/games/{game['id']}/queued-actions",
         headers={"authorization": f"Bearer {automated_player['id']}"},
@@ -192,7 +196,9 @@ def test_invalid_action_clears_queue(client: TestClient):
     assert game["active_player_id"] == manual_player
 
     # queue a bid of FIFTEEN and a select trump of DIAMONDS
-    queue_action(client, game["id"], DEFAULT_ID, {"type": "BID", "amount": BidAmount.FIFTEEN})
+    queue_action(
+        client, game["id"], DEFAULT_ID, {"type": "BID", "amount": BidAmount.FIFTEEN}
+    )
     queue_action(
         client,
         game["id"],

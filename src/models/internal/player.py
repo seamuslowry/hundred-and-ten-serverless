@@ -7,7 +7,6 @@ from typing import Optional, Self
 
 from .actions import Action, Card
 
-
 # ---------------------------------------------------------------------------
 # ActionRequest discriminated union
 # ---------------------------------------------------------------------------

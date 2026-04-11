@@ -52,7 +52,9 @@ class Play:
     @classmethod
     def from_engine(cls, engine_play: EnginePlay) -> Self:
         """Create an internal Play from an engine Play."""
-        return cls(player_id=engine_play.identifier, card=Card.from_engine(engine_play.card))
+        return cls(
+            player_id=engine_play.identifier, card=Card.from_engine(engine_play.card)
+        )
 
     def to_engine(self) -> EnginePlay:
         """Convert this internal Play to an engine Play."""
@@ -69,11 +71,15 @@ class Bid:
     @classmethod
     def from_engine(cls, engine_bid: EngineBid) -> Self:
         """Create an internal Bid from an engine Bid."""
-        return cls(player_id=engine_bid.identifier, amount=BidAmount(engine_bid.amount.value))
+        return cls(
+            player_id=engine_bid.identifier, amount=BidAmount(engine_bid.amount.value)
+        )
 
     def to_engine(self) -> EngineBid:
         """Convert this internal Bid to an engine Bid."""
-        return EngineBid(identifier=self.player_id, amount=EngineBidAmount(self.amount.value))
+        return EngineBid(
+            identifier=self.player_id, amount=EngineBidAmount(self.amount.value)
+        )
 
 
 @dataclass
@@ -86,7 +92,9 @@ class SelectTrump:
     @classmethod
     def from_engine(cls, engine_select: EngineSelectTrump) -> Self:
         """Create an internal SelectTrump from an engine SelectTrump."""
-        return cls(player_id=engine_select.identifier, suit=CardSuit[engine_select.suit.name])
+        return cls(
+            player_id=engine_select.identifier, suit=CardSuit[engine_select.suit.name]
+        )
 
     def to_engine(self) -> EngineSelectTrump:
         """Convert this internal SelectTrump to an engine SelectTrump."""
@@ -112,7 +120,9 @@ class Discard:
 
     def to_engine(self) -> EngineDiscard:
         """Convert this internal Discard to an engine Discard."""
-        return EngineDiscard(identifier=self.player_id, cards=[c.to_engine() for c in self.cards])
+        return EngineDiscard(
+            identifier=self.player_id, cards=[c.to_engine() for c in self.cards]
+        )
 
 
 type Action = Union[Bid, SelectTrump, Discard, Play]
@@ -177,6 +187,8 @@ class GameEnd:
     winner: str
 
 
-type DerivedEvent = Union[GameStart, RoundStart, TrickStart, TrickEnd, RoundEnd, GameEnd]
+type DerivedEvent = Union[
+    GameStart, RoundStart, TrickStart, TrickEnd, RoundEnd, GameEnd
+]
 
 type Event = Union[Action, DerivedEvent]

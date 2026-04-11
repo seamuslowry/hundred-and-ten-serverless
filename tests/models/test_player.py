@@ -2,6 +2,8 @@
 
 import pytest
 
+from src.models.internal.actions import Bid
+from src.models.internal.constants import BidAmount
 from src.models.internal.player import (
     ConcreteAction,
     Human,
@@ -9,9 +11,6 @@ from src.models.internal.player import (
     NoAction,
     RequestAutomation,
 )
-from src.models.internal.actions import Bid
-from src.models.internal.constants import BidAmount
-
 
 # ---------------------------------------------------------------------------
 # Helpers
