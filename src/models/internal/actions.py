@@ -1,6 +1,6 @@
 """Internal models for actions"""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Self, Union
 
 from hundredandten.engine import (
@@ -158,7 +158,7 @@ class RoundStart:
     """A class to represent the start of round event"""
 
     dealer: str
-    # hands: dict[str, list[Card]]
+    hands: dict[str, list[Card]] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

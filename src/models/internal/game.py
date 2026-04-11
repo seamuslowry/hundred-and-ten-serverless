@@ -2,27 +2,22 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import InitVar, dataclass, field
-from itertools import chain
 from typing import Optional, override
 from uuid import uuid4
 
 from hundredandten.automation import naive_action_for
 from hundredandten.engine import Game as Engine, Player as EnginePlayer
-from hundredandten.engine.round import Round as EngineRound
 
 from .actions import (
     Action,
     ActionFactory,
-    Bid,
     Card,
-    Discard,
     Event,
     GameEnd,
     GameStart,
     Play,
     RoundEnd,
     RoundStart,
-    SelectTrump,
     TrickEnd,
     TrickStart,
 )
@@ -207,13 +202,79 @@ class Game(BaseGame):
 
     @property
     def events(self) -> list[Event]:
-        """Get all game events"""
+        """Get all game events via action-walking replay"""
+        engine = Engine(
+            players=[EnginePlayer(p.id) for p in self.ordered_players],
+            seed=self.seed,
+        )
 
-        return [
+        result: list[Event] = [
             GameStart(),
-            *chain.from_iterable(Game.__round_events(r) for r in self._engine.rounds),
-            *([] if not self.winner else [GameEnd(self.winner.id)]),
+            RoundStart(
+                dealer=engine.active_round.dealer.identifier,
+                hands={
+                    p.identifier: [Card.from_engine(c) for c in p.hand]
+                    for p in engine.active_round.players
+                },
+            ),
         ]
+
+        prev_round_count = len(engine.rounds)
+        prev_trick_count = len(engine.active_round.tricks)
+
+        for action in self.actions:
+            engine.act(action.to_engine())
+            result.append(action)
+
+            curr_round_count = len(engine.rounds)
+
+            if curr_round_count > prev_round_count:
+                # Round boundary: the previous round completed (and possibly
+                # its final trick too). Emit TrickEnd for the last trick of the
+                # completed round, then RoundEnd, then RoundStart for the new round.
+                completed_round = engine.rounds[-2]
+
+                if completed_round.tricks:
+                    last_trick = completed_round.tricks[-1]
+                    assert last_trick.winning_play
+                    result.append(TrickEnd(winner=last_trick.winning_play.identifier))
+
+                result.append(
+                    RoundEnd(
+                        scores={s.identifier: s.value for s in completed_round.scores}
+                    )
+                )
+                result.append(
+                    RoundStart(
+                        dealer=engine.active_round.dealer.identifier,
+                        hands={
+                            p.identifier: [Card.from_engine(c) for c in p.hand]
+                            for p in engine.active_round.players
+                        },
+                    )
+                )
+                prev_trick_count = len(engine.active_round.tricks)
+            else:
+                # Same round — check for trick boundary
+                curr_trick_count = len(engine.active_round.tricks)
+                if curr_trick_count > prev_trick_count:
+                    if prev_trick_count > 0:
+                        # A previous trick just completed
+                        prev_trick = engine.active_round.tricks[-2]
+                        assert prev_trick.winning_play
+                        result.append(
+                            TrickEnd(winner=prev_trick.winning_play.identifier)
+                        )
+                    # A new trick started (first trick or subsequent)
+                    result.append(TrickStart())
+                prev_trick_count = curr_trick_count
+
+            prev_round_count = curr_round_count
+
+        if engine.winner:
+            result.append(GameEnd(winner=engine.winner.identifier))
+
+        return result
 
     @property
     def scores(self) -> dict[str, int]:
@@ -297,55 +358,6 @@ class Game(BaseGame):
     def suggestion_for(self, player_id: str) -> Action:
         """Return a suggested action for the given player"""
         return ActionFactory.from_engine(naive_action_for(self._engine, player_id))
-
-    @staticmethod
-    def __round_events(r: EngineRound) -> list[Event]:
-        """Deserialize an engine round to the corresponding events"""
-        trick_events: list[list[Event]] = [
-            [
-                TrickStart(),
-                *[Play.from_engine(p) for p in trick.plays],
-                # don't include the trick end event if it hasn't ended
-                *(
-                    [TrickEnd(trick.winning_play.identifier)]
-                    if (trick.winning_play and len(trick.plays) == len(r.players))
-                    else []
-                ),
-            ]
-            for trick in r.tricks
-        ]
-
-        return [
-            RoundStart(
-                r.dealer.identifier,
-                # {
-                #     p.identifier: Game.__original_hand(r, p.identifier)
-                #     for p in r.players
-                # },
-            ),
-            *[Bid.from_engine(b) for b in r.bids],
-            *([SelectTrump.from_engine(r.selection)] if r.selection else []),
-            *[Discard.from_engine(b) for b in r.discards],
-            *[trick_event for event_list in trick_events for trick_event in event_list],
-            # don't include the round end event if it hasn't ended
-            *(
-                [RoundEnd(scores={s.identifier: s.value for s in r.scores})]
-                if r.completed
-                else []
-            ),
-        ]
-
-    # @staticmethod
-    # def __original_hand(r: EngineRound, player_id: str) -> list[Card]:
-    #     """Return the identified player's original hand"""
-    #     player = next(p for p in r.players if p.identifier == player_id)
-    #     discard = next((d for d in r.discards if d.identifier == player_id), None)
-
-    #     return [
-    #         Card.from_engine(c)
-    #         # TODO: is this valuable enough to keep
-    #         for c in (discard.cards + discard.kept if discard else player.hand)
-    #     ]
 
     def __initialize_engine(self, actions: list[Action]) -> None:
         self._engine = Engine(

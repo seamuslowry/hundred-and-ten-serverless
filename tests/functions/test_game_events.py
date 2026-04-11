@@ -6,6 +6,7 @@ from src.models.internal.constants import BidAmount, CardSuit
 from tests.helpers import (
     DEFAULT_ID,
     completed_game,
+    game_with_manual_player,
     get_events,
     get_game,
     get_suggestion,
@@ -89,3 +90,66 @@ def test_completed_game(client: TestClient):
     game_end_events = [e for e in events if e["type"] == "GAME_END"]
     assert len(game_end_events) >= 1
     assert events[-1]["type"] == "GAME_END"
+
+
+def test_round_start_has_own_hand(client: TestClient):
+    """RoundStart event includes the requesting player's dealt cards"""
+    game = started_game(client)
+    events = get_events(client, game["id"], DEFAULT_ID)
+
+    round_start = next(e for e in events if e["type"] == "ROUND_START")
+    hands = round_start["hands"]
+
+    # Own player sees a list of card objects
+    assert isinstance(hands[DEFAULT_ID], list)
+    assert len(hands[DEFAULT_ID]) == 5
+    for card in hands[DEFAULT_ID]:
+        assert "suit" in card
+        assert "number" in card
+
+
+def test_round_start_has_opponent_counts(client: TestClient):
+    """RoundStart event shows opponent hand sizes as integers"""
+    game = started_game(client)
+    events = get_events(client, game["id"], DEFAULT_ID)
+
+    round_start = next(e for e in events if e["type"] == "ROUND_START")
+    hands = round_start["hands"]
+
+    # Other players see integer counts
+    opponent_ids = [pid for pid in hands if pid != DEFAULT_ID]
+    assert len(opponent_ids) > 0
+    for opponent_id in opponent_ids:
+        assert hands[opponent_id] == 5
+
+
+def test_round_start_visibility_per_player(client: TestClient):
+    """Each player sees their own cards and opponents' counts"""
+    game, manual_player = game_with_manual_player(client)
+
+    events_organizer = get_events(client, game["id"], DEFAULT_ID)
+    events_manual = get_events(client, game["id"], manual_player)
+
+    rs_organizer = next(e for e in events_organizer if e["type"] == "ROUND_START")
+    rs_manual = next(e for e in events_manual if e["type"] == "ROUND_START")
+
+    # Organizer sees own cards as list, manual player as int
+    assert isinstance(rs_organizer["hands"][DEFAULT_ID], list)
+    assert isinstance(rs_organizer["hands"][manual_player], int)
+
+    # Manual player sees own cards as list, organizer as int
+    assert isinstance(rs_manual["hands"][manual_player], list)
+    assert isinstance(rs_manual["hands"][DEFAULT_ID], int)
+
+
+def test_completed_game_round_start_hands(client: TestClient):
+    """Completed game events include hands on RoundStart"""
+    game = completed_game(client)
+    events = get_events(client, game["id"], DEFAULT_ID)
+
+    round_starts = [e for e in events if e["type"] == "ROUND_START"]
+    assert len(round_starts) >= 1
+
+    for rs in round_starts:
+        assert "hands" in rs
+        assert len(rs["hands"]) > 0

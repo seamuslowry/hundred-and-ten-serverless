@@ -72,7 +72,7 @@ class RoundStart(Sequential):
 
     type: Literal["ROUND_START"]
     dealer: str
-    # hands: dict[str, Union[list[Card], int]]
+    hands: dict[str, Union[list[Card], int]] = {}
 
 
 class TrickStart(Sequential):
