@@ -1,7 +1,7 @@
 ---
 title: "refactor: Introduce ActionRequest discriminated union for player automation"
 type: refactor
-status: active
+status: completed
 date: 2026-04-10
 origin: docs/brainstorms/player-automation-api-requirements.md
 ---
