@@ -88,7 +88,9 @@ class Lobby(BaseGame):
 
     def join(self, player: PlayerInGame) -> None:
         """Add a player to the lobby"""
-        if self.accessibility == Accessibility.PRIVATE and not self.invitees.find(player.id):
+        if self.accessibility == Accessibility.PRIVATE and not self.invitees.find(
+            player.id
+        ):
             raise ValueError("Cannot join private game without invitation")
 
         self.players.append(player)
@@ -197,7 +199,9 @@ class Game(BaseGame):
             Trick(
                 bleeding=t.bleeding,
                 plays=[Play.from_engine(p) for p in t.plays],
-                winning_play=(Play.from_engine(t.winning_play) if t.winning_play else None),
+                winning_play=(
+                    Play.from_engine(t.winning_play) if t.winning_play else None
+                ),
             )
             for t in self._engine.active_round.tricks
         ]
@@ -243,7 +247,9 @@ class Game(BaseGame):
                     break
                 case ConcreteAction(action):
                     engine_action = action.to_engine()
-                    if engine_action not in self._engine.available_actions(active_player_id):
+                    if engine_action not in self._engine.available_actions(
+                        active_player_id
+                    ):
                         if not isinstance(active_player, Human):
                             raise TypeError(
                                 f"Expected Human player for ConcreteAction, got {type(active_player).__name__}"
@@ -255,7 +261,9 @@ class Game(BaseGame):
                     naive_act = naive_action_for(self._engine, active_player_id)
                     self._engine.act(naive_act)
                 case _:
-                    raise AssertionError(f"Unhandled ActionRequest variant: {request!r}")
+                    raise AssertionError(
+                        f"Unhandled ActionRequest variant: {request!r}"
+                    )
 
     def get_player_in_round(self, player_id: str) -> PlayerInRound:
         """Return the representation of this player as they are in the round"""
@@ -264,7 +272,9 @@ class Game(BaseGame):
             hand=[
                 Card.from_engine(c)
                 for c in next(
-                    p for p in self._engine.active_round.players if p.identifier == player_id
+                    p
+                    for p in self._engine.active_round.players
+                    if p.identifier == player_id
                 ).hand
             ],
         )
@@ -329,7 +339,11 @@ class Game(BaseGame):
             *[Discard.from_engine(b) for b in r.discards],
             *[trick_event for event_list in trick_events for trick_event in event_list],
             # don't include the round end event if it hasn't ended
-            *([RoundEnd(scores={s.identifier: s.value for s in r.scores})] if r.completed else []),
+            *(
+                [RoundEnd(scores={s.identifier: s.value for s in r.scores})]
+                if r.completed
+                else []
+            ),
         ]
 
     # @staticmethod
