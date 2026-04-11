@@ -71,7 +71,7 @@ def __move(db_move: db.Move) -> internal.Action:
         case db.DiscardMove():
             return internal.Discard(
                 player_id=player_id,
-                cards=list(map(__card, db_move.cards)),
+                cards=tuple(map(__card, db_move.cards)),
             )
         case db.PlayMove():
             return internal.Play(

@@ -58,7 +58,7 @@ class PlayCardAction(Sequential):
     card: Card
 
 
-type GameAction = Union[BidAction, SelectTrumpAction, DiscardAction, PlayCardAction]
+type GameAction = BidAction | SelectTrumpAction | DiscardAction | PlayCardAction
 
 
 class GameStart(Sequential):
@@ -72,7 +72,7 @@ class RoundStart(Sequential):
 
     type: Literal["ROUND_START"]
     dealer: str
-    hands: dict[str, Union[list[Card], int]] = {}
+    hands: dict[str, Union[list[Card], int]]
 
 
 class TrickStart(Sequential):
@@ -109,7 +109,7 @@ class GameEnd(Sequential):
     winner_player_id: str
 
 
-type GameEvent = Union[GameStart, RoundStart, TrickStart, TrickEnd, RoundEnd, GameEnd]
+type GameEvent = GameStart | RoundStart | TrickStart | TrickEnd | RoundEnd | GameEnd
 
 # Union type for all event types (used in results field for OpenAPI)
 type Event = Annotated[
@@ -219,7 +219,7 @@ class SelfInRound(BaseModel):
     queued_actions: list[UnorderedActionResponse]
 
 
-type PlayerInRound = Union[SelfInRound, OtherPlayerInRound]
+type PlayerInRound = SelfInRound | OtherPlayerInRound
 
 # =============================================================================
 # Games

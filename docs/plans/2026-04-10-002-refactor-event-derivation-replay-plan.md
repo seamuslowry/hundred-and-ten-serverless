@@ -1,7 +1,7 @@
 ---
 title: "refactor: Replace structural-inspection event derivation with action-walking replay"
 type: refactor
-status: active
+status: completed
 date: 2026-04-10
 origin: docs/brainstorms/event-derivation-refactor-requirements.md
 ---

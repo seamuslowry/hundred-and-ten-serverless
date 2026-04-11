@@ -1,7 +1,7 @@
 """Internal models for actions"""
 
-from dataclasses import dataclass, field
-from typing import Self, Union
+from dataclasses import dataclass
+from typing import Self
 
 from hundredandten.engine import (
     Action as EngineAction,
@@ -108,14 +108,14 @@ class Discard:
     """A class to keep track of one player's discard action"""
 
     player_id: str
-    cards: list[Card]
+    cards: tuple[Card, ...]
 
     @classmethod
     def from_engine(cls, engine_discard: EngineDiscard) -> Self:
         """Create an internal Discard from an engine Discard."""
         return cls(
             player_id=engine_discard.identifier,
-            cards=[Card.from_engine(c) for c in engine_discard.cards],
+            cards=tuple(Card.from_engine(c) for c in engine_discard.cards),
         )
 
     def to_engine(self) -> EngineDiscard:
@@ -125,7 +125,7 @@ class Discard:
         )
 
 
-type Action = Union[Bid, SelectTrump, Discard, Play]
+type Action = Bid | SelectTrump | Discard | Play
 
 
 class ActionFactory:
@@ -158,7 +158,7 @@ class RoundStart:
     """A class to represent the start of round event"""
 
     dealer: str
-    hands: dict[str, list[Card]] = field(default_factory=dict)
+    hands: dict[str, list[Card]]
 
 
 @dataclass(frozen=True)
@@ -187,8 +187,6 @@ class GameEnd:
     winner: str
 
 
-type DerivedEvent = Union[
-    GameStart, RoundStart, TrickStart, TrickEnd, RoundEnd, GameEnd
-]
+type DerivedEvent = GameStart | RoundStart | TrickStart | TrickEnd | RoundEnd | GameEnd
 
-type Event = Union[Action, DerivedEvent]
+type Event = Action | DerivedEvent
