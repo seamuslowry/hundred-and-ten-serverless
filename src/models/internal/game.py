@@ -194,7 +194,7 @@ class Game(BaseGame):
                 bleeding=t.bleeding,
                 plays=[Play.from_engine(p) for p in t.plays],
                 winning_play=(
-                    Play.from_engine(t.winning_play) if t.winning_play else None
+                    Play.from_engine(t.winning_play) if len(t.plays) else None
                 ),
             )
             for t in self._engine.active_round.tricks
@@ -203,78 +203,95 @@ class Game(BaseGame):
     @property
     def events(self) -> list[Event]:
         """Get all game events via action-walking replay"""
-        engine = Engine(
+        replay_engine = Engine(
             players=[EnginePlayer(p.id) for p in self.ordered_players],
             seed=self.seed,
         )
 
-        result: list[Event] = [
+        return [
             GameStart(),
             RoundStart(
-                dealer=engine.active_round.dealer.identifier,
+                dealer=replay_engine.active_round.dealer.identifier,
                 hands={
                     p.identifier: [Card.from_engine(c) for c in p.hand]
-                    for p in engine.active_round.players
+                    for p in replay_engine.active_round.players
                 },
+            ),
+            *(
+                event
+                for a in self.actions
+                for event in Game.__events_for_action(replay_engine, a)
+            ),
+            *(
+                [GameEnd(winner=replay_engine.winner.identifier)]
+                if replay_engine.winner
+                else []
             ),
         ]
 
-        prev_round_count = len(engine.rounds)
-        prev_trick_count = len(engine.active_round.tricks)
+    @staticmethod
+    def __events_for_action(replay_engine: Engine, action: Action) -> list[Event]:
+        before_action_round_count = len(replay_engine.rounds)
+        before_action_trick_count = len(replay_engine.active_round.tricks)
 
-        for action in self.actions:
-            engine.act(action.to_engine())
-            result.append(action)
+        replay_engine.act(action.to_engine())
 
-            curr_round_count = len(engine.rounds)
+        after_action_round_count = len(replay_engine.rounds)
+        after_action_trick_count = len(replay_engine.active_round.tricks)
 
-            if curr_round_count > prev_round_count:
-                # Round boundary: the previous round completed (and possibly
-                # its final trick too). Emit TrickEnd for the last trick of the
-                # completed round, then RoundEnd, then RoundStart for the new round.
-                completed_round = engine.rounds[-2]
-
-                if completed_round.tricks:
-                    last_trick = completed_round.tricks[-1]
-                    assert last_trick.winning_play
-                    result.append(TrickEnd(winner=last_trick.winning_play.identifier))
-
-                result.append(
-                    RoundEnd(
-                        scores={s.identifier: s.value for s in completed_round.scores}
+        return [
+            # always include the action itself
+            action,
+            # if the action resulted in an ended trick, include TrickEnd
+            *(
+                [
+                    TrickEnd(
+                        winner=(
+                            replay_engine.active_round.tricks[-2]
+                            if replay_engine.active_round.tricks
+                            else replay_engine.rounds[-2].tricks[-1]
+                        ).winning_play.identifier
                     )
-                )
-                result.append(
+                ]
+                if before_action_trick_count > 0
+                and after_action_trick_count != before_action_trick_count
+                else []
+            ),
+            # if the action resulted in starting a trick, include TrickStart
+            *(
+                [TrickStart()]
+                if after_action_trick_count > before_action_trick_count
+                else []
+            ),
+            # if the action ended a round, include RoundEnd
+            *(
+                [
+                    RoundEnd(
+                        scores={
+                            s.identifier: s.value
+                            for s in replay_engine.rounds[-2].scores
+                        }
+                    )
+                ]
+                if after_action_round_count > before_action_round_count
+                or replay_engine.winner is not None
+                else []
+            ),
+            # if the action started a new round, include RoundStart
+            *(
+                [
                     RoundStart(
-                        dealer=engine.active_round.dealer.identifier,
+                        dealer=replay_engine.active_round.dealer.identifier,
                         hands={
                             p.identifier: [Card.from_engine(c) for c in p.hand]
-                            for p in engine.active_round.players
+                            for p in replay_engine.active_round.players
                         },
                     )
-                )
-                prev_trick_count = len(engine.active_round.tricks)
-            else:
-                # Same round — check for trick boundary
-                curr_trick_count = len(engine.active_round.tricks)
-                if curr_trick_count > prev_trick_count:
-                    if prev_trick_count > 0:
-                        # A previous trick just completed
-                        prev_trick = engine.active_round.tricks[-2]
-                        assert prev_trick.winning_play
-                        result.append(
-                            TrickEnd(winner=prev_trick.winning_play.identifier)
-                        )
-                    # A new trick started (first trick or subsequent)
-                    result.append(TrickStart())
-                prev_trick_count = curr_trick_count
-
-            prev_round_count = curr_round_count
-
-        if engine.winner:
-            result.append(GameEnd(winner=engine.winner.identifier))
-
-        return result
+                ]
+                if after_action_round_count > before_action_round_count
+                else []
+            ),
+        ]
 
     @property
     def scores(self) -> dict[str, int]:
