@@ -5,8 +5,9 @@ from dataclasses import InitVar, dataclass, field
 from typing import Optional, override
 from uuid import uuid4
 
-from hundredandten.automation import naive_action_for
+from hundredandten.automation.naive import action_for
 from hundredandten.engine import Game as Engine, Player as EnginePlayer
+from hundredandten.state import EngineAdapter
 
 from .actions import (
     Action,
@@ -330,7 +331,14 @@ class Game(BaseGame):
                     else:
                         self._engine.act(engine_action)
                 case RequestAutomation():
-                    naive_act = naive_action_for(self._engine, active_player.id)
+                    naive_act = EngineAdapter.available_action_for_player(
+                        action_for(
+                            EngineAdapter.state_from_engine(
+                                self._engine, active_player.id
+                            )
+                        ),
+                        active_player.id,
+                    )
                     self._engine.act(naive_act)
                 case _:  # pragma: no cover
                     # type: ignore[unreachable]
@@ -379,7 +387,12 @@ class Game(BaseGame):
 
     def suggestion_for(self, player_id: str) -> Action:
         """Return a suggested action for the given player"""
-        return ActionFactory.from_engine(naive_action_for(self._engine, player_id))
+        return ActionFactory.from_engine(
+            EngineAdapter.available_action_for_player(
+                action_for(EngineAdapter.state_from_engine(self._engine, player_id)),
+                player_id,
+            )
+        )
 
     def __initialize_engine(self, actions: list[Action]) -> None:
         self._engine = Engine(

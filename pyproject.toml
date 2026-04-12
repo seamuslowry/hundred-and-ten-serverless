@@ -23,8 +23,10 @@ dependencies = [
     "pymongo==4.16.0",
     "pyjwt==2.12.1",
     "requests==2.33.1",
-    "hundredandten-engine==0.0.1.dev91",
-    "hundredandten-automation==0.0.1.dev91"
+    "hundredandten-engine==0.0.2",
+    "hundredandten-state==0.0.1.dev2",
+    "hundredandten-automation-naive==0.0.1.dev1",
+    "hundredandten-deck==0.0.1",
 ]
 
 [dependency-groups]
@@ -75,7 +77,9 @@ addopts = ["--import-mode=importlib"]
 
 [tool.uv.sources]
 hundredandten-engine = { index = "testpypi" }
-hundredandten-automation = { index = "testpypi" }
+hundredandten-automation-naive = { index = "testpypi" }
+hundredandten-state = { index = "testpypi" }
+hundredandten-deck = { index = "testpypi" }
 
 [[tool.uv.index]]
 name = "testpypi"
