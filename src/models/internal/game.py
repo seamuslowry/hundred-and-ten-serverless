@@ -323,13 +323,22 @@ class Game(BaseGame):
         ):
             match action_request:
                 case ConcreteAction(action):
-                    engine_action = action.to_engine()
-                    if engine_action not in self._engine.available_actions(
-                        active_player.id
-                    ) and isinstance(active_player, Human):
+                    available_action = EngineAdapter.action_for(
+                        self._engine,
+                        active_player.id,
+                        lambda _: EngineAdapter.available_action_from_engine(
+                            action.to_engine()
+                        ),
+                    )
+
+                    if available_action is not None:
+                        self._engine.act(
+                            EngineAdapter.available_action_for_player(
+                                available_action, active_player.id
+                            )
+                        )
+                    elif isinstance(active_player, Human):
                         self._update_game_player(active_player.clear_queued_actions())
-                    else:
-                        self._engine.act(engine_action)
                 case RequestAutomation():
                     naive_act = EngineAdapter.available_action_for_player(
                         action_for(
