@@ -134,44 +134,57 @@ def __initialize_engine(self, actions: list[Action]) -> Engine:
 
 ## Examples
 
-**The `_automated_act` dispatch loop:**
+**The `__automated_act` dispatch loop:**
 
 ```python
-def _automated_act(self) -> None:
-    while True:
-        if self._engine.winner:
-            break
-
-        active_player_id = self.active_player_id
-        active_player = self.ordered_players.find_or_throw(active_player_id)
-
-        request = active_player.next_action()
-        match request:
-            case NoAction():
-                break
+def __automated_act(self) -> None:
+    while (
+        not self.winner
+        and (
+            active_player := self.ordered_players.find_or_throw(
+                self.active_player_id
+            )
+        )
+        is not None
+        and (action_request := active_player.next_action()) != NoAction()
+    ):
+        match action_request:
             case ConcreteAction(action):
-                engine_action = action.to_engine()
-                if engine_action not in self._engine.available_actions(active_player_id):
-                    if not isinstance(active_player, Human):
-                        raise TypeError(
-                            f"Expected Human player for ConcreteAction, "
-                            f"got {type(active_player).__name__}"
+                try:
+                    self._engine.act(
+                        EngineAdapter.action_for(
+                            self._engine,
+                            active_player.id,
+                            lambda _: EngineAdapter.available_action_from_engine(
+                                action.to_engine()
+                            ),
                         )
+                    )
+                except UnavailableActionError:
+                    assert isinstance(active_player, Human), (
+                        "Only Human players produce ConcreteAction; "
+                        f"got {active_player}"
+                    )
                     self._update_game_player(active_player.clear_queued_actions())
-                    break
-                self._engine.act(engine_action)
             case RequestAutomation():
-                naive_act = naive_action_for(self._engine, active_player_id)
-                self._engine.act(naive_act)
-            case _:
-                raise AssertionError(
-                    f"Unhandled ActionRequest variant: {request!r}"
+                self._engine.act(
+                    EngineAdapter.action_for(
+                        self._engine,
+                        active_player.id,
+                        naive.action_for,
+                    )
+                )
+            case _:  # pragma: no cover
+                raise InternalServerError(
+                    f"Unable to process action request. Automation failing for {action_request}"
                 )
 ```
 
-**Important:** bind the result of `next_action()` to a variable *before* the `match` statement. Calling `active_player.next_action()` inside the `case _` f-string would invoke it a second time — and `Human.next_action()` has a side effect (`deque.popleft()`), so that double-call would silently consume a queued action before raising the error. Binding once and referencing `request` in all arms is both correct and clearer.
+**Important:** `next_action()` is bound in the `while` condition via walrus operator — this keeps the loop exit logic co-located with the `NoAction` check and avoids calling `next_action()` twice. `Human.next_action()` has a side effect (`deque.popleft()`), so any double-call would silently consume a queued action.
 
 Note the wildcard arm. Without it, a future `ActionRequest` variant would cause the loop to spin silently.
+
+CPU actions go through `EngineAdapter.action_for` (from `hundredandten-automation-engineadapter`), which adapts the automation's chosen action into whatever the engine's current available-action set accepts. `naive.action_for` (from `hundredandten-automation-naive`) is passed as the strategy callback; the adapter handles the engine-boundary translation.
 
 **Queue guard consolidated in `Game`:**
 
@@ -215,8 +228,7 @@ self._engine.act(naive_act)
 ## Related
 
 - `src/models/internal/player.py` — `ActionRequest` union definition; `PlayerInGame` ABC; `Human` and `NaiveCpu` implementations
-- `src/models/internal/game.py` — `_automated_act()`, `queue_action_for()`, `clear_queued_actions_for()`, `__initialize_engine()`
+- `src/models/internal/game.py` — `__automated_act()`, `queue_action_for()`, `clear_queued_actions_for()`, `__initialize_engine()`
 - `src/mappers/db/deserialize.py` — `deque` deserialization fix for `Human.queued_actions`
-- `tests/models/test_player.py` — unit tests for `next_action()` across all player types
 - `tests/functions/test_queued_action.py` — integration tests for queue behaviour and `NaiveCpu` guard
 - `docs/plans/2026-04-10-001-refactor-player-automation-api-plan.md` — execution plan for this refactor

@@ -4,7 +4,7 @@ Repository map for AI agent sessions working on `hundred-and-ten-serverless`.
 
 ## Project Overview
 
-A serverless API for the card game **Hundred and Ten** (a.k.a. One Hundred Ten). Built with FastAPI, deployed on Azure Functions, backed by MongoDB (CosmosDB in production). The core game logic lives in external packages (`hundredandten-engine`, `hundredandten-automation`) hosted on TestPyPI; this project is the API/persistence layer wrapping that engine.
+A serverless API for the card game **Hundred and Ten** (a.k.a. One Hundred Ten). Built with FastAPI, deployed on Azure Functions, backed by MongoDB (CosmosDB in production). The core game logic lives in external packages (`hundredandten-engine`, `hundredandten-automation-naive`, `hundredandten-automation-engineadapter`) hosted on PyPI; this project is the API/persistence layer wrapping that engine.
 
 ## Tech Stack
 
@@ -14,7 +14,7 @@ A serverless API for the card game **Hundred and Ten** (a.k.a. One Hundred Ten).
 | Framework       | FastAPI (ASGI) wrapped by Azure Functions `AsgiFunctionApp`  |
 | Database        | MongoDB via Beanie ODM (async) / PyMongo                     |
 | Auth            | Firebase ID tokens validated against Google public keys      |
-| Game engine     | `hundredandten-engine` + `hundredandten-automation` (TestPyPI) |
+| Game engine     | `hundredandten-engine` + `hundredandten-automation-naive` + `hundredandten-automation-engineadapter` (PyPI) |
 | Package manager | uv                                                           |
 | Linting         | pylint, pyright, ruff, black                                 |
 | Testing         | pytest + pytest-asyncio, 100% branch coverage enforced       |
@@ -171,5 +171,5 @@ Solutions use YAML frontmatter with: `title`, `date`, `category`, `module`, `pro
 
 ## External Dependencies of Note
 
-- **`hundredandten-engine`** and **`hundredandten-automation`** are hosted on TestPyPI (not regular PyPI). They are pinned in `pyproject.toml` and sourced via `[tool.uv.sources]`.
+- **`hundredandten-engine`**, **`hundredandten-automation-naive`**, and **`hundredandten-automation-engineadapter`** are pinned in `pyproject.toml` and resolve from regular PyPI. A `[[tool.uv.index]]` entry for TestPyPI exists with `explicit = true` but is not currently used as a source for any of these packages.
 - The engine mutates `RoundPlayer.hand` in-place during discards — the action-walking replay pattern exists specifically to work around this.
