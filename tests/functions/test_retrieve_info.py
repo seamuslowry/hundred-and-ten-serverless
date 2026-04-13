@@ -5,14 +5,17 @@ from time import time
 from beanie import PydanticObjectId
 from fastapi.testclient import TestClient
 
+from models.internal.constants import BidAmount
 from src.models.internal import Player
 from tests.helpers import (
     DEFAULT_ID,
     completed_game,
+    game_with_manual_player,
     get_events,
     lobby_game,
     player,
-    request_suggestion,
+    queue_action,
+    request_suggestions,
     started_game,
 )
 
@@ -219,16 +222,42 @@ def test_get_nonexistent_player(client: TestClient):
     assert 404 == resp.status_code
 
 
-def test_get_suggestion_on_other_turn(client: TestClient):
+def test_get_suggestion_on_other_turn_no_moves(client: TestClient):
     """The game will provide a suggestion on another player's turn"""
-    game = started_game(client)
-    active_player_id = game["active_player_id"]
-    assert active_player_id
-    non_active_player = next(p for p in game["players"] if p["id"] != active_player_id)
-    resp = request_suggestion(client, game["id"], non_active_player["id"])
+    game, manual_player = game_with_manual_player(client)
+
+    queue_action(
+        client,
+        game["id"],
+        manual_player,
+        {"amount": BidAmount.PASS, "type": "BID"},
+    )
+
+    # player immediately passes; play moves to DEFAULT_ID
+    # manual player has no moves until the next phase, so no suggestions should be provided
+    resp = request_suggestions(client, game["id"], manual_player)
 
     assert 200 == resp.status_code
-    assert resp.json()["type"] is not None
+    assert len(resp.json()) == 0
+
+
+def test_get_suggestion_on_other_turn_possible_moves(client: TestClient):
+    """The game will provide a suggestion on another player's turn"""
+    game, manual_player = game_with_manual_player(client)
+
+    queue_action(
+        client,
+        game["id"],
+        manual_player,
+        {"amount": BidAmount.FIFTEEN, "type": "BID"},
+    )
+
+    # player immediately bids; play moves to DEFAULT_ID
+    # manual player still has possible moves in this phase so suggestions should be provided
+    resp = request_suggestions(client, game["id"], manual_player)
+
+    assert 200 == resp.status_code
+    assert len(resp.json()) > 0
 
 
 def test_get_all_events(client: TestClient):

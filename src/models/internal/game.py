@@ -5,9 +5,9 @@ from dataclasses import InitVar, dataclass, field
 from typing import Optional, override
 from uuid import uuid4
 
-from hundredandten.automation.naive import action_for
+from hundredandten.automation import naive
+from hundredandten.automation.engineadapter import EngineAdapter, StateError
 from hundredandten.engine import Game as Engine, Player as EnginePlayer
-from hundredandten.state import EngineAdapter
 
 from .actions import (
     Action,
@@ -323,32 +323,29 @@ class Game(BaseGame):
         ):
             match action_request:
                 case ConcreteAction(action):
-                    available_action = EngineAdapter.action_for(
-                        self._engine,
-                        active_player.id,
-                        lambda _: EngineAdapter.available_action_from_engine(
-                            action.to_engine()
-                        ),
-                    )
-
-                    if available_action is not None:
+                    try:
                         self._engine.act(
-                            EngineAdapter.available_action_for_player(
-                                available_action, active_player.id
+                            EngineAdapter.action_for(
+                                self._engine,
+                                active_player.id,
+                                lambda _: EngineAdapter.available_action_from_engine(
+                                    action.to_engine()
+                                ),
                             )
                         )
-                    elif isinstance(active_player, Human):
-                        self._update_game_player(active_player.clear_queued_actions())
-                case RequestAutomation():
-                    naive_act = EngineAdapter.available_action_for_player(
-                        action_for(
-                            EngineAdapter.state_from_engine(
-                                self._engine, active_player.id
+                    except StateError:
+                        if isinstance(active_player, Human):
+                            self._update_game_player(
+                                active_player.clear_queued_actions()
                             )
-                        ),
-                        active_player.id,
+                case RequestAutomation():
+                    self._engine.act(
+                        EngineAdapter.action_for(
+                            self._engine,
+                            active_player.id,
+                            naive.action_for,
+                        )
                     )
-                    self._engine.act(naive_act)
                 case _:  # pragma: no cover
                     # type: ignore[unreachable]
                     raise InternalServerError(
@@ -394,14 +391,20 @@ class Game(BaseGame):
 
         self.__initialize_engine(self.actions)
 
-    def suggestion_for(self, player_id: str) -> Action:
-        """Return a suggested action for the given player"""
-        return ActionFactory.from_engine(
-            EngineAdapter.available_action_for_player(
-                action_for(EngineAdapter.state_from_engine(self._engine, player_id)),
-                player_id,
-            )
-        )
+    def suggestions_for(self, player_id: str) -> list[Action]:
+        """Return a list of suggested actions for the given player"""
+        try:
+            return [
+                ActionFactory.from_engine(
+                    EngineAdapter.action_for(
+                        self._engine,
+                        player_id,
+                        naive.action_for,
+                    )
+                )
+            ]
+        except StateError:
+            return []  # if no suggestion is available, return an empty list
 
     def __initialize_engine(self, actions: list[Action]) -> None:
         self._engine = Engine(

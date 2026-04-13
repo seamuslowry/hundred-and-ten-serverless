@@ -130,12 +130,12 @@ async def events(
     ]
 
 
-@router.get("/{game_id}/suggestion", response_model=UnorderedActionResponse)
+@router.get("/{game_id}/suggestions", response_model=list[UnorderedActionResponse])
 async def suggestion(player_id: str, game_id: PydanticObjectId):
-    """Ask for a suggestion in a 110 game"""
+    """Ask for suggestions in a 110 game"""
     game = await GameService.get(game_id)
 
-    return serialize.suggestion(game.suggestion_for(player_id))
+    return [serialize.suggestion(s) for s in game.suggestions_for(player_id)]
 
 
 @router.post("/search", response_model=list[GameResponse])
