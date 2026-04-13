@@ -334,10 +334,11 @@ class Game(BaseGame):
                             )
                         )
                     except UnavailableActionError:
-                        if isinstance(active_player, Human):
-                            self._update_game_player(
-                                active_player.clear_queued_actions()
-                            )
+                        assert isinstance(active_player, Human), (
+                            "Only Human players produce ConcreteAction; "
+                            f"got {active_player}"
+                        )
+                        self._update_game_player(active_player.clear_queued_actions())
                 case RequestAutomation():
                     self._engine.act(
                         EngineAdapter.action_for(
