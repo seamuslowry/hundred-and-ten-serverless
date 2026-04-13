@@ -6,7 +6,7 @@ from typing import Optional, override
 from uuid import uuid4
 
 from hundredandten.automation import naive
-from hundredandten.automation.engineadapter import EngineAdapter, StateError
+from hundredandten.automation.engineadapter import EngineAdapter, UnavailableActionError
 from hundredandten.engine import Game as Engine, Player as EnginePlayer
 
 from .actions import (
@@ -333,7 +333,7 @@ class Game(BaseGame):
                                 ),
                             )
                         )
-                    except StateError:
+                    except UnavailableActionError:
                         if isinstance(active_player, Human):
                             self._update_game_player(
                                 active_player.clear_queued_actions()
@@ -403,7 +403,7 @@ class Game(BaseGame):
                     )
                 )
             ]
-        except StateError:
+        except UnavailableActionError:
             return []  # if no suggestion is available, return an empty list
 
     def __initialize_engine(self, actions: list[Action]) -> None:

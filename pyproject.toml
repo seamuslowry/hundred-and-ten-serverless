@@ -24,9 +24,9 @@ dependencies = [
     "pyjwt==2.12.1",
     "requests==2.33.1",
     "hundredandten-engine==0.0.2.dev0",
-    "hundredandten-state==0.0.1.dev4",
-    "hundredandten-automation-naive==0.0.1.dev3",
-    "hundredandten-automation-engineadapter==0.0.1.dev4",
+    "hundredandten-state==0.0.1.dev5",
+    "hundredandten-automation-naive==0.0.1.dev4",
+    "hundredandten-automation-engineadapter==0.0.1.dev5",
     "hundredandten-deck==0.0.1",
 ]
 
