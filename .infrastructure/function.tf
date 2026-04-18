@@ -150,6 +150,13 @@ resource "azurerm_linux_function_app_slot" "staging" {
       python_version = "3.13"
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      app_settings["WEBSITE_RUN_FROM_PACKAGE"],
+      app_settings["WEBSITE_ENABLE_SYNC_UPDATE_SITE"],
+    ]
+  }
 }
 
 data "azurerm_role_definition" "monitoring_contributor" {
