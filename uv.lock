@@ -542,13 +542,13 @@ wheels = [
 
 [[package]]
 name = "hundredandten-state"
-version = "0.0.3"
+version = "0.0.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "hundredandten-deck" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1e/a0/7489ad99b8a6f7cb5a82282062a00e03850c5dec37827960d6e4a4e1683d/hundredandten_state-0.0.3-py3-none-any.whl", hash = "sha256:a14b57492ca95cfc41c63dc0eef5ec78ea850060e20f49f46fbc0720d9342d95", size = 3748, upload-time = "2026-04-13T10:37:12.307Z" },
+    { url = "https://files.pythonhosted.org/packages/5f/03/e99e073984af8c5bc1beff4b87fc1ff0c64a1cec23cb2643f84e4a0fe400/hundredandten_state-0.0.4-py3-none-any.whl", hash = "sha256:50cb18b25ddbbc75448a8ac7a873ac122d686a0c0d57fba6ffa53fcc32cfa71f", size = 5068, upload-time = "2026-04-18T18:19:54.276Z" },
 ]
 
 [[package]]
