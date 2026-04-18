@@ -207,7 +207,21 @@ The `astral-sh/setup-uv@v7` step and the `uv pip install` step are removed — d
 2. **Tofu — service plan**: change SKU to `FC1`, rename resource. Run `tofu plan` to confirm what will be recreated.
 3. **Tofu — function app + slot**: add `identity` blocks, swap storage auth, update `app_settings`, clean up `sticky_settings`, remove `ftps_state`, remove `lifecycle.ignore_changes` on `WEBSITE_RUN_FROM_PACKAGE`.
 4. **Tofu — RBAC role assignments**: add `Storage Blob Data Owner` for app and slot identities.
-5. **Apply all Tofu changes** in a single `tofu apply`. This will recreate the service plan and likely the function app — expect a brief outage during apply.
+5. **Apply in two passes** — the role assignments reference `identity[0].principal_id`, which is only known after the managed identity is created. The provider rejects unknown values for `principal_id` at plan time, so a single `tofu apply` will fail.
+
+   **Pass 1** — create identities and migrate the plan/storage:
+   ```
+   tofu apply \
+     -target=azurerm_storage_account.storage \
+     -target=azurerm_service_plan.service_plan \
+     -target=azurerm_linux_function_app.app \
+     -target=azurerm_linux_function_app_slot.staging
+   ```
+
+   **Pass 2** — create role assignments now that `principal_id` values are known:
+   ```
+   tofu apply
+   ```
 6. **Update `deploy-staging.yml`**: switch to `functions-action@v2`, remove `setup-uv` and `uv pip install` steps, fix `checkout@v4`, add `scm-do-build-during-deployment: true`.
 7. **Commit and push to `main`** — CI deploys to staging via the updated workflow.
 8. **Verify staging**: function app reports `Running`, HTTP smoke test succeeds.
