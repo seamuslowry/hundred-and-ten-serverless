@@ -523,10 +523,10 @@ wheels = [
 
 [[package]]
 name = "hundredandten-deck"
-version = "0.0.2"
+version = "0.0.3"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/03/4a/710d0b9b4ba79fa5e5cdb5635155dc4d5f5a35c63a16d749ae495d125c42/hundredandten_deck-0.0.2-py3-none-any.whl", hash = "sha256:b027a43d4376962ac67bf6cce584cd9d8fee6b38e542737f2108f3334685692a", size = 3217, upload-time = "2026-04-13T10:28:42.869Z" },
+    { url = "https://files.pythonhosted.org/packages/34/54/88281b0f6ad1e05e5e8abbb81c45def1bd81c15d4ca083e0f28906c11da5/hundredandten_deck-0.0.3-py3-none-any.whl", hash = "sha256:486366409501a1bb6a1a4337fa439c5f5823d4a0c2db0a795ca6628c0041db58", size = 3992, upload-time = "2026-04-18T18:19:50.715Z" },
 ]
 
 [[package]]
