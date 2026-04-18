@@ -75,16 +75,27 @@ resource "azurerm_cosmosdb_account" "db" {
   }
 }
 
-resource "azurerm_linux_function_app" "app" {
+resource "azurerm_storage_container" "deployments" {
+  name                  = "deployments"
+  storage_account_id    = azurerm_storage_account.storage.id
+  container_access_type = "private"
+}
+
+resource "azurerm_function_app_flex_consumption" "app" {
   name                = "hundredandten"
   resource_group_name = azurerm_resource_group.group.name
   location            = azurerm_resource_group.group.location
 
   https_only = true
 
-  storage_account_name          = azurerm_storage_account.storage.name
-  storage_uses_managed_identity = true
-  service_plan_id               = azurerm_service_plan.service_plan.id
+  service_plan_id = azurerm_service_plan.service_plan.id
+
+  runtime_name    = "python"
+  runtime_version = "3.13"
+
+  storage_authentication_type  = "SystemAssignedIdentity"
+  storage_container_endpoint   = "${azurerm_storage_account.storage.primary_blob_endpoint}${azurerm_storage_container.deployments.name}"
+  storage_container_type       = "blobContainer"
 
   identity {
     type = "SystemAssigned"
@@ -97,8 +108,6 @@ resource "azurerm_linux_function_app" "app" {
     "MongoDb"                          = azurerm_cosmosdb_account.db.primary_mongodb_connection_string
   }
 
-  builtin_logging_enabled = false
-
   tags = {
     "hidden-link: /app-insights-conn-string"         = azurerm_application_insights.insights.connection_string
     "hidden-link: /app-insights-instrumentation-key" = azurerm_application_insights.insights.instrumentation_key
@@ -107,9 +116,6 @@ resource "azurerm_linux_function_app" "app" {
 
   site_config {
     application_insights_connection_string = azurerm_application_insights.insights.connection_string
-    application_stack {
-      python_version = "3.13"
-    }
   }
 
   sticky_settings {
@@ -117,52 +123,10 @@ resource "azurerm_linux_function_app" "app" {
   }
 }
 
-resource "azurerm_linux_function_app_slot" "staging" {
-  name                 = "staging"
-  function_app_id      = azurerm_linux_function_app.app.id
-
-  https_only = true
-
-  storage_account_name          = azurerm_storage_account.storage.name
-  storage_uses_managed_identity = true
-
-  identity {
-    type = "SystemAssigned"
-  }
-
-  app_settings = {
-    "AzureWebJobsStorage__accountName" = azurerm_storage_account.storage.name
-    "AzureWebJobsSecretStorageType"    = "Blob"
-    "DatabaseName"                     = "dev"
-    "MongoDb"                          = azurerm_cosmosdb_account.db.primary_mongodb_connection_string
-  }
-
-  builtin_logging_enabled = false
-
-  tags = {
-    "hidden-link: /app-insights-conn-string"         = azurerm_application_insights.insights.connection_string
-    "hidden-link: /app-insights-instrumentation-key" = azurerm_application_insights.insights.instrumentation_key
-    "hidden-link: /app-insights-resource-id"         = azurerm_application_insights.insights.id
-  }
-
-  site_config {
-    application_insights_connection_string = azurerm_application_insights.insights.connection_string
-    application_stack {
-      python_version = "3.13"
-    }
-  }
-}
-
 resource "azurerm_role_assignment" "app_storage_blob" {
   scope                = azurerm_storage_account.storage.id
   role_definition_name = "Storage Blob Data Owner"
-  principal_id         = azurerm_linux_function_app.app.identity[0].principal_id
-}
-
-resource "azurerm_role_assignment" "staging_storage_blob" {
-  scope                = azurerm_storage_account.storage.id
-  role_definition_name = "Storage Blob Data Owner"
-  principal_id         = azurerm_linux_function_app_slot.staging.identity[0].principal_id
+  principal_id         = azurerm_function_app_flex_consumption.app.identity[0].principal_id
 }
 
 data "azurerm_role_definition" "monitoring_contributor" {
