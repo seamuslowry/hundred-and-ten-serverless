@@ -1,7 +1,7 @@
 ---
 title: "feat: Migrate Azure Functions app from Y1 Consumption to Flex Consumption (FC1)"
 type: feat
-status: ready
+status: completed
 date: 2026-04-18
 ---
 
