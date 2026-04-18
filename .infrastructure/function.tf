@@ -71,8 +71,8 @@ resource "azurerm_cosmosdb_account" "db" {
   }
 }
 
-resource "azurerm_storage_container" "deployments" {
-  name                  = "deployments"
+resource "azurerm_storage_container" "production_storage" {
+  name                  = "hundradandten-production"
   storage_account_id    = azurerm_storage_account.storage.id
   container_access_type = "private"
 }
@@ -90,7 +90,7 @@ resource "azurerm_function_app_flex_consumption" "app" {
   runtime_version = "3.13"
 
   storage_authentication_type  = "SystemAssignedIdentity"
-  storage_container_endpoint   = "${azurerm_storage_account.storage.primary_blob_endpoint}${azurerm_storage_container.deployments.name}" # primary_blob_endpoint always includes trailing slash
+  storage_container_endpoint   = "${azurerm_storage_account.storage.primary_blob_endpoint}${azurerm_storage_container.production_storage.name}" # primary_blob_endpoint always includes trailing slash
   storage_container_type       = "blobContainer"
 
   identity {
@@ -98,10 +98,9 @@ resource "azurerm_function_app_flex_consumption" "app" {
   }
 
   app_settings = {
-    "AzureWebJobsStorage__accountName"  = azurerm_storage_account.storage.name
-    "AzureWebJobsStorage__credential"   = "managedidentity"
-    "AzureWebJobsSecretStorageType"     = "Blob"
-    "DatabaseName"                      = "prod"
+    "AzureWebJobsStorage__accountName" = azurerm_storage_account.storage.name
+    "AzureWebJobsStorage__credential"  = "managedidentity"
+    "DatabaseName"                     = "prod"
     "MongoDb"                           = azurerm_cosmosdb_account.db.primary_mongodb_connection_string
   }
 
@@ -118,8 +117,8 @@ resource "azurerm_function_app_flex_consumption" "app" {
 
 resource "azurerm_role_assignment" "app_storage_blob" {
   # Scoped to the full storage account, not just the deployments container.
-  # The Functions host also needs access to azure-webjobs-secrets (for AzureWebJobsSecretStorageType=Blob)
-  # and any other containers it creates at runtime (e.g., azure-webjobs-hosts).
+  # The Functions host also needs access to azure-webjobs-secrets and azure-webjobs-hosts
+  # containers that it creates at runtime — not just the deployments container.
   scope                = azurerm_storage_account.storage.id
   role_definition_name = "Storage Blob Data Owner"
   principal_id         = azurerm_function_app_flex_consumption.app.identity[0].principal_id
