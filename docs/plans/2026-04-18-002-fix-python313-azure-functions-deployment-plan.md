@@ -1,7 +1,7 @@
 ---
 title: "fix: Restore Azure Functions deployment after Python 3.13 + azure-functions 2.1.0 upgrade"
 type: fix
-status: active
+status: superceded
 date: 2026-04-18
 deepened: 2026-04-18
 ---
