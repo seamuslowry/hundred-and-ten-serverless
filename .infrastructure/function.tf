@@ -19,10 +19,6 @@ resource "azurerm_service_plan" "service_plan" {
   location            = azurerm_resource_group.group.location
   os_type             = "Linux"
   sku_name            = "FC1"
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
 resource "azurerm_log_analytics_workspace" "workspace" {
