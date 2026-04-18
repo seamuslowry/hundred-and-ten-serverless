@@ -103,7 +103,7 @@ resource "azurerm_linux_function_app" "app" {
     application_insights_connection_string = azurerm_application_insights.insights.connection_string
     ftps_state = "AllAllowed"
     application_stack {
-      python_version = "3.12"
+      python_version = "3.13"
     }
   }
 
@@ -147,8 +147,15 @@ resource "azurerm_linux_function_app_slot" "staging" {
     application_insights_connection_string = azurerm_application_insights.insights.connection_string
     ftps_state = "AllAllowed"
     application_stack {
-      python_version = "3.12"
+      python_version = "3.13"
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      app_settings["WEBSITE_RUN_FROM_PACKAGE"],
+      app_settings["WEBSITE_ENABLE_SYNC_UPDATE_SITE"],
+    ]
   }
 }
 
