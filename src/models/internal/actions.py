@@ -3,16 +3,18 @@
 from dataclasses import dataclass
 from typing import Self
 
+from hundredandten.deck import (
+    Card as EngineCard,
+    CardNumber as EngineCardNumber,
+    CardSuit as EngineCardSuit,
+    SelectableSuit as EngineSelectableSuit,
+)
 from hundredandten.engine import (
     Action as EngineAction,
     Bid as EngineBid,
     BidAmount as EngineBidAmount,
-    Card as EngineCard,
-    CardNumber as EngineCardNumber,
-    CardSuit as EngineCardSuit,
     Discard as EngineDiscard,
     Play as EnginePlay,
-    SelectableSuit as EngineSelectableSuit,
     SelectTrump as EngineSelectTrump,
 )
 
