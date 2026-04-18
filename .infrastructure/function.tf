@@ -94,7 +94,7 @@ resource "azurerm_function_app_flex_consumption" "app" {
   runtime_version = "3.13"
 
   storage_authentication_type  = "SystemAssignedIdentity"
-  storage_container_endpoint   = "${azurerm_storage_account.storage.primary_blob_endpoint}${azurerm_storage_container.deployments.name}"
+  storage_container_endpoint   = "https://${azurerm_storage_account.storage.name}.blob.core.windows.net/${azurerm_storage_container.deployments.name}"
   storage_container_type       = "blobContainer"
 
   identity {
@@ -102,10 +102,11 @@ resource "azurerm_function_app_flex_consumption" "app" {
   }
 
   app_settings = {
-    "AzureWebJobsStorage__accountName" = azurerm_storage_account.storage.name
-    "AzureWebJobsSecretStorageType"    = "Blob"
-    "DatabaseName"                     = "prod"
-    "MongoDb"                          = azurerm_cosmosdb_account.db.primary_mongodb_connection_string
+    "AzureWebJobsStorage__accountName"  = azurerm_storage_account.storage.name
+    "AzureWebJobsStorage__credential"   = "managedidentity"
+    "AzureWebJobsSecretStorageType"     = "Blob"
+    "DatabaseName"                      = "prod"
+    "MongoDb"                           = azurerm_cosmosdb_account.db.primary_mongodb_connection_string
   }
 
   tags = {
@@ -117,14 +118,10 @@ resource "azurerm_function_app_flex_consumption" "app" {
   site_config {
     application_insights_connection_string = azurerm_application_insights.insights.connection_string
   }
-
-  sticky_settings {
-    app_setting_names = ["DatabaseName"]
-  }
 }
 
 resource "azurerm_role_assignment" "app_storage_blob" {
-  scope                = azurerm_storage_account.storage.id
+  scope                = azurerm_storage_container.deployments.resource_manager_id
   role_definition_name = "Storage Blob Data Owner"
   principal_id         = azurerm_function_app_flex_consumption.app.identity[0].principal_id
 }

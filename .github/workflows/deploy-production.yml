@@ -29,3 +29,12 @@ jobs:
           package: .
           respect-funcignore: true
           scm-do-build-during-deployment: true
+
+      - name: Smoke test - verify app is running
+        run: |
+          state=$(az functionapp show \
+            --name hundredandten \
+            --resource-group hundredandten \
+            --query "state" -o tsv)
+          echo "Function app state: $state"
+          [ "$state" = "Running" ] || (echo "App is not Running after deploy" && exit 1)
