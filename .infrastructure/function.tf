@@ -9,17 +9,16 @@ resource "azurerm_storage_account" "storage" {
   location                 = azurerm_resource_group.group.location
   account_tier             = "Standard"
   account_replication_type = "LRS"
-  account_kind             = "Storage"
-  cross_tenant_replication_enabled = false
-  min_tls_version          = "TLS1_0"
+  account_kind             = "StorageV2"
+  min_tls_version          = "TLS1_2"
 }
 
 resource "azurerm_service_plan" "service_plan" {
-  name                = "ASP-hundredandten-0127"
+  name                = "ASP-hundredandten-fc1"
   resource_group_name = azurerm_resource_group.group.name
   location            = azurerm_resource_group.group.location
   os_type             = "Linux"
-  sku_name            = "Y1"
+  sku_name            = "FC1"
 }
 
 resource "azurerm_log_analytics_workspace" "workspace" {
@@ -79,19 +78,22 @@ resource "azurerm_linux_function_app" "app" {
 
   https_only = true
 
-  storage_account_name       = azurerm_storage_account.storage.name
-  storage_account_access_key = azurerm_storage_account.storage.primary_access_key
-  service_plan_id            = azurerm_service_plan.service_plan.id
+  storage_account_name          = azurerm_storage_account.storage.name
+  storage_uses_managed_identity = true
+  service_plan_id               = azurerm_service_plan.service_plan.id
+
+  identity {
+    type = "SystemAssigned"
+  }
 
   app_settings = {
-    "AzureWebJobsFeatureFlags"              = "EnableWorkerIndexing"
-    "AzureWebJobsSecretStorageType"         = "Blob"
-    "DatabaseName"                          = "prod"
-    "MongoDb"                               = azurerm_cosmosdb_account.db.primary_mongodb_connection_string
+    "AzureWebJobsStorage__accountName" = azurerm_storage_account.storage.name
+    "AzureWebJobsSecretStorageType"    = "Blob"
+    "DatabaseName"                     = "prod"
+    "MongoDb"                          = azurerm_cosmosdb_account.db.primary_mongodb_connection_string
   }
 
   builtin_logging_enabled = false
-  client_certificate_mode = "Required"
 
   tags = {
     "hidden-link: /app-insights-conn-string"         = azurerm_application_insights.insights.connection_string
@@ -101,20 +103,13 @@ resource "azurerm_linux_function_app" "app" {
 
   site_config {
     application_insights_connection_string = azurerm_application_insights.insights.connection_string
-    ftps_state = "AllAllowed"
     application_stack {
       python_version = "3.13"
     }
   }
 
   sticky_settings {
-    app_setting_names = [
-        "CosmosDb",
-        "DatabaseName",
-    ]
-    connection_string_names = [
-        "CosmosDb"
-    ]
+    app_setting_names = ["DatabaseName"]
   }
 }
 
@@ -124,18 +119,21 @@ resource "azurerm_linux_function_app_slot" "staging" {
 
   https_only = true
 
-  storage_account_name       = azurerm_storage_account.storage.name
-  storage_account_access_key = azurerm_storage_account.storage.primary_access_key
+  storage_account_name          = azurerm_storage_account.storage.name
+  storage_uses_managed_identity = true
+
+  identity {
+    type = "SystemAssigned"
+  }
 
   app_settings = {
-    "AzureWebJobsFeatureFlags"              = "EnableWorkerIndexing"
-    "AzureWebJobsSecretStorageType"         = "Blob"
-    "DatabaseName"                          = "dev"
-    "MongoDb"                               = azurerm_cosmosdb_account.db.primary_mongodb_connection_string
+    "AzureWebJobsStorage__accountName" = azurerm_storage_account.storage.name
+    "AzureWebJobsSecretStorageType"    = "Blob"
+    "DatabaseName"                     = "dev"
+    "MongoDb"                          = azurerm_cosmosdb_account.db.primary_mongodb_connection_string
   }
 
   builtin_logging_enabled = false
-  client_certificate_mode = "Required"
 
   tags = {
     "hidden-link: /app-insights-conn-string"         = azurerm_application_insights.insights.connection_string
@@ -145,18 +143,22 @@ resource "azurerm_linux_function_app_slot" "staging" {
 
   site_config {
     application_insights_connection_string = azurerm_application_insights.insights.connection_string
-    ftps_state = "AllAllowed"
     application_stack {
       python_version = "3.13"
     }
   }
+}
 
-  lifecycle {
-    ignore_changes = [
-      app_settings["WEBSITE_RUN_FROM_PACKAGE"],
-      app_settings["WEBSITE_ENABLE_SYNC_UPDATE_SITE"],
-    ]
-  }
+resource "azurerm_role_assignment" "app_storage_blob" {
+  scope                = azurerm_storage_account.storage.id
+  role_definition_name = "Storage Blob Data Owner"
+  principal_id         = azurerm_linux_function_app.app.identity[0].principal_id
+}
+
+resource "azurerm_role_assignment" "staging_storage_blob" {
+  scope                = azurerm_storage_account.storage.id
+  role_definition_name = "Storage Blob Data Owner"
+  principal_id         = azurerm_linux_function_app_slot.staging.identity[0].principal_id
 }
 
 data "azurerm_role_definition" "monitoring_contributor" {

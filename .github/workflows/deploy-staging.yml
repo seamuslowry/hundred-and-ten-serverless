@@ -13,15 +13,7 @@ jobs:
     name: Deploy Function App
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-
-      - uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
-          python-version: "3.13"
-
-      - name: Install dependencies
-        run: uv pip install . --target=".python_packages/lib/site-packages"
+      - uses: actions/checkout@v4
 
       - name: Login to Azure
         uses: azure/login@v3
@@ -31,9 +23,10 @@ jobs:
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
       - name: Deploy to staging slot
-        uses: Azure/functions-action@v1
+        uses: Azure/functions-action@v2
         with:
           app-name: hundredandten
           slot-name: staging
           package: .
           respect-funcignore: true
+          scm-do-build-during-deployment: true
