@@ -94,7 +94,7 @@ resource "azurerm_function_app_flex_consumption" "app" {
   runtime_version = "3.13"
 
   storage_authentication_type  = "SystemAssignedIdentity"
-  storage_container_endpoint   = "https://${azurerm_storage_account.storage.name}.blob.core.windows.net/${azurerm_storage_container.deployments.name}"
+  storage_container_endpoint   = "${azurerm_storage_account.storage.primary_blob_endpoint}${azurerm_storage_container.deployments.name}" # primary_blob_endpoint always includes trailing slash
   storage_container_type       = "blobContainer"
 
   identity {
@@ -121,7 +121,10 @@ resource "azurerm_function_app_flex_consumption" "app" {
 }
 
 resource "azurerm_role_assignment" "app_storage_blob" {
-  scope                = azurerm_storage_container.deployments.resource_manager_id
+  # Scoped to the full storage account, not just the deployments container.
+  # The Functions host also needs access to azure-webjobs-secrets (for AzureWebJobsSecretStorageType=Blob)
+  # and any other containers it creates at runtime (e.g., azure-webjobs-hosts).
+  scope                = azurerm_storage_account.storage.id
   role_definition_name = "Storage Blob Data Owner"
   principal_id         = azurerm_function_app_flex_consumption.app.identity[0].principal_id
 }
