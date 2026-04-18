@@ -13,7 +13,7 @@ resource "azurerm_federated_identity_credential" "github_actions" {
   issuer              = "https://token.actions.githubusercontent.com"
 
   # Only the main branch can authenticate
-  subject = "repo:seamuslowry/hundred-and-ten-serverless:ref:refs/heads/main"
+  subject = "repo:seamuslowry/hundred-and-ten-serverless:ref:refs/heads/feat/migrate-flex-consumption-fc1" # TODO: revert
 }
 
 resource "azurerm_role_assignment" "github_deploy" {
