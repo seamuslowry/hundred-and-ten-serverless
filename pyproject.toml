@@ -15,7 +15,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
 ]
 dependencies = [
-    "azure-functions==1.24.0",
+    "azure-functions==2.1.0",
     "beanie==2.1.0",
     "cachecontrol==0.14.4",
     "fastapi==0.135.3",
