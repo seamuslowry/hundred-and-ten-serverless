@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
+from httpx import Response
 
 from src.auth import Identity
 from src.models.internal import Player
@@ -70,20 +71,20 @@ def completed_game(test_client: TestClient) -> dict[str, Any]:
     return get_game(test_client, game["id"], active_player_id)
 
 
-def request_suggestion(
+def request_suggestions(
     test_client: TestClient, game_id: str, player_id: str = DEFAULT_ID
-):
+) -> Response:
     """get the suggestion for the game"""
     return test_client.get(
-        f"/players/{player_id}/games/{game_id}/suggestion",
+        f"/players/{player_id}/games/{game_id}/suggestions",
         headers={"authorization": f"Bearer {player_id}"},
     )
 
 
 def get_suggestion(test_client: TestClient, game_id: str) -> dict[str, Any]:
     """get the suggestion for the game"""
-    resp = request_suggestion(test_client, game_id)
-    return resp.json()
+    resp = request_suggestions(test_client, game_id)
+    return resp.json()[0]
 
 
 def game_with_manual_player(test_client: TestClient) -> tuple[dict[str, Any], str]:

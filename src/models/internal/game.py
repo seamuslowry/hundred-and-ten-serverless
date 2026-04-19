@@ -2,32 +2,37 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import InitVar, dataclass, field
-from itertools import chain
 from typing import Optional, override
 from uuid import uuid4
 
-from hundredandten import Game as Engine
-from hundredandten.player import NaiveAutomatedPlayer
-from hundredandten.round import Round as EngineRound
+from hundredandten.automation import naive
+from hundredandten.automation.engineadapter import EngineAdapter, UnavailableActionError
+from hundredandten.engine import Game as Engine, Player as EnginePlayer
 
 from .actions import (
     Action,
     ActionFactory,
-    Bid,
     Card,
-    Discard,
     Event,
     GameEnd,
     GameStart,
     Play,
     RoundEnd,
     RoundStart,
-    SelectTrump,
     TrickEnd,
     TrickStart,
 )
 from .constants import Accessibility, CardSuit, GameStatus
-from .player import NaiveCpu, PlayerInGame, PlayerInRound
+from .errors import BadRequestError, InternalServerError
+from .player import (
+    ConcreteAction,
+    Human,
+    NaiveCpu,
+    NoAction,
+    PlayerInGame,
+    PlayerInRound,
+    RequestAutomation,
+)
 from .trick import Trick
 
 
@@ -111,7 +116,7 @@ class Game(BaseGame):
     _engine: Engine = field(init=False, repr=False)
 
     def __post_init__(self, initial_actions: Optional[list[Action]]):
-        self._engine = self.__initialize_engine(initial_actions or [])
+        self.__initialize_engine(initial_actions or [])
 
     @staticmethod
     def from_lobby(lobby: Lobby) -> "Game":
@@ -148,7 +153,7 @@ class Game(BaseGame):
     @property
     def active_player_id(self) -> str:
         """Get the current active player ID"""
-        return self._engine.active_round.active_player.identifier
+        return self._engine.active_player.identifier
 
     @property
     def dealer_player_id(self) -> str:
@@ -190,7 +195,7 @@ class Game(BaseGame):
                 bleeding=t.bleeding,
                 plays=[Play.from_engine(p) for p in t.plays],
                 winning_play=(
-                    Play.from_engine(t.winning_play) if t.winning_play else None
+                    Play.from_engine(t.winning_play) if len(t.plays) else None
                 ),
             )
             for t in self._engine.active_round.tricks
@@ -198,12 +203,95 @@ class Game(BaseGame):
 
     @property
     def events(self) -> list[Event]:
-        """Get all game events"""
+        """Get all game events via action-walking replay"""
+        replay_engine = Engine(
+            players=[EnginePlayer(p.id) for p in self.ordered_players],
+            seed=self.seed,
+        )
 
         return [
             GameStart(),
-            *chain.from_iterable(Game.__round_events(r) for r in self._engine.rounds),
-            *([] if not self.winner else [GameEnd(self.winner.id)]),
+            RoundStart(
+                dealer=replay_engine.active_round.dealer.identifier,
+                hands={
+                    p.identifier: [Card.from_engine(c) for c in p.hand]
+                    for p in replay_engine.active_round.players
+                },
+            ),
+            *(
+                event
+                for a in self.actions
+                for event in Game.__events_for_action(replay_engine, a)
+            ),
+            *(
+                [GameEnd(winner=replay_engine.winner.identifier)]
+                if replay_engine.winner
+                else []
+            ),
+        ]
+
+    @staticmethod
+    def __events_for_action(replay_engine: Engine, action: Action) -> list[Event]:
+        before_action_round_count = len(replay_engine.rounds)
+        before_action_trick_count = len(replay_engine.active_round.tricks)
+
+        replay_engine.act(action.to_engine())
+
+        after_action_round_count = len(replay_engine.rounds)
+        after_action_trick_count = len(replay_engine.active_round.tricks)
+
+        return [
+            # always include the action itself
+            action,
+            # if the action resulted in an ended trick, include TrickEnd
+            *(
+                [
+                    TrickEnd(
+                        winner=(
+                            replay_engine.active_round.tricks[-2]
+                            if replay_engine.active_round.tricks
+                            else replay_engine.rounds[-2].tricks[-1]
+                        ).winning_play.identifier
+                    )
+                ]
+                if before_action_trick_count > 0
+                and after_action_trick_count != before_action_trick_count
+                else []
+            ),
+            # if the action resulted in starting a trick, include TrickStart
+            *(
+                [TrickStart()]
+                if after_action_trick_count > before_action_trick_count
+                else []
+            ),
+            # if the action ended a round, include RoundEnd
+            *(
+                [
+                    RoundEnd(
+                        scores={
+                            s.identifier: s.value
+                            for s in replay_engine.rounds[-2].scores
+                        }
+                    )
+                ]
+                if after_action_round_count > before_action_round_count
+                or replay_engine.winner is not None
+                else []
+            ),
+            # if the action started a new round, include RoundStart
+            *(
+                [
+                    RoundStart(
+                        dealer=replay_engine.active_round.dealer.identifier,
+                        hands={
+                            p.identifier: [Card.from_engine(c) for c in p.hand]
+                            for p in replay_engine.active_round.players
+                        },
+                    )
+                ]
+                if after_action_round_count > before_action_round_count
+                else []
+            ),
         ]
 
     @property
@@ -219,6 +307,51 @@ class Game(BaseGame):
     def act(self, action: Action) -> None:
         """Perform a game action"""
         self._engine.act(action.to_engine())
+
+        self.__automated_act()
+
+    def __automated_act(self) -> None:
+        while (
+            not self.winner
+            and (
+                active_player := self.ordered_players.find_or_throw(
+                    self.active_player_id
+                )
+            )
+            is not None
+            and (action_request := active_player.next_action()) != NoAction()
+        ):
+            match action_request:
+                case ConcreteAction(action):
+                    try:
+                        self._engine.act(
+                            EngineAdapter.action_for(
+                                self._engine,
+                                active_player.id,
+                                lambda _: EngineAdapter.available_action_from_engine(
+                                    action.to_engine()
+                                ),
+                            )
+                        )
+                    except UnavailableActionError:
+                        assert isinstance(active_player, Human), (
+                            "Only Human players produce ConcreteAction; "
+                            f"got {active_player}"
+                        )
+                        self._update_game_player(active_player.clear_queued_actions())
+                case RequestAutomation():
+                    self._engine.act(
+                        EngineAdapter.action_for(
+                            self._engine,
+                            active_player.id,
+                            naive.action_for,
+                        )
+                    )
+                case _:  # pragma: no cover
+                    # type: ignore[unreachable]
+                    raise InternalServerError(
+                        f"Unable to process action request. Automation failing for {action_request}"
+                    )
 
     def get_player_in_round(self, player_id: str) -> PlayerInRound:
         """Return the representation of this player as they are in the round"""
@@ -236,15 +369,17 @@ class Game(BaseGame):
 
     def queue_action_for(self, player_id: str, action: Action) -> None:
         """Queue an action for a player"""
-        self._update_game_player(
-            self.ordered_players.find_or_throw(player_id).queue_action(action)
-        )
+        player = self.ordered_players.find_or_throw(player_id)
+        if not isinstance(player, Human):
+            raise BadRequestError("Cannot queue an action for an automated player")
+        self._update_game_player(player.queue_action(action))
 
     def clear_queued_actions_for(self, player_id: str) -> None:
         """Clear all queued actions for a player"""
-        self._update_game_player(
-            self.ordered_players.find_or_throw(player_id).clear_queued_actions()
-        )
+        player = self.ordered_players.find_or_throw(player_id)
+        if not isinstance(player, Human):
+            raise BadRequestError("Cannot queue actions for an automated player")
+        self._update_game_player(player.clear_queued_actions())
 
     def _update_game_player(self, new_player: PlayerInGame):
         """Update a game player and re-initialize the engine with that player"""
@@ -255,65 +390,30 @@ class Game(BaseGame):
         else:
             self.players[self.players.index(original_player)] = new_player
 
-        self._engine = self.__initialize_engine(self.actions)
+        self.__initialize_engine(self.actions)
 
-    def suggestion_for(self, player_id: str) -> Action:
-        """Return a suggested action for the given player"""
-        return ActionFactory.from_engine(
-            NaiveAutomatedPlayer(player_id).act(self._engine.game_state_for(player_id))
-        )
-
-    @staticmethod
-    def __round_events(r: EngineRound) -> list[Event]:
-        """Deserialize an engine round to the corresponding events"""
-        trick_events: list[list[Event]] = [
-            [
-                TrickStart(),
-                *[Play.from_engine(p) for p in trick.plays],
-                # don't include the trick end event if it hasn't ended
-                *(
-                    [TrickEnd(trick.winning_play.identifier)]
-                    if (trick.winning_play and len(trick.plays) == len(r.players))
-                    else []
-                ),
+    def suggestions_for(self, player_id: str) -> list[Action]:
+        """Return a list of suggested actions for the given player"""
+        try:
+            return [
+                ActionFactory.from_engine(
+                    EngineAdapter.action_for(
+                        self._engine,
+                        player_id,
+                        naive.action_for,
+                    )
+                )
             ]
-            for trick in r.tricks
-        ]
+        except UnavailableActionError:
+            return []  # if no suggestion is available, return an empty list
 
-        return [
-            RoundStart(
-                r.dealer.identifier,
-                {
-                    p.identifier: Game.__original_hand(r, p.identifier)
-                    for p in r.players
-                },
-            ),
-            *[Bid.from_engine(b) for b in r.bids],
-            *([SelectTrump.from_engine(r.selection)] if r.selection else []),
-            *[Discard.from_engine(b) for b in r.discards],
-            *[trick_event for event_list in trick_events for trick_event in event_list],
-            # don't include the round end event if it hasn't ended
-            *(
-                [RoundEnd(scores={s.identifier: s.value for s in r.scores})]
-                if r.completed
-                else []
-            ),
-        ]
-
-    @staticmethod
-    def __original_hand(r: EngineRound, player_id: str) -> list[Card]:
-        """Return the identified player's original hand"""
-        player = next(p for p in r.players if p.identifier == player_id)
-        discard = next((d for d in r.discards if d.identifier == player_id), None)
-
-        return [
-            Card.from_engine(c)
-            for c in (discard.cards + discard.kept if discard else player.hand)
-        ]
-
-    def __initialize_engine(self, actions: list[Action]) -> Engine:
-        return Engine(
-            players=[p.as_engine_player() for p in self.ordered_players],
+    def __initialize_engine(self, actions: list[Action]) -> None:
+        self._engine = Engine(
+            players=[EnginePlayer(p.id) for p in self.ordered_players],
             seed=self.seed,
-            initial_actions=[a.to_engine() for a in (actions or [])],
         )
+
+        for a in actions:
+            self._engine.act(a.to_engine())
+
+        self.__automated_act()

@@ -1,28 +1,27 @@
 """Internal models for actions"""
 
 from dataclasses import dataclass
-from typing import Self, Union
+from typing import Self
 
-from hundredandten.actions import (
-    Action as EngineAction,
-    Bid as EngineBid,
-    BidAmount as EngineBidAmount,
-    DetailedDiscard as EngineDetailedDiscard,
-    Discard as EngineDiscard,
-    Play as EnginePlay,
-    SelectTrump as EngineSelectTrump,
-)
-from hundredandten.constants import (
+from hundredandten.deck import (
+    Card as EngineCard,
     CardNumber as EngineCardNumber,
     CardSuit as EngineCardSuit,
     SelectableSuit as EngineSelectableSuit,
 )
-from hundredandten.deck import Card as EngineCard
+from hundredandten.engine import (
+    Action as EngineAction,
+    Bid as EngineBid,
+    BidAmount as EngineBidAmount,
+    Discard as EngineDiscard,
+    Play as EnginePlay,
+    SelectTrump as EngineSelectTrump,
+)
 
 from .constants import BidAmount, CardNumber, CardSuit
 
 
-@dataclass
+@dataclass(frozen=True)
 class Card:
     """Internal representation of a card"""
 
@@ -45,7 +44,7 @@ class Card:
         )
 
 
-@dataclass
+@dataclass(frozen=True)
 class Play:
     """Internal representation of a play"""
 
@@ -64,7 +63,7 @@ class Play:
         return EnginePlay(identifier=self.player_id, card=self.card.to_engine())
 
 
-@dataclass
+@dataclass(frozen=True)
 class Bid:
     """A class to keep track of bid information"""
 
@@ -85,7 +84,7 @@ class Bid:
         )
 
 
-@dataclass
+@dataclass(frozen=True)
 class SelectTrump:
     """A class to represent the select trump action"""
 
@@ -106,19 +105,19 @@ class SelectTrump:
         )
 
 
-@dataclass
+@dataclass(frozen=True)
 class Discard:
     """A class to keep track of one player's discard action"""
 
     player_id: str
-    cards: list[Card]
+    cards: tuple[Card, ...]
 
     @classmethod
     def from_engine(cls, engine_discard: EngineDiscard) -> Self:
         """Create an internal Discard from an engine Discard."""
         return cls(
             player_id=engine_discard.identifier,
-            cards=[Card.from_engine(c) for c in engine_discard.cards],
+            cards=tuple(Card.from_engine(c) for c in engine_discard.cards),
         )
 
     def to_engine(self) -> EngineDiscard:
@@ -128,7 +127,7 @@ class Discard:
         )
 
 
-type Action = Union[Bid, SelectTrump, Discard, Play]
+type Action = Bid | SelectTrump | Discard | Play
 
 
 class ActionFactory:
@@ -142,7 +141,7 @@ class ActionFactory:
                 return Bid.from_engine(a)
             case EngineSelectTrump():
                 return SelectTrump.from_engine(a)
-            case EngineDiscard() | EngineDetailedDiscard():
+            case EngineDiscard():
                 return Discard.from_engine(a)
             case EnginePlay():
                 return Play.from_engine(a)
@@ -151,12 +150,12 @@ class ActionFactory:
         )  # pragma: nocover
 
 
-@dataclass
+@dataclass(frozen=True)
 class GameStart:
     """A class to represent the start of game event"""
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoundStart:
     """A class to represent the start of round event"""
 
@@ -164,34 +163,32 @@ class RoundStart:
     hands: dict[str, list[Card]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class TrickStart:
     """A class to represent the start of trick event"""
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoundEnd:
     """A class to represent the end of round event"""
 
     scores: dict[str, int]
 
 
-@dataclass
+@dataclass(frozen=True)
 class TrickEnd:
     """A class to represent the end of trick event"""
 
     winner: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class GameEnd:
     """A class to represent the end of game event"""
 
     winner: str
 
 
-type DerivedEvent = Union[
-    GameStart, RoundStart, TrickStart, TrickEnd, RoundEnd, TrickEnd, GameEnd
-]
+type DerivedEvent = GameStart | RoundStart | TrickStart | TrickEnd | RoundEnd | GameEnd
 
-type Event = Union[Action, DerivedEvent]
+type Event = Action | DerivedEvent

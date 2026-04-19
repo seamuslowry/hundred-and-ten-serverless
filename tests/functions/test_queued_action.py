@@ -107,10 +107,14 @@ def test_only_human_players_queue(client: TestClient):
     game = started_game(client)
 
     # attempt queue action on automated player
+    automated_player = game["players"][-1]
+    assert (
+        automated_player["type"] == "cpu-easy"
+    ), f"Expected last player to be cpu-easy, got {automated_player['type']}"
     resp = client.post(
-        f"/players/{game['players'][-1]['id']}/games/{game['id']}/queued-actions",
+        f"/players/{automated_player['id']}/games/{game['id']}/queued-actions",
         json={"type": "BID", "amount": BidAmount.SHOOT_THE_MOON},
-        headers={"authorization": f"Bearer {game['players'][-1]['id']}"},
+        headers={"authorization": f"Bearer {automated_player['id']}"},
     )
     assert 400 == resp.status_code
 
@@ -120,9 +124,13 @@ def test_only_human_players_clear_queue(client: TestClient):
     game = started_game(client)
 
     # attempt clear queue action on automated player
+    automated_player = game["players"][-1]
+    assert (
+        automated_player["type"] == "cpu-easy"
+    ), f"Expected last player to be cpu-easy, got {automated_player['type']}"
     resp = client.delete(
-        f"/players/{game['players'][-1]['id']}/games/{game['id']}/queued-actions",
-        headers={"authorization": f"Bearer {game['players'][-1]['id']}"},
+        f"/players/{automated_player['id']}/games/{game['id']}/queued-actions",
+        headers={"authorization": f"Bearer {automated_player['id']}"},
     )
     assert 400 == resp.status_code
 

@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 import azure.functions as func
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
-from hundredandten.errors import HundredAndTenError
+from hundredandten.engine.errors import HundredAndTenError
 
 from src.auth import (
     get_authorized_identity_for_path_player,

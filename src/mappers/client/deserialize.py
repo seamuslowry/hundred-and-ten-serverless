@@ -23,7 +23,7 @@ def action(player_id: str, c_action: requests.ActRequest) -> internal.Action:
                 player_id, internal.CardSuit[c_action.suit.value]
             )
         case requests.DiscardRequest():
-            return internal.Discard(player_id, [__card(c) for c in c_action.cards])
+            return internal.Discard(player_id, tuple(__card(c) for c in c_action.cards))
         case requests.PlayRequest():
             return internal.Play(player_id, __card(c_action.card))
 
