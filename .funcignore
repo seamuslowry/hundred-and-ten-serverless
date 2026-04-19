@@ -10,3 +10,6 @@ references
 requirements-*.txt
 .isort.cfg
 docker-compose.yml
+docs
+docker-compose.test.yml
+README.md
