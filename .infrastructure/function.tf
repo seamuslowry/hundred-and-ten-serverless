@@ -98,8 +98,6 @@ resource "azurerm_function_app_flex_consumption" "app" {
   }
 
   app_settings = {
-    # "AzureWebJobsStorage__accountName" = azurerm_storage_account.storage.name
-    # "AzureWebJobsStorage__credential"  = "managedidentity"
     "DatabaseName"                     = "prod"
     "MongoDb"                           = azurerm_cosmosdb_account.db.primary_mongodb_connection_string
   }
