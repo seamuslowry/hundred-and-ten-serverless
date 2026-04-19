@@ -3,10 +3,12 @@ The entrypoint for azure functions, wrapping a FastAPI app via AsgiFunctionApp
 """
 
 from contextlib import asynccontextmanager
+import os
 
 import azure.functions as func
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from hundredandten.engine.errors import HundredAndTenError
 
 from src.auth import (
@@ -42,6 +44,22 @@ fastapi_app = FastAPI(
     dependencies=[Depends(get_authorized_identity_for_path_player)], lifespan=lifespan
 )
 
+
+# =============================================================================
+# CORS middleware
+# =============================================================================
+
+
+fastapi_app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        *(os.getenv("CORS_ORIGINS", "").split(",") if os.getenv("CORS_ORIGINS") else [])
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # =============================================================================
 # Exception handlers
