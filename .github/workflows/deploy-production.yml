@@ -1,4 +1,4 @@
-name: Deploy to Staging
+name: Deploy to Production
 on:
   push:
     branches:
@@ -30,10 +30,9 @@ jobs:
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Deploy to staging slot
+      - name: Deploy to production
         uses: Azure/functions-action@v1
         with:
           app-name: hundredandten
-          slot-name: staging
           package: .
           respect-funcignore: true

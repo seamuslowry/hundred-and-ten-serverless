@@ -17,9 +17,8 @@ resource "azurerm_federated_identity_credential" "github_actions" {
 }
 
 resource "azurerm_role_assignment" "github_deploy" {
-  # Scoped to the function app (includes all slots). The deploy action validates
-  # the parent app before targeting a slot, so slot-only scope is insufficient.
-  scope                = azurerm_linux_function_app.app.id
+  # Scoped to the function app. The deploy action needs Contributor on the app.
+  scope                = azurerm_function_app_flex_consumption.app.id
   role_definition_name = "Contributor"
   principal_id         = azurerm_user_assigned_identity.github_deploy.principal_id
 }
