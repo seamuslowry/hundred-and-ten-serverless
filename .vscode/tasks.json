@@ -11,7 +11,7 @@
     {
       "label": "uv sync",
       "type": "shell",
-      "command": "uv sync --locked",
+      "command": "uv sync --inexact --locked",
       "problemMatcher": []
     }
   ]
