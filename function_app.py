@@ -52,14 +52,11 @@ fastapi_app = FastAPI(
 
 fastapi_app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        *(
-            os.getenv("CORS_ORIGINS", "").split(",")
-            if os.getenv("CORS_ORIGINS")
-            else []
-        ),
-    ],
+    allow_origins=(
+        os.getenv("CORS_ORIGINS", "").split(",")
+        if os.getenv("CORS_ORIGINS")
+        else ["http://localhost:3000"]
+    ),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
