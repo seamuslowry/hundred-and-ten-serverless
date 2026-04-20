@@ -1,3 +1,7 @@
+locals {
+  cors_origins = "http://localhost:3000"
+}
+
 resource "azurerm_resource_group" "group" {
   name     = "hundredandten"
   location = "eastus"
@@ -99,7 +103,8 @@ resource "azurerm_function_app_flex_consumption" "app" {
 
   app_settings = {
     "DatabaseName"                     = "prod"
-    "MongoDb"                           = azurerm_cosmosdb_account.db.primary_mongodb_connection_string
+    "MongoDb"                          = azurerm_cosmosdb_account.db.primary_mongodb_connection_string,
+    "CORS_ORIGINS"                     = local.cors_origins
   }
 
   tags = {
@@ -110,6 +115,11 @@ resource "azurerm_function_app_flex_consumption" "app" {
 
   site_config {
     application_insights_connection_string = azurerm_application_insights.insights.connection_string
+
+    cors {
+      allowed_origins = split(",", local.cors_origins)
+      support_credentials = true
+    }
   }
 }
 
