@@ -1,5 +1,5 @@
 locals {
-  cors_origins = "http://localhost:5173"
+  cors_origins = "http://localhost:5173,https://salmon-island-0bfaede0f.7.azurestaticapps.net"
 }
 
 resource "azurerm_resource_group" "group" {
