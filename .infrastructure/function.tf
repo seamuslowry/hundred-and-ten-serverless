@@ -1,5 +1,5 @@
 locals {
-  cors_origins = "http://localhost:3000"
+  cors_origins = "http://localhost:5173"
 }
 
 resource "azurerm_resource_group" "group" {
