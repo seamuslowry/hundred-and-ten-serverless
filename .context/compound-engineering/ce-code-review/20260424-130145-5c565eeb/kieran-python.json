@@ -1,0 +1,71 @@
+{
+  "reviewer": "kieran-python",
+  "findings": [
+    {
+      "id": "KP-1",
+      "priority": "P1",
+      "confidence": 80,
+      "file": "src/models/internal/round.py",
+      "lines": "10-23",
+      "title": "Mutable Round dataclass breaks the frozen-dataclass contract of the internal model layer",
+      "detail": "Every other internal model that carries domain state uses `@dataclass(frozen=True)` (NoAction, ConcreteAction, RequestAutomation, Card, Play, Bid, SelectTrump, Discard, Trick, …). Round is the only exception and it is mutable by design so the action-walking loop can accumulate state. The problem is not the mutability per se — the replay loop genuinely needs to build up a Round incrementally — but the chosen shape leaks that build-up concern into the public model type. A reader of `rounds -> list[Round]` sees a frozen-looking dataclass with `completed: bool = False` and mutable list fields and has to mentally reconstruct the builder pattern from the loop body. The codebase convention is that internal models are value objects; Round is a builder disguised as a value object.",
+      "suggestion": "Introduce a private `_RoundBuilder` (plain mutable dataclass or a simple class) used only inside `Game.rounds`, and convert it to a `frozen=True` Round at the point it is appended to `completed_rounds` or returned as the active round. This keeps the public `Round` type consistent with the rest of the layer and makes the builder intent explicit. If the plan explicitly decided against this, a comment on the class explaining why it is intentionally mutable would at minimum prevent future readers from 'fixing' it."
+    },
+    {
+      "id": "KP-2",
+      "priority": "P1",
+      "confidence": 75,
+      "file": "src/mappers/client/serialize.py",
+      "lines": "113-115",
+      "title": "assert statements in __spike_round guard invariants that should raise InternalServerError",
+      "detail": "Lines 114-115 (`assert round_.trump is not None`, `assert round_.bid_amount is not None`) are inside a private serializer function that is called from a request handler path. In production Python, `assert` statements can be stripped by the `-O` flag, and even without that flag they raise `AssertionError`, not `InternalServerError`. The existing codebase pattern (lines 23, 44, 47, 90 in the same file) uses bare `assert` only for invariants that are guaranteed by the call site (e.g. 'games sent to clients will be saved and have an id'). The two new asserts are different: they guard a logical invariant derived from the Round's internal state (`completed and bidder is not None` implies trump and bid_amount are set), which is a domain rule that could be violated by a bug in the replay logic. If that invariant is ever broken, the caller gets an `AssertionError` with no HTTP mapping, producing a 500 with a confusing traceback rather than a clean `InternalServerError`.",
+      "suggestion": "Replace with explicit guards that raise `InternalServerError` (already imported), matching the codebase's error-handling pattern:\n```python\nif round_.trump is None or round_.bid_amount is None:\n    raise InternalServerError(\n        'Completed round with bidder is missing trump or bid_amount'\n    )\n```\nAlternatively, if the frozen-dataclass refactor from KP-1 is adopted, a `CompletedRound` type with non-Optional trump/bid_amount fields would eliminate the need for these guards entirely."
+    },
+    {
+      "id": "KP-3",
+      "priority": "P2",
+      "confidence": 70,
+      "file": "src/models/internal/round.py",
+      "lines": "4",
+      "title": "Optional imported from typing instead of using X | None syntax (Python 3.14 target)",
+      "detail": "The project targets Python 3.14 (`target-version = 'py314'` in pyproject.toml). The rest of the codebase uses `Optional[X]` from `typing` in older files (game.py, player.py, trick.py), but round.py is a new file added in this diff and could set the modern standard. PEP 604 (`X | None`) has been idiomatic since 3.10 and is what ruff/pyright prefer at this target version. Using `Optional[str]` in a brand-new file on a 3.14 target is a minor inconsistency that will accumulate if not addressed at introduction.",
+      "suggestion": "Replace `from typing import Optional` and all `Optional[X]` annotations in round.py with `X | None` syntax:\n```python\nbidder: str | None = None\nbid_amount: int | None = None\ntrump: CardSuit | None = None\nscores: dict[str, int] | None = None\n```\nThis is a low-effort change that keeps the new file consistent with the project's stated Python version target."
+    },
+    {
+      "id": "KP-4",
+      "priority": "P3",
+      "confidence": 55,
+      "file": "src/models/internal/game.py",
+      "lines": "356-366",
+      "title": "current_round.tricks = [...] list replacement is a subtle mutation pattern on a mutable dataclass",
+      "detail": "At round completion, `current_round.tricks` is replaced wholesale via assignment (`current_round.tricks = [Trick(...) for t in ...]`). Earlier in the active-round path (lines 393-403), tricks are accumulated via `.append()`. These two patterns for the same field on the same object are inconsistent and require the reader to understand why one replaces and the other appends. The replacement is correct (completed round tricks come from the engine's authoritative record, not the incremental accumulation), but the asymmetry is non-obvious. This is a direct consequence of the mutable Round design (KP-1); it would not exist with a builder pattern.",
+      "detail_secondary": "This is flagged as P3 because the code is correct and the comment on line 355 ('Read all tricks from the completed engine round') partially explains the intent. The real fix is KP-1."
+    }
+  ],
+  "residual_risks": [
+    {
+      "id": "RR-1",
+      "title": "SpikeActiveRound.status is typed as Literal['BIDDING', 'TRUMP_SELECTION', 'DISCARD', 'TRICKS'] but populated via m_game.status.name with a type: ignore",
+      "detail": "Line 154 in serialize.py uses `status=m_game.status.name` with `# type: ignore[arg-type]`. This means if a new GameStatus value is added that is neither WON nor one of the four active statuses, the serializer will silently produce an invalid Literal value that Pydantic will reject at runtime with a validation error rather than a clean domain error. The type: ignore suppresses the static check that would catch this. The risk is low today (the status set is stable) but the ignore comment is a maintenance trap.",
+      "severity": "low"
+    },
+    {
+      "id": "RR-2",
+      "title": "get_spike_game helper in tests/helpers.py returns dict[str, Any] without asserting HTTP 200",
+      "detail": "The helper returns `.json()` unconditionally. If the endpoint returns a 4xx/5xx, the caller gets a dict like `{'detail': 'Not found'}` and the test assertion fails with a confusing KeyError rather than a clear HTTP status failure. The existing `get_game`, `get_events` helpers have the same pattern, so this is consistent with the codebase — but it is a latent readability issue for test failures.",
+      "severity": "low"
+    }
+  ],
+  "testing_gaps": [
+    {
+      "id": "TG-1",
+      "title": "No test covers the assert/invariant path in __spike_round for a completed round with bidder but missing trump or bid_amount",
+      "detail": "The two assert statements on lines 114-115 are unreachable under normal operation (the replay logic always sets trump and bid_amount before marking completed=True with a bidder). But if KP-2 is addressed by converting them to explicit raises, the new raise path would need a test. Currently there is no unit test that constructs a Round with completed=True, bidder set, but trump=None to verify the error path. This is a 100%-branch-coverage gap waiting to happen if the guards are made explicit."
+    },
+    {
+      "id": "TG-2",
+      "title": "test_completed_game_has_all_pass_rounds asserts len > 0 but does not verify the no-bidder round structure beyond presence",
+      "detail": "The test confirms at least one COMPLETED_NO_BIDDERS round exists and checks hands/tricks/trump absence, but does not verify that bid_history is present and non-empty (all-pass rounds should have 4 pass bids). A regression that accidentally drops bid_history from the no-bidder path would not be caught."
+    }
+  ]
+}

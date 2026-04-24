@@ -108,8 +108,14 @@ def test_all_pass_rounds_have_hands_but_no_tricks(client: TestClient):
     for round_ in spike["rounds"]:
         if round_["status"] == "COMPLETED_NO_BIDDERS":
             assert len(round_["hands"]) == 4
-            assert "tricks" not in round_ or round_.get("tricks") is None
-            assert "trump" not in round_ or round_.get("trump") is None
+            # COMPLETED_NO_BIDDERS rounds only have: status, dealer, bid_history, hands, scores
+            assert set(round_.keys()) == {
+                "status",
+                "dealer",
+                "bid_history",
+                "hands",
+                "scores",
+            }
             break
 
 

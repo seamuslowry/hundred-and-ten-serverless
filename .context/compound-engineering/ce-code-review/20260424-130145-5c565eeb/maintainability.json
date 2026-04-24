@@ -1,0 +1,93 @@
+{
+  "reviewer": "maintainability",
+  "findings": [
+    {
+      "id": "M-01",
+      "priority": "P1",
+      "confidence": 85,
+      "title": "\"spike\" naming leaks temporary implementation intent into long-lived identifiers",
+      "location": [
+        "src/routers/games.py:46-51",
+        "src/mappers/client/serialize.py:85-104",
+        "src/models/client/responses.py:282-353",
+        "tests/functions/test_spike_game.py"
+      ],
+      "description": "The word 'spike' appears in route paths (/spike), function names (spike_game, spike_game_info, __spike_round, __spike_bid, __spike_trick), response model class names (SpikeGame, SpikeRound, SpikeCompletedRound, SpikeCompletedNoBiddersRound, SpikeActiveRound, SpikeBid, SpikeTrick), and test file names (test_spike_game.py). 'Spike' is an engineering term for a time-boxed exploratory prototype — it signals 'this is temporary, do not rely on it'. If this endpoint is intended to become the canonical round-based game view, every one of these identifiers will need to be renamed, touching the router, serializer, response models, tests, and any API consumers. The rename cost is proportional to how widely the name has already spread. If the endpoint is genuinely temporary, the URL path /spike is fine but the Pydantic response models (SpikeGame, SpikeCompletedRound, etc.) are already being exported from the responses module and imported in the router — they are not isolated to a spike branch.",
+      "recommendation": "Decide now whether this is the permanent round-based endpoint. If yes, rename to reflect intent: RoundGame, RoundBasedGame, or simply extend the existing Game response hierarchy. If it is genuinely exploratory and will be deleted, add a TODO/FIXME comment to every exported symbol and do not export the response models from the top-level responses module."
+    },
+    {
+      "id": "M-02",
+      "priority": "P1",
+      "confidence": 80,
+      "title": "Game.rounds duplicates the replay-engine scaffolding from Game.events without a shared abstraction",
+      "location": [
+        "src/models/internal/game.py:208-235",
+        "src/models/internal/game.py:301-406"
+      ],
+      "description": "Both Game.events and Game.rounds independently: (1) construct a fresh Engine with the same players and seed, (2) iterate self.actions replaying each action via replay_engine.act(), (3) detect round boundaries by comparing before/after len(replay_engine.rounds), and (4) detect game-end via replay_engine.winner. The boundary-detection logic in rounds (lines 342-353) is a near-duplicate of the same logic in __events_for_action (lines 281-298). The two properties will diverge independently as the engine evolves — e.g. if the round-boundary condition changes, it must be updated in two places. The replay engine construction (lines 304-307 vs 211-214) is identical boilerplate. A caller that needs both events and rounds for the same game will also replay the engine twice.",
+      "recommendation": "Extract a private __replay_engine() method or a __walk_actions(callback) helper that owns the engine construction and action-walking loop. Both events and rounds can then register callbacks for round-boundary events rather than duplicating the detection logic. At minimum, extract the engine construction into a shared helper to eliminate the copy-paste."
+    },
+    {
+      "id": "M-03",
+      "priority": "P2",
+      "confidence": 75,
+      "title": "Round dataclass is mutable while all other internal models are frozen dataclasses",
+      "location": [
+        "src/models/internal/round.py:10-23",
+        "src/models/internal/game.py:326-376"
+      ],
+      "description": "The project's stated quality standard is 'Frozen dataclasses for internal models — immutability by default'. Round is the only internal model dataclass that is not frozen. It is mutated in-place across the action-walking loop in Game.rounds (bid_history.append, bidder assignment, trump assignment, discards dict mutation, tricks list assignment, scores assignment, completed flag flip). This is a deliberate design choice to accumulate round state incrementally, but it breaks the established pattern. A future developer reading round.py will not see @dataclass(frozen=True) and may not realize the mutation is intentional and load-bearing. It also means Round cannot be used as a dict key or in a set, and equality semantics differ from every other internal model.",
+      "recommendation": "Either (a) document explicitly in the class docstring that Round is intentionally mutable and explain why, or (b) refactor Game.rounds to build Round instances immutably by collecting all fields before constructing each Round. Option (b) aligns with the project pattern; option (a) is lower risk for this PR."
+    },
+    {
+      "id": "M-04",
+      "priority": "P2",
+      "confidence": 70,
+      "title": "__spike_round discriminates on two independent booleans rather than a single state enum",
+      "location": [
+        "src/mappers/client/serialize.py:107-171"
+      ],
+      "description": "The function branches on round_.completed (bool) and round_.bidder (Optional[str]) as two separate conditions: 'if completed and bidder is not None' → COMPLETED, 'if completed and bidder is None' → COMPLETED_NO_BIDDERS, implicit else → active. This is a two-field discriminated union encoded as two booleans, which means the combination (completed=False, bidder=not None) is structurally possible but semantically invalid — a non-completed round can have a bidder mid-round. The function silently falls through to the active-round branch in that case, which is correct today but fragile: if Round ever gains a fourth state (e.g. ABANDONED), the function will silently misclassify it as an active round. The assert statements on lines 114-115 partially guard the COMPLETED+bidder branch but there is no exhaustiveness check.",
+      "recommendation": "Add a Round.status property (or a RoundStatus enum field) that encodes the three states explicitly, then use a match statement in __spike_round. This makes the discriminator a single field, makes new states visible at compile time, and removes the implicit 'else = active' assumption."
+    },
+    {
+      "id": "M-05",
+      "priority": "P3",
+      "confidence": 65,
+      "title": "Active-round visibility dict comprehensions with inline ternaries reduce readability",
+      "location": [
+        "src/mappers/client/serialize.py:157-163"
+      ],
+      "description": "The hands and discards comprehensions in the active-round branch each embed a ternary that switches between two different types (list[Card] vs int) based on pid == client_player_id. The same pattern appears in __event for RoundStart (lines 286-292) and DiscardAction (lines 314-318), so it is not novel, but in __spike_round both comprehensions appear back-to-back with identical structure. The type-switching ternary inside a dict comprehension is a non-obvious pattern — the return type of the comprehension value changes based on the key, which is unusual Python. A reader must parse the ternary carefully to understand that the dict is heterogeneous by design.",
+      "recommendation": "Extract a small helper, e.g. __visible_hand(pid, hand, client_player_id) -> list[Card] | int, and call it from both comprehensions. This names the visibility concept, makes the comprehensions one-liners, and makes the pattern reusable if a third call site appears."
+    }
+  ],
+  "residual_risks": [
+    {
+      "id": "RR-01",
+      "title": "Double replay-engine cost on spike endpoint",
+      "description": "spike_game_info calls serialize.spike_game which calls m_game.rounds, which replays the full action log through a fresh engine. If a caller ever needs both the existing game response and the spike response for the same game (e.g. a future combined endpoint), the engine will be replayed twice. For long games this is O(n) engine operations twice. Not a correctness issue today, but worth noting as the endpoint matures.",
+      "severity": "low"
+    },
+    {
+      "id": "RR-02",
+      "title": "SpikeActiveRound.status Literal type is not exhaustive against GameStatus",
+      "description": "SpikeActiveRound.status is typed as Literal['BIDDING', 'TRUMP_SELECTION', 'DISCARD', 'TRICKS']. The serialize code passes m_game.status.name with a type: ignore comment (line 154). If GameStatus gains a new non-WON status (e.g. ABANDONED), the Literal will silently accept it at runtime but the type annotation will be wrong. The type: ignore suppresses the warning that would catch this.",
+      "severity": "low"
+    }
+  ],
+  "testing_gaps": [
+    {
+      "id": "TG-01",
+      "title": "No test for a game where the active round already has a bidder (mid-round, post-bidding phase)",
+      "description": "test_spike_serialize.py and test_spike_game.py cover BIDDING status for the active round but do not cover TRUMP_SELECTION, DISCARD, or TRICKS status. The __spike_round active branch sets bidder, bid_amount, trump, and tricks from the Round object — these fields are only populated in post-bidding phases. A test that advances past bidding would exercise the ternary visibility logic for discards (which are empty in BIDDING) and confirm trump serialization in the active round.",
+      "location": "tests/mappers/test_spike_serialize.py, tests/functions/test_spike_game.py"
+    },
+    {
+      "id": "TG-02",
+      "title": "test_completed_game_round_count weakened from exact count to 'more than one'",
+      "description": "The diff changes test_completed_game_round_count to test_completed_game_has_multiple_rounds, dropping the assertion that len(g.rounds) == len(g._engine.rounds). The new test only asserts > 1. This removes a precise regression guard: if Game.rounds ever drops a round (e.g. off-by-one in the boundary detection), the test will still pass as long as at least two rounds are returned. The original assertion was tighter and more valuable.",
+      "location": "tests/mappers/test_game_rounds.py:84-87"
+    }
+  ]
+}

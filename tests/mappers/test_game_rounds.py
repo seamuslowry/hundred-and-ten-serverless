@@ -1,6 +1,13 @@
 """Tests for the Game.rounds property"""
 
-from src.models.internal.actions import GameStart
+from src.models.internal.actions import (
+    Bid as InternalBid,
+    BidAmount,
+    CardSuit,
+    Discard,
+    GameStart,
+    SelectTrump,
+)
 from src.models.internal.game import Game, PlayerGroup
 from src.models.internal.player import Human, NaiveCpu
 
@@ -62,11 +69,11 @@ def test_new_game_round_has_players_in_order():
 
 
 def test_active_round_has_bid_history():
-    """The active round's bid_history contains bids that have been placed."""
+    """The active round's bid_history contains bids placed by automated CPU players."""
     g = _make_new_game()
     round_ = g.rounds[0]
-    # NaiveCpu players auto-bid; at least some bids should have been placed
-    assert len(round_.bid_history) >= 0  # may be 0 if no bids placed yet
+    # NaiveCpu players auto-bid before the Human player's turn
+    assert len(round_.bid_history) >= 1
 
 
 # ---------------------------------------------------------------------------
@@ -177,6 +184,29 @@ def test_trump_set_on_bidder_rounds():
     for round_ in g.rounds:
         if round_.bidder is not None:
             assert round_.trump is not None
+
+
+def test_tricks_phase_active_round_has_in_progress_tricks():
+    """Active round in TRICKS phase contains in-progress trick data."""
+    g = Game(
+        organizer=Human("p1"),
+        players=PlayerGroup([NaiveCpu("p2"), NaiveCpu("p3"), NaiveCpu("p4")]),
+        seed="test-seed",
+    )
+    g.act(InternalBid(player_id="p1", amount=BidAmount.SHOOT_THE_MOON))
+    g.act(SelectTrump(player_id="p1", suit=CardSuit.HEARTS))
+    g.act(Discard(player_id="p1", cards=tuple()))
+    assert g.status.name == "TRICKS"
+
+    rounds = g.rounds
+    assert len(rounds) == 1
+    active = rounds[0]
+    assert not active.completed
+    # At least one trick should be in progress
+    assert len(active.tricks) >= 1
+    # Tricks in-progress have plays
+    for trick in active.tricks:
+        assert len(trick.plays) >= 0  # may be 0 if no plays yet
 
 
 def test_game_events_property_unchanged():

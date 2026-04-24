@@ -1,0 +1,105 @@
+{
+  "reviewer": "testing",
+  "findings": [
+    {
+      "id": "T1",
+      "severity": "critical",
+      "confidence": 95,
+      "title": "Vacuous assertion: `assert len(round_.bid_history) >= 0` always passes",
+      "location": "tests/mappers/test_game_rounds.py:69",
+      "description": "The assertion `len(round_.bid_history) >= 0` is a tautology — list length is never negative. The comment acknowledges it 'may be 0', but that means the test never actually verifies that bid_history is populated or even that the property is wired correctly. A bug that returned `None` instead of a list would raise `TypeError` (not an `AssertionError`), which would surface as a test error rather than a clean failure, but a bug that returned an empty list when bids had been placed would pass silently. The test provides zero behavioral signal.",
+      "fix": "Either assert `len(round_.bid_history) > 0` (NaiveCpu players auto-bid, so bids will have been placed by the time the Human player acts), or remove the test entirely. If the intent is to verify the field exists and is a list, assert `isinstance(round_.bid_history, list)`."
+    },
+    {
+      "id": "T2",
+      "severity": "high",
+      "confidence": 90,
+      "title": "Vacuous assertion: `'tricks' not in round_` is always True for COMPLETED_NO_BIDDERS rounds",
+      "location": "tests/functions/test_spike_game.py:111",
+      "description": "`SpikeCompletedNoBiddersRound` has no `tricks` field in its Pydantic model (confirmed: model fields are `['status', 'dealer', 'bid_history', 'hands', 'scores']`). When serialized to JSON and returned by the HTTP endpoint, the dict will never contain a `tricks` key. The assertion `'tricks' not in round_ or round_.get('tricks') is None` is therefore always True regardless of what the serializer does. The same applies to `'trump' not in round_`. These assertions cannot catch a regression where `tricks` or `trump` are accidentally added to the model.",
+      "fix": "Replace with a positive assertion on what IS present: `assert set(round_.keys()) == {'status', 'dealer', 'bid_history', 'hands', 'scores'}`. This would actually fail if `tricks` or `trump` were accidentally added to the model."
+    },
+    {
+      "id": "T3",
+      "severity": "high",
+      "confidence": 85,
+      "title": "Missing test: active round in TRICKS phase — untested in both unit and integration layers",
+      "location": "tests/mappers/test_game_rounds.py, tests/mappers/test_spike_serialize.py, tests/functions/test_spike_game.py",
+      "description": "All active-round tests use a freshly started game in BIDDING phase. No test advances the game to TRICKS phase (after bidding, trump selection, and discarding) and then calls `Game.rounds` or `serialize.spike_game`. This leaves several branches uncovered: (1) `Game.rounds` lines 391-403 — the loop that reads in-progress tricks from the active engine round is never exercised with actual tricks present; (2) `__spike_round` in the serializer — the `tricks=[__spike_trick(t) for t in round_.tricks]` line for an active round with non-empty tricks; (3) the `discards` visibility dict comprehension in `__spike_round` — the BIDDING-phase test asserts `discards == {}`, so the `pid == client_player_id` branch inside the discards comprehension is never hit.",
+      "fix": "Add a test fixture that advances a Human-led game to TRICKS phase (Bid -> SelectTrump -> Discard) and then asserts: (a) `round_.tricks` is non-empty, (b) `round_.status == 'TRICKS'`, (c) discards for self are card lists and discards for others are integers."
+    },
+    {
+      "id": "T4",
+      "severity": "high",
+      "confidence": 80,
+      "title": "Missing test: discards visibility (list vs int) for active round at HTTP integration level",
+      "location": "tests/functions/test_spike_game.py",
+      "description": "The serializer applies visibility rules to `discards` in the active round: `pid == client_player_id` → card list, else → integer count. The integration tests never reach a game state where discards exist in the active round. `test_new_game_single_active_bidding_round` asserts `discards == {}` (correct for BIDDING phase, but no discards to check visibility on). No integration test advances to DISCARD or TRICKS phase and verifies that the requesting player sees their own discards as cards while other players' discards are integers. This is the HTTP-level analogue of the missing TRICKS-phase unit test.",
+      "fix": "Add an integration test that: starts a game with a manual Human player, advances to DISCARD phase, has the manual player discard, then calls `get_spike_game` as both the manual player and the organizer and asserts the correct visibility for each."
+    },
+    {
+      "id": "T5",
+      "severity": "medium",
+      "confidence": 75,
+      "title": "Missing branch: NaiveCpu as requesting player in active round (`isinstance(requesting_player, internal.Human)` else branch)",
+      "location": "src/mappers/client/serialize.py:148-150, tests/mappers/test_spike_serialize.py",
+      "description": "In `__spike_round`, the queued_actions for the active round are computed as `[suggestion(a) for a in requesting_player.queued_actions] if isinstance(requesting_player, internal.Human) else []`. Every test that calls `serialize.spike_game` on an active game uses a Human player as the `client_player_id` (p1 or p2, both Human). No test calls `spike_game(g, 'p3')` where p3 is a NaiveCpu, which would exercise the `else []` branch. With 100% branch coverage enforced, this branch must be hit.",
+      "fix": "Add a test: `result = serialize.spike_game(g, 'p3')` where p3 is NaiveCpu, then assert `active.queued_actions == []`."
+    },
+    {
+      "id": "T6",
+      "severity": "medium",
+      "confidence": 70,
+      "title": "Missing branch: `if t.plays` filter in `Game.rounds` active round path may never be False",
+      "location": "src/models/internal/game.py:392",
+      "description": "The active-round trick accumulation loop filters with `if engine_trick.plays` to skip empty/in-progress tricks. For this filter to have a False branch, the engine would need to have a trick object with zero plays in the active round. With NaiveCpu auto-play, by the time `Game.rounds` is called, the engine has already auto-played all CPU turns, so any trick in the active round will have at least one play. The False branch (empty trick skipped) may be unreachable in practice, which would cause the 100% branch coverage gate to fail.",
+      "fix": "Verify empirically whether the engine ever produces a zero-play trick in the active round. If not, the guard is dead code and should be removed (or marked `# pragma: no cover`). If it is reachable, add a test that exercises it."
+    },
+    {
+      "id": "T7",
+      "severity": "medium",
+      "confidence": 65,
+      "title": "Missing branch: `round_.scores or {}` None-scores path in `__spike_round` for completed rounds",
+      "location": "src/mappers/client/serialize.py:131, 142",
+      "description": "`Round.scores` is `Optional[dict[str, int]]` defaulting to `None`. The serializer uses `round_.scores or {}` as a guard. For completed rounds, `scores` is always set by `Game.rounds` (line 375: `current_round.scores = score_totals`). The `or {}` fallback is therefore dead code for the paths that reach `__spike_round` with a completed round. The 100% branch coverage gate will flag the falsy branch of `round_.scores or {}` as uncovered.",
+      "fix": "Either add a unit test that directly calls `__spike_round` with a Round where `scores=None` (requires making the private function accessible or testing via a crafted scenario), or remove the `or {}` guard and assert `round_.scores is not None` before use, marking the unreachable path explicitly."
+    }
+  ],
+  "residual_risks": [
+    {
+      "id": "RR1",
+      "severity": "medium",
+      "title": "test_completed_game_scores_sum_to_cumulative iterates ALL rounds including COMPLETED_NO_BIDDERS, but COMPLETED_NO_BIDDERS rounds may have zero scores",
+      "description": "The integration test (line 122-129) sums `round_['scores']` for every round. If a COMPLETED_NO_BIDDERS round has an empty `scores` dict, the loop body `for pid, v in round_['scores'].items()` simply does nothing — which is correct. But if the engine ever returns non-zero scores for an all-pass round, the test would silently include them in the sum. The unit test in `test_spike_serialize.py` uses `isinstance` checks to filter to completed-round types before summing, which is more precise. The integration test's approach is less defensive but not wrong given current game rules."
+    },
+    {
+      "id": "RR2",
+      "severity": "low",
+      "title": "test_active_round_queued_actions comment undermines the assertion",
+      "description": "The comment on line 247 says 'queued_actions may be empty if action was consumed; field presence is what matters'. This means the test only verifies the field exists and is a list — it does not verify that a queued action is actually present. A regression that always returned an empty list would pass. The test is not vacuous (it does verify the field is a list, not absent), but it provides weak behavioral signal for the queued-action path."
+    },
+    {
+      "id": "RR3",
+      "severity": "low",
+      "title": "test_completed_rounds_have_de_anonymized_hands and test_completed_rounds_have_tricks_with_bleeding use `break` after first COMPLETED round",
+      "description": "Both tests find the first COMPLETED round and break. If the first COMPLETED round happens to be anomalous (e.g., has unusual hand sizes due to a bug in a later round), the test would pass while other rounds are broken. The unit tests in `test_spike_serialize.py` iterate all rounds, which is more thorough."
+    }
+  ],
+  "testing_gaps": [
+    {
+      "id": "TG1",
+      "title": "No test for active round in TRUMP_SELECTION phase",
+      "description": "The `SpikeActiveRound.status` field accepts `'BIDDING' | 'TRUMP_SELECTION' | 'DISCARD' | 'TRICKS'`. Only BIDDING is tested at both unit and integration levels. TRUMP_SELECTION, DISCARD, and TRICKS are untested. While TRUMP_SELECTION and DISCARD are transient phases that NaiveCpu players pass through instantly, a Human player can be paused at any of them. The serializer's `status=m_game.status.name` line passes through whatever the engine reports, so the serializer itself is not branchy here — but the round's `trump`, `bidder`, and `bid_amount` fields take different values at each phase, and no test verifies the serialized output at TRUMP_SELECTION or DISCARD phase."
+    },
+    {
+      "id": "TG2",
+      "title": "No test for `Game.rounds` with a game in TRICKS phase (active round with in-progress tricks)",
+      "description": "The `Game.rounds` property has a dedicated code path (lines 391-403) for reading in-progress tricks from the active engine round. This path is only reachable when the game is in TRICKS phase. All existing `test_game_rounds.py` tests use either a new game (BIDDING, no tricks) or a completed game (all rounds completed). The in-progress tricks path is entirely untested at the unit level."
+    },
+    {
+      "id": "TG3",
+      "title": "No test verifies `SelectTrump` with `bidder=None` branch in `Game.rounds`",
+      "description": "In `Game.rounds` (line 334-335), when a `SelectTrump` action is processed and `current_round.bidder is None`, the bidder is set to the trump-selector's player_id. This handles an edge case where trump selection happens without a prior winning bid. No test exercises this branch. Whether it is reachable in normal game flow is unclear, but if it is reachable, it is untested; if it is not reachable, it is dead code that will fail the 100% branch coverage gate."
+    }
+  ]
+}

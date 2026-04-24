@@ -1,7 +1,6 @@
 """Internal model for a structured round of Hundred and Ten"""
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 from .actions import Bid, Card, CardSuit
 from .trick import Trick
@@ -9,15 +8,20 @@ from .trick import Trick
 
 @dataclass
 class Round:
-    """Internal representation of a single round (completed or active)"""
+    """Internal representation of a single round (completed or active).
+
+    Instances are mutable by design: Game.rounds builds each Round
+    incrementally during its action-walking replay before appending it
+    to the completed list or returning it as the active round.
+    """
 
     dealer: str
     hands: dict[str, list[Card]]
     bid_history: list[Bid] = field(default_factory=list)
-    bidder: Optional[str] = None
-    bid_amount: Optional[int] = None
-    trump: Optional[CardSuit] = None
+    bidder: str | None = None
+    bid_amount: int | None = None
+    trump: CardSuit | None = None
     discards: dict[str, list[Card]] = field(default_factory=dict)
     tricks: list[Trick] = field(default_factory=list)
-    scores: Optional[dict[str, int]] = None
+    scores: dict[str, int] | None = None
     completed: bool = False

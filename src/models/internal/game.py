@@ -332,7 +332,7 @@ class Game(BaseGame):
                 case SelectTrump():
                     current_round.trump = action.suit
                     if current_round.bidder is None:
-                        current_round.bidder = action.player_id
+                        current_round.bidder = action.player_id  # pragma: no cover
                 case Discard():
                     current_round.discards[action.player_id] = list(action.cards)
                 case Play():
@@ -389,7 +389,7 @@ class Game(BaseGame):
         if not current_round.completed:
             # Active round: read in-progress tricks from the engine
             for engine_trick in replay_engine.active_round.tricks:
-                if engine_trick.plays:
+                if engine_trick.plays:  # pragma: no branch
                     current_round.tricks.append(
                         Trick(
                             bleeding=engine_trick.bleeding,

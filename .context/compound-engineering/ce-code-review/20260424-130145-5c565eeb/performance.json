@@ -1,0 +1,57 @@
+{
+  "reviewer": "performance",
+  "findings": [
+    {
+      "id": "PERF-01",
+      "confidence": 75,
+      "severity": "medium",
+      "title": "Game.rounds is an uncached property — spike endpoint triggers two full replays per request",
+      "location": "src/models/internal/game.py:302, src/mappers/client/serialize.py:93,100",
+      "detail": "spike_game() calls m_game.rounds (one full action-walking replay) and then also accesses m_game.scores (line 102) and m_game.status (line 99), which both delegate to self._engine — the already-replayed primary engine, so those are cheap. However, m_game.rounds is a plain @property with no memoization. Every call to the property re-instantiates an Engine, re-walks all actions, and rebuilds all Round objects. In the current spike endpoint there is exactly one call to m_game.rounds (the list comprehension on line 93), so the spike endpoint itself incurs exactly one replay — not two. The risk is latent: if a future caller (e.g., a test helper, a second serializer field, or a debug log) calls m_game.rounds a second time on the same Game instance, it silently doubles the replay cost. For a 335-action game this is ~335 engine.act() calls per extra call. This is not a bug today but is a footgun worth noting.",
+      "recommendation": "Cache the result with a private attribute (e.g., _rounds_cache: list[Round] | None = None) or use functools.cached_property. The Game dataclass would need a small adjustment (field with init=False) but the pattern is already used for _engine."
+    },
+    {
+      "id": "PERF-02",
+      "confidence": 75,
+      "severity": "low",
+      "title": "m_game.active_player_id accessed once per round inside __spike_round for the active round — not a loop concern, but worth confirming",
+      "location": "src/mappers/client/serialize.py:169",
+      "detail": "m_game.active_player_id is read inside __spike_round for the active round branch. Because there is at most one active round per game, this is called at most once per spike_game() invocation. If active_player_id delegates to self._engine (the primary engine, not the replay engine), it is O(1) and not a concern. Confirmed non-issue at current call frequency.",
+      "recommendation": "No action needed."
+    }
+  ],
+  "residual_risks": [
+    {
+      "id": "RISK-01",
+      "title": "Three Engine replays per spike request (primary + events + rounds) if events is ever called on the same request path",
+      "detail": "The plan acknowledges that Game.rounds adds a third replay equivalent to Game.events. In the current spike endpoint (games.py:47-51), only serialize.spike_game() is called, which internally calls m_game.rounds once and reads m_game.scores/status/winner from the primary engine. Game.events is NOT called on this path, so the actual replay count is two (primary __initialize_engine replay + rounds replay), not three. The risk is that a future refactor that also calls game.events on the spike path (e.g., to include event history in the response) would push it to three replays. At 335 actions this is ~1005 engine.act() calls total — still fast in absolute terms but worth tracking.",
+      "severity": "low"
+    },
+    {
+      "id": "RISK-02",
+      "title": "No quadratic behavior found in the action-walking loop",
+      "detail": "The rounds property iterates self.actions once (O(N) where N = action count). At each round boundary it reads completed_engine_round.tricks (at most 5 tricks per round, each with at most 4 plays) and completed_engine_round.scores (at most 4 entries). These inner reads are O(1) relative to total action count. The match/case dispatch is O(1). list.append and dict assignment are amortized O(1). No nested loop over all actions or all tricks per action was found. The algorithm is strictly O(N) in action count.",
+      "severity": "none"
+    },
+    {
+      "id": "RISK-03",
+      "title": "Round object mutation is safe and efficient",
+      "detail": "Round is a plain mutable dataclass (not frozen). bid_history.append, discards[pid] = ..., and tricks = [...] are all O(1) or O(k) where k is the size of the per-round data (≤5 tricks, ≤4 players, ≤5 bids). No unbounded accumulation across rounds occurs because a new Round() is created at each round boundary. The completed_rounds list grows by one entry per round; for a 100-round game this is 100 Round objects in memory simultaneously, each holding ≤5 tricks × 4 plays = ≤20 Play objects. Total memory is negligible.",
+      "severity": "none"
+    },
+    {
+      "id": "RISK-04",
+      "title": "No redundant work in __spike_round that could be hoisted to Game.rounds",
+      "detail": "The only per-round work in __spike_round beyond field access is: (a) card serialization via __card() — O(hand_size), unavoidably per-response since it produces client model objects; (b) ordered_players.find() for the active round — O(4 players), called at most once. Nothing in __spike_round re-walks actions or re-reads the engine. No hoisting opportunity exists.",
+      "severity": "none"
+    }
+  ],
+  "testing_gaps": [
+    {
+      "id": "TGAP-01",
+      "title": "No test verifies that Game.rounds is called exactly once per spike_game() invocation",
+      "detail": "If a future change accidentally calls m_game.rounds twice (e.g., once for the round list and once for a count), the replay cost doubles silently. A test that mocks or counts Engine instantiation calls would catch this regression.",
+      "severity": "low"
+    }
+  ]
+}

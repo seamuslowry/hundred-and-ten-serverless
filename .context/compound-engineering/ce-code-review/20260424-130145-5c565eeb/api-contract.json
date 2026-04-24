@@ -1,0 +1,117 @@
+{
+  "reviewer": "api-contract",
+  "findings": [
+    {
+      "id": "AC-1",
+      "title": "type alias discriminated union works correctly as response_model",
+      "severity": "info",
+      "confidence": 100,
+      "location": "src/models/client/responses.py:338-341, src/routers/games.py:46",
+      "detail": "Verified empirically on Python 3.14 / Pydantic 2.12.5 / FastAPI 0.136.0. `type SpikeRound = Annotated[Union[...], Field(discriminator='status')]` (PEP 695 TypeAliasType) is resolved correctly by Pydantic v2's schema generator. The generated OpenAPI schema emits a named `SpikeRound` $def with a proper `discriminator.mapping` and `oneOf` array. `list[SpikeRound]` in `SpikeGame.rounds` resolves to `items: {$ref: '#/$defs/SpikeRound'}`. No schema corruption.",
+      "verdict": "safe"
+    },
+    {
+      "id": "AC-2",
+      "title": "Multi-value Literal discriminator on SpikeActiveRound works correctly",
+      "severity": "info",
+      "confidence": 100,
+      "location": "src/models/client/responses.py:325",
+      "detail": "Verified empirically. `status: Literal['BIDDING', 'TRUMP_SELECTION', 'DISCARD', 'TRICKS']` on SpikeActiveRound produces a correct discriminator mapping: all four values map to `#/$defs/SpikeActiveRound` in the OpenAPI schema. Pydantic v2 validation and serialization both work correctly for all four status values. FastAPI response validation passes through the same Pydantic machinery.",
+      "verdict": "safe"
+    },
+    {
+      "id": "AC-3",
+      "title": "dict[str, Union[list[Card], int]] serializes correctly through FastAPI",
+      "severity": "info",
+      "confidence": 100,
+      "location": "src/models/client/responses.py:328-329",
+      "detail": "Verified empirically. Pydantic v2 serializes mixed dict values correctly: card-list entries serialize as JSON arrays of {suit, number} objects; integer entries serialize as JSON numbers. No coercion occurs between the two types. The serializer correctly populates this field: own player gets `[__card(c) for c in hand]`, others get `len(hand)` (an int). Round-trip through FastAPI response_model validation is clean.",
+      "verdict": "safe"
+    },
+    {
+      "id": "AC-4",
+      "title": "New /spike route is purely additive — no existing routes changed",
+      "severity": "info",
+      "confidence": 100,
+      "location": "src/routers/games.py:46-51",
+      "detail": "All existing route handlers (GET /{game_id}, POST /{game_id}/players, GET /{game_id}/players, POST /{game_id}/actions, POST/DELETE /{game_id}/queued-actions, GET /{game_id}/events, GET /{game_id}/suggestions, POST /search) are unchanged in signature, response_model, and implementation. The spike route is inserted at line 46 between game_info and leave_game with no effect on existing registrations.",
+      "verdict": "safe"
+    },
+    {
+      "id": "AC-5",
+      "title": "No route shadowing between /{game_id}/spike and existing routes",
+      "severity": "info",
+      "confidence": 100,
+      "location": "src/routers/games.py:38-51",
+      "detail": "GET /{game_id} matches exactly one path segment. GET /{game_id}/spike matches two segments with the literal 'spike' as the second. Starlette path matching is segment-based; there is no ambiguity. 'spike' is not a valid 24-hex-char PydanticObjectId, so it cannot be mistakenly captured by /{game_id}. No conflict with /suggestions, /players, /events, /queued-actions (all are sub-paths of /{game_id}, not siblings of /spike).",
+      "verdict": "safe"
+    },
+    {
+      "id": "AC-6",
+      "title": "status field passed to SpikeActiveRound uses m_game.status.name with type: ignore",
+      "severity": "low",
+      "confidence": 75,
+      "location": "src/mappers/client/serialize.py:154",
+      "detail": "The serializer passes `status=m_game.status.name` to SpikeActiveRound with a `# type: ignore[arg-type]` comment. GameStatus members are ['BIDDING', 'TRUMP_SELECTION', 'TRICKS', 'DISCARD', 'WON']. The Literal on SpikeActiveRound covers all four active statuses. The 'WON' value can never reach this branch because Game.rounds returns only completed_rounds when the game is won (game.py:406). However, the type: ignore suppresses static analysis that would otherwise catch a future GameStatus addition (e.g., a new status) that is not covered by the Literal. If a new GameStatus is added to the engine, Pydantic validation will raise a runtime error at the /spike endpoint before the type checker catches it.",
+      "verdict": "acceptable — runtime-safe today, fragile under engine evolution"
+    },
+    {
+      "id": "AC-7",
+      "title": "SpikeGame omits 'organizer' field present in CompletedGame",
+      "severity": "low",
+      "confidence": 75,
+      "location": "src/models/client/responses.py:344-353",
+      "detail": "CompletedGame (returned by GET /{game_id} for won games) includes an `organizer: PlayerInGame` field. SpikeGame (returned by GET /{game_id}/spike) does not. This is not a breaking change to any existing endpoint, but clients that migrate from /{game_id} to /{game_id}/spike for completed games will lose the organizer field without a schema-level signal. The OpenAPI schemas for the two endpoints are distinct, so a careful client will notice. No existing consumer is broken.",
+      "verdict": "acceptable — new endpoint, not a replacement"
+    },
+    {
+      "id": "AC-8",
+      "title": "Error response shape is consistent with existing endpoints",
+      "severity": "info",
+      "confidence": 100,
+      "location": "function_app.py:70-107, src/routers/games.py:46-51",
+      "detail": "The spike endpoint raises the same exception types as game_info (NotFoundError via GameService.get, AuthorizationError/AuthenticationError via global auth dependency). All are handled by the same exception handlers producing JSONResponse(status_code=N, content=str(exc)). No new exception types are introduced. Error shape is consistent across all game endpoints.",
+      "verdict": "safe"
+    }
+  ],
+  "residual_risks": [
+    {
+      "id": "RR-1",
+      "title": "GameStatus enum expansion would silently break /spike at runtime",
+      "detail": "If the hundredandten-engine package adds a new active game status (e.g., 'SCORING'), Game.status.name would return that value, __spike_round would reach the active branch, and Pydantic would raise a ValidationError when constructing SpikeActiveRound because the new status is not in the Literal. The type: ignore on line 154 of serialize.py means pyright will not catch this. The fix is to either widen the Literal to match GameStatus dynamically, or add an exhaustive match before constructing SpikeActiveRound.",
+      "severity": "medium"
+    },
+    {
+      "id": "RR-2",
+      "title": "SpikeCompletedNoBiddersRound lacks 'discards' field — asymmetric with SpikeActiveRound",
+      "detail": "SpikeActiveRound has a `discards` field; SpikeCompletedNoBiddersRound does not. This is semantically correct (no-bidder rounds have no discards), but clients iterating over all rounds and accessing round['discards'] will get a KeyError for COMPLETED_NO_BIDDERS rounds. The test at line 111 checks `'tricks' not in round_` but does not check for discards absence. Clients need to branch on status before accessing discards.",
+      "severity": "low"
+    }
+  ],
+  "testing_gaps": [
+    {
+      "id": "TG-1",
+      "title": "No test for TRUMP_SELECTION, DISCARD, or TRICKS active round status values",
+      "detail": "test_spike_game.py only exercises BIDDING as the active round status. The multi-value Literal discriminator maps all four active statuses to SpikeActiveRound, but no test verifies that a round in TRUMP_SELECTION, DISCARD, or TRICKS phase serializes correctly through the /spike endpoint. A game that progresses past bidding before the test reads /spike would cover these.",
+      "severity": "medium"
+    },
+    {
+      "id": "TG-2",
+      "title": "No test verifies OpenAPI schema correctness for /spike",
+      "detail": "No test calls GET /openapi.json and asserts the SpikeRound discriminator mapping contains all six status values (COMPLETED, COMPLETED_NO_BIDDERS, BIDDING, TRUMP_SELECTION, DISCARD, TRICKS). Schema generation is verified empirically here but not in the CI test suite.",
+      "severity": "low"
+    },
+    {
+      "id": "TG-3",
+      "title": "No test for /spike on a game in DISCARD phase with non-empty discards",
+      "detail": "The discards field in SpikeActiveRound uses dict[str, Union[list[Card], int]] with the same visibility rules as hands. No test exercises the discard phase to verify that the requesting player sees their own discards as a card list while others see an integer count.",
+      "severity": "low"
+    },
+    {
+      "id": "TG-4",
+      "title": "test_completed_game_scores_sum_to_cumulative assumes all rounds have scores",
+      "detail": "The test at line 116-129 iterates all rounds and accesses round_['scores']. SpikeCompletedNoBiddersRound has a scores field, so this is safe. However, if a future round type omits scores, this test would raise a KeyError rather than fail an assertion. The test is fragile against schema evolution of round types.",
+      "severity": "low"
+    }
+  ]
+}
