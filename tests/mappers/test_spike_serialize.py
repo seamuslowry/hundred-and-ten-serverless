@@ -2,14 +2,14 @@
 
 from src.mappers.client import serialize
 from src.models.client import responses
-from src.models.internal.game import Game
+from src.models.internal.game import Game, PlayerGroup
 from src.models.internal.player import Human, NaiveCpu
 
 
 def _make_completed_game(seed: str = "test-seed") -> Game:
     g = Game(
         organizer=Human("p1"),
-        players=[NaiveCpu("p2"), NaiveCpu("p3"), NaiveCpu("p4")],
+        players=PlayerGroup([NaiveCpu("p2"), NaiveCpu("p3"), NaiveCpu("p4")]),
         seed=seed,
     )
     g.id = "test-id"
@@ -20,7 +20,7 @@ def _make_completed_game(seed: str = "test-seed") -> Game:
 def _make_new_game(seed: str = "test-seed") -> Game:
     g = Game(
         organizer=Human("p1"),
-        players=[NaiveCpu("p2"), NaiveCpu("p3"), NaiveCpu("p4")],
+        players=PlayerGroup([NaiveCpu("p2"), NaiveCpu("p3"), NaiveCpu("p4")]),
         seed=seed,
     )
     g.id = "test-id"
@@ -168,7 +168,9 @@ def test_completed_round_scores_sum_to_cumulative():
     result = serialize.spike_game(g, "p1")
     total: dict[str, int] = {}
     for r in result.rounds:
-        if r.status in ("COMPLETED", "COMPLETED_NO_BIDDERS"):
+        if isinstance(
+            r, (responses.SpikeCompletedRound, responses.SpikeCompletedNoBiddersRound)
+        ):
             for pid, v in r.scores.items():
                 total[pid] = total.get(pid, 0) + v
     # Map to same key order as g.scores
@@ -238,11 +240,9 @@ def test_active_round_queued_actions_for_self():
 
 def test_active_round_different_players_different_visibility():
     """Two players see each other's hands as counts in the active round."""
-    from src.models.internal.player import Human
-
     g = Game(
         organizer=Human("p1"),
-        players=[Human("p2"), NaiveCpu("p3"), NaiveCpu("p4")],
+        players=PlayerGroup([Human("p2"), NaiveCpu("p3"), NaiveCpu("p4")]),
         seed="test-seed",
     )
     g.id = "test-id"

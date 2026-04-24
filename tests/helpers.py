@@ -167,3 +167,13 @@ def get_events(client: TestClient, game_id: str, player_id: str) -> list[dict]:
         f"/players/{player_id}/games/{game_id}/events",
         headers={"authorization": f"Bearer {player_id}"},
     ).json()
+
+
+def get_spike_game(
+    test_client: TestClient, game_id: str, player_id: str
+) -> dict[str, Any]:
+    """Get a spike game response as the given player"""
+    return test_client.get(
+        f"/players/{player_id}/games/{game_id}/spike",
+        headers={"authorization": f"Bearer {player_id}"},
+    ).json()

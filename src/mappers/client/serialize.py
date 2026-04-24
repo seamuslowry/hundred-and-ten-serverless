@@ -90,8 +90,7 @@ def spike_game(
     assert m_game.id  # games sent to clients will be saved and have an id
 
     spike_rounds: list[responses.SpikeRound] = [
-        __spike_round(round_, m_game, client_player_id)
-        for round_ in m_game.rounds
+        __spike_round(round_, m_game, client_player_id) for round_ in m_game.rounds
     ]
 
     return responses.SpikeGame(
@@ -121,7 +120,9 @@ def __spike_round(
             bid_amount=round_.bid_amount,
             trump=SelectableSuit[round_.trump.name],
             bid_history=[__spike_bid(b) for b in round_.bid_history],
-            hands={pid: [__card(c) for c in hand] for pid, hand in round_.hands.items()},
+            hands={
+                pid: [__card(c) for c in hand] for pid, hand in round_.hands.items()
+            },
             discards={
                 pid: [__card(c) for c in cards]
                 for pid, cards in round_.discards.items()
@@ -135,7 +136,9 @@ def __spike_round(
             status="COMPLETED_NO_BIDDERS",
             dealer=round_.dealer,
             bid_history=[__spike_bid(b) for b in round_.bid_history],
-            hands={pid: [__card(c) for c in hand] for pid, hand in round_.hands.items()},
+            hands={
+                pid: [__card(c) for c in hand] for pid, hand in round_.hands.items()
+            },
             scores=round_.scores or {},
         )
 
@@ -152,26 +155,16 @@ def __spike_round(
         dealer=round_.dealer,
         bid_history=[__spike_bid(b) for b in round_.bid_history],
         hands={
-            pid: (
-                [__card(c) for c in hand]
-                if pid == client_player_id
-                else len(hand)
-            )
+            pid: ([__card(c) for c in hand] if pid == client_player_id else len(hand))
             for pid, hand in round_.hands.items()
         },
         discards={
-            pid: (
-                [__card(c) for c in cards]
-                if pid == client_player_id
-                else len(cards)
-            )
+            pid: ([__card(c) for c in cards] if pid == client_player_id else len(cards))
             for pid, cards in round_.discards.items()
         },
         bidder=round_.bidder,
         bid_amount=round_.bid_amount,
-        trump=(
-            SelectableSuit[round_.trump.name] if round_.trump else None
-        ),
+        trump=(SelectableSuit[round_.trump.name] if round_.trump else None),
         tricks=[__spike_trick(t) for t in round_.tricks],
         active_player_id=m_game.active_player_id,
         queued_actions=queued,

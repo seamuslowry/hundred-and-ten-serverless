@@ -27,7 +27,6 @@ from .actions import (
 )
 from .constants import Accessibility, CardSuit, GameStatus
 from .errors import BadRequestError, InternalServerError
-from .round import Round
 from .player import (
     ConcreteAction,
     Human,
@@ -37,6 +36,7 @@ from .player import (
     PlayerInRound,
     RequestAutomation,
 )
+from .round import Round
 from .trick import Trick
 
 
@@ -340,7 +340,8 @@ class Game(BaseGame):
 
             # Round completed: a new round was started, or the game just ended
             round_ended = (
-                after_round_count > before_round_count or replay_engine.winner is not None
+                after_round_count > before_round_count
+                or replay_engine.winner is not None
             )
             if round_ended:
                 # When a new round starts, the completed round is at rounds[-2].
