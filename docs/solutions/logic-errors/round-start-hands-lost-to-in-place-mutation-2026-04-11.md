@@ -65,7 +65,9 @@ RoundStart(
 )
 ```
 
-Then replay each stored action one at a time, detecting round and trick boundaries by comparing `len(engine.rounds)` and `len(engine.active_round.tricks)` before and after each `engine.act()` call. At each round boundary, the completed round is at `engine.rounds[-2]` (the new active round is `[-1]`), and hands for the new `RoundStart` are again snapshotted from the fresh active round before any actions in that round are applied.
+Then replay each stored action one at a time, detecting round and trick boundaries by comparing `len(engine.rounds)` and `len(engine.active_round.tricks)` before and after each `engine.act()` call. At each mid-game round boundary, the completed round is at `engine.rounds[-2]` (the new active round is `[-1]`), and hands for the new `RoundStart` are again snapshotted from the fresh active round before any actions in that round are applied.
+
+**Caveat — game-winning action:** When the game-winning action completes a round, the engine does not start a new round. `len(engine.rounds)` does not increase, so `rounds[-2]` is the second-to-last round (wrong). Use `rounds[-1]` when `replay_engine.winner is not None` and no new round was opened. See [`docs/solutions/logic-errors/game-rounds-action-replay-boundary-and-score-aggregation-bugs-2026-04-24.md`](game-rounds-action-replay-boundary-and-score-aggregation-bugs-2026-04-24.md) for the complete fix pattern.
 
 See `src/models/internal/game.py:204` for the full implementation.
 
@@ -99,7 +101,7 @@ hands: dict[str, Union[list[Card], int]]
 
 ## Why This Works
 
-The state-transition detection works because the engine tracks completed rounds cumulatively in `engine.rounds`. When `len(engine.rounds)` increases after an `engine.act()` call, the round that just completed is at index `[-2]` (the new active round is `[-1]`). Trick boundaries use the same logic within the active round.
+The state-transition detection works because the engine tracks completed rounds cumulatively in `engine.rounds`. When `len(engine.rounds)` increases after an `engine.act()` call, the round that just completed is at index `[-2]` (the new active round is `[-1]`). Trick boundaries use the same logic within the active round. **Exception:** when the game-winning action completes, `len(engine.rounds)` does not increase — the completed round is at `[-1]`, not `[-2]`. See the caveat in the Solution section above.
 
 Using plain `EnginePlayer` (not `Human` or `NaiveCpu`) keeps the replay passive — the engine does not attempt to automate any actions during the walk.
 
