@@ -1,7 +1,6 @@
 """Internal model for a structured round of Hundred and Ten"""
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 from .actions import Bid, Card, CardSuit
 from .trick import Trick
@@ -22,7 +21,9 @@ class Round:
     tricks: list[Trick] = field(default_factory=list)
 
     @property
-    def max_bid(self) -> Optional[Bid]:
-        """The greatest non-pass bid"""
+    def max_bid(self) -> Bid | None:
+        """The greatest non-pass bid, or None if no bids have been placed or all passed"""
+        if not self.bid_history:
+            return None
         max_bid = max(self.bid_history, key=lambda b: b.amount)
         return max_bid if max_bid.amount > 0 else None

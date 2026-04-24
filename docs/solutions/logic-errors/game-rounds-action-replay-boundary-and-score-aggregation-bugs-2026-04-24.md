@@ -1,6 +1,7 @@
 ---
 title: "Game.rounds action-replay: game-ending boundary off-by-one and lossy score aggregation"
 date: 2026-04-24
+last_updated: 2026-04-24
 category: logic-errors
 module: src/models/internal/game.py
 problem_type: logic_error
@@ -143,3 +144,5 @@ The engine models scoring as a list of independent ledger entries (one per trick
 
 - [`docs/solutions/logic-errors/round-start-hands-lost-to-in-place-mutation-2026-04-11.md`](round-start-hands-lost-to-in-place-mutation-2026-04-11.md) — the prior action-walking replay doc. **Note:** that doc states "the completed round is at `engine.rounds[-2]`" as a general rule. This is correct for mid-game transitions but not for the game-winning action; see the primary fix above for the correct conditional pattern.
 - `src/models/internal/game.py:270-274` — `Game.events` contains the same lossy dict comprehension for `RoundEnd.scores`; that path is a pre-existing bug that should be addressed in the same codebase pass.
+
+> **Superseded for `Game.rounds`**: The action-walking replay described in this doc has been replaced for `Game.rounds` by direct engine round inspection with `EngineRound` reconstruction for initial hands. See [`docs/solutions/best-practices/engine-round-reconstruction-for-initial-hands-2026-04-24.md`](../best-practices/engine-round-reconstruction-for-initial-hands-2026-04-24.md). The bugs documented here (`rounds[-2]`/`[-1]` boundary, lossy scores) no longer apply to `Game.rounds`; `Game.events` still uses the action-walking replay and is still subject to the score aggregation bug.

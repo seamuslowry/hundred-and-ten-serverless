@@ -163,14 +163,14 @@ def test_completed_round_de_anonymization_independent_of_requester():
 
 
 def test_completed_round_scores_sum_to_cumulative():
-    """Sum of per-round scores equals top-level cumulative scores."""
+    """Sum of COMPLETED round scores equals top-level cumulative scores.
+    All-pass (COMPLETED_NO_BIDDERS) rounds score 0 for all players so are not included.
+    """
     g = _make_completed_game()
     result = serialize.spike_game(g, "p1")
     total: dict[str, int] = {}
     for r in result.rounds:
-        if isinstance(
-            r, (responses.SpikeCompletedRound, responses.SpikeCompletedNoBiddersRound)
-        ):
+        if isinstance(r, responses.SpikeCompletedRound):
             for pid, v in r.scores.items():
                 total[pid] = total.get(pid, 0) + v
     # Map to same key order as g.scores

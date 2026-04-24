@@ -137,3 +137,5 @@ def test_round_start_hands_reflect_dealt_cards():
 
 - [`docs/solutions/best-practices/action-request-discriminated-union-player-automation-2026-04-10.md`](../best-practices/action-request-discriminated-union-player-automation-2026-04-10.md) — the `__initialize_engine` replay loop is the direct ancestor of the action-walking pattern used here; the two docs share the same engine re-construction idiom
 - `docs/plans/2026-04-10-002-refactor-event-derivation-replay-plan.md` — plan that drove this refactor (status: completed)
+
+> **Partially superseded for `Game.rounds`**: The action-walking replay described here as the solution is still used for `Game.events`. For `Game.rounds`, it has been replaced by direct engine inspection with targeted `EngineRound` reconstruction for initial hands — a cheaper alternative that avoids a full replay while still recovering pre-discard dealt hands. See [`docs/solutions/best-practices/engine-round-reconstruction-for-initial-hands-2026-04-24.md`](../best-practices/engine-round-reconstruction-for-initial-hands-2026-04-24.md).

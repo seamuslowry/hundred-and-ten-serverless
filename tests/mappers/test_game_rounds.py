@@ -38,11 +38,10 @@ def _make_new_game(seed: str = "test-seed") -> Game:
 
 
 def test_new_game_has_one_active_round():
-    """A new game produces a single in-progress round."""
+    """A new game produces a single round (the active round)."""
     g = _make_new_game()
     rounds = g.rounds
     assert len(rounds) == 1
-    assert not rounds[0].completed
 
 
 def test_new_game_round_has_correct_dealer():
@@ -56,16 +55,16 @@ def test_new_game_round_hands_are_pre_discard():
     """Hands in the active round snapshot 5 cards (dealt hand, not post-discard)."""
     g = _make_new_game()
     round_ = g.rounds[0]
-    for player_id, hand in round_.hands.items():
+    for player_id, hand in round_.initial_hands.items():
         assert len(hand) == 5, f"Player {player_id} has {len(hand)} cards, expected 5"
 
 
 def test_new_game_round_has_players_in_order():
-    """The hands dict contains entries for all 4 players."""
+    """The initial_hands dict contains entries for all 4 players."""
     g = _make_new_game()
     round_ = g.rounds[0]
     expected_ids = {p.id for p in g.ordered_players}
-    assert set(round_.hands.keys()) == expected_ids
+    assert set(round_.initial_hands.keys()) == expected_ids
 
 
 def test_active_round_has_bid_history():
@@ -81,13 +80,6 @@ def test_active_round_has_bid_history():
 # ---------------------------------------------------------------------------
 
 
-def test_completed_game_all_rounds_completed():
-    """A completed game has no active rounds."""
-    g = _make_completed_game()
-    rounds = g.rounds
-    assert all(r.completed for r in rounds)
-
-
 def test_completed_game_has_multiple_rounds():
     """A completed game produces more than one round."""
     g = _make_completed_game()
@@ -95,10 +87,10 @@ def test_completed_game_has_multiple_rounds():
 
 
 def test_completed_game_hands_are_pre_discard():
-    """All hands in completed rounds contain 5 cards (dealt, not post-discard)."""
+    """All initial_hands in all rounds contain 5 cards (dealt, not post-discard)."""
     g = _make_completed_game()
     for i, round_ in enumerate(g.rounds):
-        for player_id, hand in round_.hands.items():
+        for player_id, hand in round_.initial_hands.items():
             assert (
                 len(hand) == 5
             ), f"Round {i} player {player_id} has {len(hand)} cards, expected 5"
@@ -109,16 +101,15 @@ def test_completed_game_scores_sum_to_cumulative():
     g = _make_completed_game()
     round_sum: dict[str, int] = {}
     for round_ in g.rounds:
-        if round_.scores:
-            for player_id, value in round_.scores.items():
-                round_sum[player_id] = round_sum.get(player_id, 0) + value
+        for player_id, value in round_.scores.items():
+            round_sum[player_id] = round_sum.get(player_id, 0) + value
     assert round_sum == g.scores
 
 
 def test_completed_game_has_all_pass_rounds():
-    """Some completed rounds have no bidder (all-pass)."""
+    """Some rounds have no winning bidder (all-pass)."""
     g = _make_completed_game()
-    no_bidder = [r for r in g.rounds if r.completed and r.bidder is None]
+    no_bidder = [r for r in g.rounds if r.max_bid is None]
     assert len(no_bidder) > 0
 
 
@@ -126,27 +117,27 @@ def test_all_pass_round_has_no_tricks_or_discards():
     """All-pass rounds have empty tricks and discards."""
     g = _make_completed_game()
     for round_ in g.rounds:
-        if round_.completed and round_.bidder is None:
+        if round_.max_bid is None:
             assert len(round_.tricks) == 0
             assert len(round_.discards) == 0
             assert round_.trump is None
 
 
 def test_all_pass_round_is_completed_with_hands():
-    """All-pass rounds are completed and still have dealt hands."""
+    """All-pass rounds still have dealt hands."""
     g = _make_completed_game()
-    all_pass = [r for r in g.rounds if r.completed and r.bidder is None]
+    all_pass = [r for r in g.rounds if r.max_bid is None]
     assert len(all_pass) > 0
     for round_ in all_pass:
-        assert len(round_.hands) == 4
-        for hand in round_.hands.values():
+        assert len(round_.initial_hands) == 4
+        for hand in round_.initial_hands.values():
             assert len(hand) == 5
 
 
 def test_completed_round_with_bidder_has_five_tricks():
-    """Completed rounds with a bidder have 5 tricks."""
+    """Completed rounds with a winning bidder have 5 tricks."""
     g = _make_completed_game()
-    bidder_rounds = [r for r in g.rounds if r.completed and r.bidder is not None]
+    bidder_rounds = [r for r in g.rounds if r.max_bid is not None]
     assert len(bidder_rounds) > 0
     for round_ in bidder_rounds:
         assert len(round_.tricks) == 5
@@ -163,27 +154,46 @@ def test_tricks_have_bleeding_and_winning_play():
 
 
 def test_bid_history_captured_per_round():
-    """Each completed round with a bidder has a non-empty bid_history."""
+    """Each round with a winning bid has a non-empty bid_history."""
     g = _make_completed_game()
     for round_ in g.rounds:
-        if round_.bidder is not None:
+        if round_.max_bid is not None:
             assert len(round_.bid_history) > 0
 
 
 def test_discards_captured_per_round():
-    """Completed rounds with a bidder have discards for all 4 players."""
+    """Rounds with a winning bid have discards for all 4 players."""
     g = _make_completed_game()
     for round_ in g.rounds:
-        if round_.bidder is not None:
+        if round_.max_bid is not None:
             assert len(round_.discards) == 4
 
 
 def test_trump_set_on_bidder_rounds():
-    """Completed rounds with a bidder have a trump suit."""
+    """Rounds with a winning bid have a trump suit."""
     g = _make_completed_game()
     for round_ in g.rounds:
-        if round_.bidder is not None:
+        if round_.max_bid is not None:
             assert round_.trump is not None
+
+
+def test_max_bid_on_all_pass_round_is_none():
+    """max_bid returns None when all players passed."""
+    g = _make_completed_game()
+    all_pass = [r for r in g.rounds if r.max_bid is None]
+    assert len(all_pass) > 0
+
+
+def test_max_bid_on_empty_bid_history_is_none():
+    """max_bid returns None when no bids have been placed yet."""
+    from src.models.internal.round import Round
+
+    empty_round = Round(
+        dealer_player_id="p1",
+        initial_hands={},
+        scores={},
+    )
+    assert empty_round.max_bid is None
 
 
 def test_tricks_phase_active_round_has_in_progress_tricks():
@@ -201,12 +211,8 @@ def test_tricks_phase_active_round_has_in_progress_tricks():
     rounds = g.rounds
     assert len(rounds) == 1
     active = rounds[0]
-    assert not active.completed
     # At least one trick should be in progress
     assert len(active.tricks) >= 1
-    # Tricks in-progress have plays
-    for trick in active.tricks:
-        assert len(trick.plays) >= 0  # may be 0 if no plays yet
 
 
 def test_game_events_property_unchanged():

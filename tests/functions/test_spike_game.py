@@ -101,33 +101,34 @@ def test_completed_game_has_all_pass_rounds(client: TestClient):
 
 
 def test_all_pass_rounds_have_hands_but_no_tricks(client: TestClient):
-    """Edge case: COMPLETED_NO_BIDDERS rounds have hands but no tricks or discards."""
+    """Edge case: COMPLETED_NO_BIDDERS rounds have initial_hands but no tricks or discards."""
     game = completed_game(client)
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
 
     for round_ in spike["rounds"]:
         if round_["status"] == "COMPLETED_NO_BIDDERS":
-            assert len(round_["hands"]) == 4
-            # COMPLETED_NO_BIDDERS rounds only have: status, dealer, bid_history, hands, scores
+            assert len(round_["initial_hands"]) == 4
+            # COMPLETED_NO_BIDDERS rounds only have: status, dealer_player_id, initial_hands
             assert set(round_.keys()) == {
                 "status",
-                "dealer",
-                "bid_history",
-                "hands",
-                "scores",
+                "dealer_player_id",
+                "initial_hands",
             }
             break
 
 
 def test_completed_game_scores_sum_to_cumulative(client: TestClient):
-    """Edge case: sum of round scores equals top-level cumulative scores."""
+    """Edge case: sum of COMPLETED round scores equals top-level cumulative scores.
+    COMPLETED_NO_BIDDERS rounds score 0 for all players and have no scores field.
+    """
     game = completed_game(client)
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
 
     total: dict[str, int] = {}
     for round_ in spike["rounds"]:
-        for pid, v in round_["scores"].items():
-            total[pid] = total.get(pid, 0) + v
+        if round_["status"] == "COMPLETED":
+            for pid, v in round_["scores"].items():
+                total[pid] = total.get(pid, 0) + v
 
     for pid, expected in spike["scores"].items():
         assert (

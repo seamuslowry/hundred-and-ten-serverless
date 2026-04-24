@@ -2,7 +2,6 @@
 
 from typing import Optional
 
-from models.internal.constants import GameStatus
 from src.models import internal
 from src.models.client import responses
 from src.models.client.constants import CardNumberName, SelectableSuit, Suit
@@ -163,7 +162,7 @@ def __spike_round_active(
         else []
     )
 
-    assert m_game.status != GameStatus.WON
+    assert m_game.status != internal.GameStatus.WON
 
     bid = m_round.max_bid
 

@@ -342,7 +342,7 @@ class Game(BaseGame):
 
     @property
     def rounds(self) -> list[Round]:
-        """Get all rounds as structured objects via action-walking replay"""
+        """Get all rounds as structured objects via direct engine inspection"""
 
         return [self.__get_round_at(i) for i in range(len(self._engine.rounds))]
 
