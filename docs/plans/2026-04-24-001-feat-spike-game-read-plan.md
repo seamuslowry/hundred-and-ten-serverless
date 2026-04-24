@@ -1,7 +1,7 @@
 ---
 title: "feat: Add spike game read endpoint with structured round-based response"
 type: feat
-status: active
+status: completed
 date: 2026-04-24
 origin: docs/brainstorms/spike-game-read-requirements.md
 ---
