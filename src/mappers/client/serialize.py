@@ -2,6 +2,7 @@
 
 from typing import Optional
 
+from models.internal.constants import GameStatus
 from src.models import internal
 from src.models.client import responses
 from src.models.client.constants import CardNumberName, SelectableSuit, Suit
@@ -89,8 +90,17 @@ def spike_game(
     """Return a round-based spike game response for the given player"""
     assert m_game.id  # games sent to clients will be saved and have an id
 
+    game_rounds = m_game.rounds
+    completed_rounds, active_rounds = (
+        (game_rounds, []) if m_game.winner else (game_rounds[:-1], game_rounds[-1:])
+    )
+
     spike_rounds: list[responses.SpikeRound] = [
-        __spike_round(round_, m_game, client_player_id) for round_ in m_game.rounds
+        *(__spike_round_completed(game_round) for game_round in completed_rounds),
+        *(
+            __spike_round_active(game_round, m_game, client_player_id)
+            for game_round in active_rounds
+        ),
     ]
 
     return responses.SpikeGame(
@@ -104,44 +114,47 @@ def spike_game(
     )
 
 
-def __spike_round(
-    round_: internal.Round,
+def __spike_round_completed(
+    m_round: internal.Round,
+) -> responses.SpikeRound:
+    bid = m_round.max_bid
+
+    if bid is not None and m_round.trump is not None:
+        return responses.SpikeCompletedRound(
+            status="COMPLETED",
+            dealer_player_id=m_round.dealer_player_id,
+            bidder_player_id=bid.player_id,
+            bid_amount=bid.amount,
+            trump=SelectableSuit[m_round.trump.name],
+            bid_history=[__spike_bid(b) for b in m_round.bid_history],
+            hands={
+                pid: [__card(c) for c in hand]
+                for pid, hand in m_round.initial_hands.items()
+            },
+            discards={
+                pid: [__card(c) for c in cards]
+                for pid, cards in m_round.discards.items()
+            },
+            tricks=[__spike_trick(t) for t in m_round.tricks],
+            scores=m_round.scores,
+        )
+
+    return responses.SpikeCompletedNoBiddersRound(
+        status="COMPLETED_NO_BIDDERS",
+        dealer_player_id=m_round.dealer_player_id,
+        initial_hands={
+            pid: [__card(c) for c in hand]
+            for pid, hand in m_round.initial_hands.items()
+        },
+    )
+
+
+def __spike_round_active(
+    m_round: internal.Round,
     m_game: internal.Game,
     client_player_id: str,
 ) -> responses.SpikeRound:
     """Convert an internal Round to the appropriate spike client round type"""
-    if round_.completed and round_.bidder is not None:
-        assert round_.trump is not None
-        assert round_.bid_amount is not None
-        return responses.SpikeCompletedRound(
-            status="COMPLETED",
-            dealer=round_.dealer,
-            bidder=round_.bidder,
-            bid_amount=round_.bid_amount,
-            trump=SelectableSuit[round_.trump.name],
-            bid_history=[__spike_bid(b) for b in round_.bid_history],
-            hands={
-                pid: [__card(c) for c in hand] for pid, hand in round_.hands.items()
-            },
-            discards={
-                pid: [__card(c) for c in cards]
-                for pid, cards in round_.discards.items()
-            },
-            tricks=[__spike_trick(t) for t in round_.tricks],
-            scores=round_.scores or {},
-        )
-
-    if round_.completed and round_.bidder is None:
-        return responses.SpikeCompletedNoBiddersRound(
-            status="COMPLETED_NO_BIDDERS",
-            dealer=round_.dealer,
-            bid_history=[__spike_bid(b) for b in round_.bid_history],
-            hands={
-                pid: [__card(c) for c in hand] for pid, hand in round_.hands.items()
-            },
-            scores=round_.scores or {},
-        )
-
     # Active round: apply visibility rules
     requesting_player = m_game.ordered_players.find(client_player_id)
     queued = (
@@ -150,22 +163,32 @@ def __spike_round(
         else []
     )
 
+    assert m_game.status != GameStatus.WON
+
+    bid = m_round.max_bid
+
     return responses.SpikeActiveRound(
-        status=m_game.status.name,  # type: ignore[arg-type]
-        dealer=round_.dealer,
-        bid_history=[__spike_bid(b) for b in round_.bid_history],
+        status=m_game.status.name,
+        dealer_player_id=m_round.dealer_player_id,
+        bid_history=[__spike_bid(b) for b in m_round.bid_history],
         hands={
-            pid: ([__card(c) for c in hand] if pid == client_player_id else len(hand))
-            for pid, hand in round_.hands.items()
+            player.id: (
+                [__card(c) for c in player.hand]
+                if player.id == client_player_id
+                else len(player.hand)
+            )
+            for player in map(
+                lambda p: m_game.get_player_in_round(p.id), m_game.ordered_players
+            )
         },
         discards={
             pid: ([__card(c) for c in cards] if pid == client_player_id else len(cards))
-            for pid, cards in round_.discards.items()
+            for pid, cards in m_round.discards.items()
         },
-        bidder=round_.bidder,
-        bid_amount=round_.bid_amount,
-        trump=(SelectableSuit[round_.trump.name] if round_.trump else None),
-        tricks=[__spike_trick(t) for t in round_.tricks],
+        bidder_player_id=bid.player_id if bid else None,
+        bid_amount=bid.amount if bid else None,
+        trump=(SelectableSuit[m_round.trump.name] if m_round.trump else None),
+        tricks=[__spike_trick(t) for t in m_round.tricks],
         active_player_id=m_game.active_player_id,
         queued_actions=queued,
     )

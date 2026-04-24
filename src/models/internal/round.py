@@ -1,6 +1,7 @@
 """Internal model for a structured round of Hundred and Ten"""
 
 from dataclasses import dataclass, field
+from typing import Optional
 
 from .actions import Bid, Card, CardSuit
 from .trick import Trick
@@ -8,20 +9,20 @@ from .trick import Trick
 
 @dataclass
 class Round:
-    """Internal representation of a single round (completed or active).
-
-    Instances are mutable by design: Game.rounds builds each Round
-    incrementally during its action-walking replay before appending it
-    to the completed list or returning it as the active round.
+    """
+    Internal representation of a single round (completed or active).
     """
 
-    dealer: str
-    hands: dict[str, list[Card]]
+    dealer_player_id: str
+    initial_hands: dict[str, list[Card]]
+    scores: dict[str, int]
     bid_history: list[Bid] = field(default_factory=list)
-    bidder: str | None = None
-    bid_amount: int | None = None
     trump: CardSuit | None = None
     discards: dict[str, list[Card]] = field(default_factory=dict)
     tricks: list[Trick] = field(default_factory=list)
-    scores: dict[str, int] | None = None
-    completed: bool = False
+
+    @property
+    def max_bid(self) -> Optional[Bid]:
+        """The greatest non-pass bid"""
+        max_bid = max(self.bid_history, key=lambda b: b.amount)
+        return max_bid if max_bid.amount > 0 else None

@@ -113,8 +113,8 @@ def test_completed_round_all_fields_present():
     result = serialize.spike_game(g, "p1")
     for r in result.rounds:
         if r.status == "COMPLETED":
-            assert r.dealer
-            assert r.bidder
+            assert r.dealer_player_id
+            assert r.bidder_player_id
             assert r.bid_amount is not None
             assert r.trump is not None
             assert len(r.bid_history) > 0
@@ -189,8 +189,8 @@ def test_all_pass_round_has_hands():
     result = serialize.spike_game(g, "p1")
     for r in result.rounds:
         if r.status == "COMPLETED_NO_BIDDERS":
-            assert len(r.hands) == 4
-            for hand in r.hands.values():
+            assert len(r.initial_hands) == 4
+            for hand in r.initial_hands.values():
                 assert isinstance(hand, list)
                 assert len(hand) == 5
             break

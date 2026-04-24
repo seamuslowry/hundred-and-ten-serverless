@@ -298,8 +298,8 @@ class SpikeCompletedRound(BaseModel):
     """A completed round where bidding was won and tricks were played"""
 
     status: Literal["COMPLETED"]
-    dealer: str
-    bidder: str
+    dealer_player_id: str
+    bidder_player_id: str
     bid_amount: int
     trump: SelectableSuit
     bid_history: list[SpikeBid]
@@ -313,21 +313,19 @@ class SpikeCompletedNoBiddersRound(BaseModel):
     """A completed round where all players passed (no bidder, no tricks)"""
 
     status: Literal["COMPLETED_NO_BIDDERS"]
-    dealer: str
-    bid_history: list[SpikeBid]
-    hands: dict[str, list[Card]]
-    scores: dict[str, int]
+    dealer_player_id: str
+    initial_hands: dict[str, list[Card]]
 
 
 class SpikeActiveRound(BaseModel):
     """The current active round (bidding, trump selection, discarding, or tricks)"""
 
     status: Literal["BIDDING", "TRUMP_SELECTION", "DISCARD", "TRICKS"]
-    dealer: str
+    dealer_player_id: str
     bid_history: list[SpikeBid]
     hands: dict[str, Union[list[Card], int]]
     discards: dict[str, Union[list[Card], int]]
-    bidder: Optional[str] = None
+    bidder_player_id: Optional[str] = None
     bid_amount: Optional[int] = None
     trump: Optional[SelectableSuit] = None
     tricks: list[SpikeTrick]

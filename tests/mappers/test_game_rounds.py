@@ -49,7 +49,7 @@ def test_new_game_round_has_correct_dealer():
     """The active round's dealer matches the engine's dealer."""
     g = _make_new_game()
     rounds = g.rounds
-    assert rounds[0].dealer == g.dealer_player_id
+    assert rounds[0].dealer_player_id == g.dealer_player_id
 
 
 def test_new_game_round_hands_are_pre_discard():
