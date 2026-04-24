@@ -12,18 +12,22 @@ from hundredandten.engine import Game as Engine, Player as EnginePlayer
 from .actions import (
     Action,
     ActionFactory,
+    Bid,
     Card,
+    Discard,
     Event,
     GameEnd,
     GameStart,
     Play,
     RoundEnd,
     RoundStart,
+    SelectTrump,
     TrickEnd,
     TrickStart,
 )
 from .constants import Accessibility, CardSuit, GameStatus
 from .errors import BadRequestError, InternalServerError
+from .round import Round
 from .player import (
     ConcreteAction,
     Human,
@@ -293,6 +297,112 @@ class Game(BaseGame):
                 else []
             ),
         ]
+
+    @property
+    def rounds(self) -> list[Round]:
+        """Get all rounds as structured objects via action-walking replay"""
+        replay_engine = Engine(
+            players=[EnginePlayer(p.id) for p in self.ordered_players],
+            seed=self.seed,
+        )
+
+        current_round = Round(
+            dealer=replay_engine.active_round.dealer.identifier,
+            hands={
+                p.identifier: [Card.from_engine(c) for c in p.hand]
+                for p in replay_engine.active_round.players
+            },
+        )
+        completed_rounds: list[Round] = []
+
+        for action in self.actions:
+            before_round_count = len(replay_engine.rounds)
+
+            replay_engine.act(action.to_engine())
+
+            after_round_count = len(replay_engine.rounds)
+
+            # Accumulate action into the current round
+            match action:
+                case Bid():
+                    current_round.bid_history.append(action)
+                    if action.amount.value > 0:
+                        current_round.bidder = action.player_id
+                        current_round.bid_amount = action.amount.value
+                case SelectTrump():
+                    current_round.trump = action.suit
+                    if current_round.bidder is None:
+                        current_round.bidder = action.player_id
+                case Discard():
+                    current_round.discards[action.player_id] = list(action.cards)
+                case Play():
+                    pass  # tricks are read from the engine at round boundaries
+
+            # Round completed: a new round was started, or the game just ended
+            round_ended = (
+                after_round_count > before_round_count or replay_engine.winner is not None
+            )
+            if round_ended:
+                # When a new round starts, the completed round is at rounds[-2].
+                # When the game-winning action completes (no new round created),
+                # the completed round is at rounds[-1].
+                if after_round_count > before_round_count:
+                    completed_engine_round = replay_engine.rounds[-2]
+                else:
+                    completed_engine_round = replay_engine.rounds[-1]
+
+                # Read all tricks from the completed engine round
+                current_round.tricks = [
+                    Trick(
+                        bleeding=t.bleeding,
+                        plays=[Play.from_engine(p) for p in t.plays],
+                        winning_play=(
+                            Play.from_engine(t.winning_play) if t.winning_play else None
+                        ),
+                    )
+                    for t in completed_engine_round.tricks
+                    if t.plays  # skip empty/in-progress tricks
+                ]
+
+                # Collect scores by summing duplicate player entries
+                score_totals: dict[str, int] = {}
+                for score_entry in completed_engine_round.scores:
+                    score_totals[score_entry.identifier] = (
+                        score_totals.get(score_entry.identifier, 0) + score_entry.value
+                    )
+
+                current_round.scores = score_totals
+                current_round.completed = True
+                completed_rounds.append(current_round)
+
+                # Open next round (only if game continues)
+                if after_round_count > before_round_count:
+                    current_round = Round(
+                        dealer=replay_engine.active_round.dealer.identifier,
+                        hands={
+                            p.identifier: [Card.from_engine(c) for c in p.hand]
+                            for p in replay_engine.active_round.players
+                        },
+                    )
+
+        if not current_round.completed:
+            # Active round: read in-progress tricks from the engine
+            for engine_trick in replay_engine.active_round.tricks:
+                if engine_trick.plays:
+                    current_round.tricks.append(
+                        Trick(
+                            bleeding=engine_trick.bleeding,
+                            plays=[Play.from_engine(p) for p in engine_trick.plays],
+                            winning_play=(
+                                Play.from_engine(engine_trick.winning_play)
+                                if engine_trick.winning_play
+                                else None
+                            ),
+                        )
+                    )
+            return [*completed_rounds, current_round]
+
+        return completed_rounds
 
     @property
     def scores(self) -> dict[str, int]:
