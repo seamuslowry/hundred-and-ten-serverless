@@ -241,7 +241,7 @@ def test_active_round_queued_actions(client: TestClient):
         client,
         game["id"],
         DEFAULT_ID,
-        {"amount": BidAmount.SHOOT_THE_MOON, "type": "BID"},
+        {"amount": BidAmount.TWENTY, "type": "BID"},
     )
 
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
