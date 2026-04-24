@@ -10,6 +10,7 @@ from src.models.internal.actions import (
 )
 from src.models.internal.game import Game, PlayerGroup
 from src.models.internal.player import Human, NaiveCpu
+from src.models.internal.round import Round
 
 
 def _make_completed_game(seed: str = "test-seed") -> Game:
@@ -186,8 +187,6 @@ def test_max_bid_on_all_pass_round_is_none():
 
 def test_max_bid_on_empty_bid_history_is_none():
     """max_bid returns None when no bids have been placed yet."""
-    from src.models.internal.round import Round
-
     empty_round = Round(
         dealer_player_id="p1",
         initial_hands={},
