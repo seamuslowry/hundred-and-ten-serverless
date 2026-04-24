@@ -82,6 +82,114 @@ def events(
     ]
 
 
+def spike_game(
+    m_game: internal.Game,
+    client_player_id: str,
+) -> responses.SpikeGame:
+    """Return a round-based spike game response for the given player"""
+    assert m_game.id  # games sent to clients will be saved and have an id
+
+    spike_rounds: list[responses.SpikeRound] = [
+        __spike_round(round_, m_game, client_player_id)
+        for round_ in m_game.rounds
+    ]
+
+    return responses.SpikeGame(
+        id=m_game.id,
+        name=m_game.name,
+        status=m_game.status.name,
+        winner=__player_in_game(m_game.winner) if m_game.winner else None,
+        players=[__player_in_game(p) for p in m_game.ordered_players],
+        scores=m_game.scores,
+        rounds=spike_rounds,
+    )
+
+
+def __spike_round(
+    round_: internal.Round,
+    m_game: internal.Game,
+    client_player_id: str,
+) -> responses.SpikeRound:
+    """Convert an internal Round to the appropriate spike client round type"""
+    if round_.completed and round_.bidder is not None:
+        assert round_.trump is not None
+        assert round_.bid_amount is not None
+        return responses.SpikeCompletedRound(
+            status="COMPLETED",
+            dealer=round_.dealer,
+            bidder=round_.bidder,
+            bid_amount=round_.bid_amount,
+            trump=SelectableSuit[round_.trump.name],
+            bid_history=[__spike_bid(b) for b in round_.bid_history],
+            hands={pid: [__card(c) for c in hand] for pid, hand in round_.hands.items()},
+            discards={
+                pid: [__card(c) for c in cards]
+                for pid, cards in round_.discards.items()
+            },
+            tricks=[__spike_trick(t) for t in round_.tricks],
+            scores=round_.scores or {},
+        )
+
+    if round_.completed and round_.bidder is None:
+        return responses.SpikeCompletedNoBiddersRound(
+            status="COMPLETED_NO_BIDDERS",
+            dealer=round_.dealer,
+            bid_history=[__spike_bid(b) for b in round_.bid_history],
+            hands={pid: [__card(c) for c in hand] for pid, hand in round_.hands.items()},
+            scores=round_.scores or {},
+        )
+
+    # Active round: apply visibility rules
+    requesting_player = m_game.ordered_players.find(client_player_id)
+    queued = (
+        [suggestion(a) for a in requesting_player.queued_actions]
+        if isinstance(requesting_player, internal.Human)
+        else []
+    )
+
+    return responses.SpikeActiveRound(
+        status=m_game.status.name,  # type: ignore[arg-type]
+        dealer=round_.dealer,
+        bid_history=[__spike_bid(b) for b in round_.bid_history],
+        hands={
+            pid: (
+                [__card(c) for c in hand]
+                if pid == client_player_id
+                else len(hand)
+            )
+            for pid, hand in round_.hands.items()
+        },
+        discards={
+            pid: (
+                [__card(c) for c in cards]
+                if pid == client_player_id
+                else len(cards)
+            )
+            for pid, cards in round_.discards.items()
+        },
+        bidder=round_.bidder,
+        bid_amount=round_.bid_amount,
+        trump=(
+            SelectableSuit[round_.trump.name] if round_.trump else None
+        ),
+        tricks=[__spike_trick(t) for t in round_.tricks],
+        active_player_id=m_game.active_player_id,
+        queued_actions=queued,
+    )
+
+
+def __spike_bid(bid: internal.Bid) -> responses.SpikeBid:
+    return responses.SpikeBid(player_id=bid.player_id, amount=bid.amount.value)
+
+
+def __spike_trick(trick: internal.Trick) -> responses.SpikeTrick:
+    return responses.SpikeTrick(
+        bleeding=trick.bleeding,
+        plays=[__play(p) for p in trick.plays],
+        winning_play=__play(trick.winning_play) if trick.winning_play else None,
+    )
+
+
 def suggestion(m_action: internal.Action) -> responses.UnorderedActionResponse:
     """Return a suggested action as it can be provided to the client"""
     if isinstance(m_action, internal.Bid):
