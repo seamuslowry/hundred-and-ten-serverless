@@ -33,5 +33,5 @@ class Round:
         """The greatest non-pass bid, or None if no bids have been placed or all passed"""
         if not self.bid_history:
             return None
-        max_bid = max(self.bid_history, key=lambda b: b.amount)
+        max_bid = max(reversed(self.bid_history), key=lambda b: b.amount)
         return max_bid if max_bid.amount > 0 else None
