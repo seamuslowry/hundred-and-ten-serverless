@@ -143,3 +143,6 @@ secret.locals.tf
 
 # Oh my OpenAgent
 .sisyphus
+
+# Compound Engineering (undesired)
+.context/compount-engineering/ce-code-review

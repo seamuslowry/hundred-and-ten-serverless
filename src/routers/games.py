@@ -19,6 +19,7 @@ from src.models.client.responses import (
     CompletedGame,
     Event,
     Player,
+    SpikeGame,
     StartedGame,
     UnorderedActionResponse,
 )
@@ -40,6 +41,14 @@ async def game_info(player_id: str, game_id: PydanticObjectId):
     game = await GameService.get(game_id)
 
     return serialize.game(game, player_id)
+
+
+@router.get("/{game_id}/spike", response_model=SpikeGame)
+async def spike_game_info(player_id: str, game_id: PydanticObjectId):
+    """Retrieve 110 game with full round history (spike endpoint)."""
+    game = await GameService.get(game_id)
+
+    return serialize.spike_game(game, player_id)
 
 
 @router.post("/{game_id}/players", response_model=list[Event])

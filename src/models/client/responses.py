@@ -241,7 +241,7 @@ class Game(BaseModel):
     name: str
 
 
-class WaitingGame(Game):
+class LobbyResponse(Game):
     """A class to model the client format of a waiting Hundred and Ten game"""
 
     accessibility: str
@@ -272,3 +272,96 @@ class CompletedGame(Game):
     organizer: PlayerInGame
     players: list[PlayerInGame]
     scores: dict[str, int]
+
+
+# =============================================================================
+# Spike game response models (round-based, unified in-progress/completed view)
+# =============================================================================
+
+
+class SpikeBid(BaseModel):
+    """A single bid in a round's bid history"""
+
+    player_id: str
+    amount: int
+
+
+class SpikeDiscard(BaseModel):
+    """A discard event in a round"""
+
+    discarded: list[Card]
+    received: list[Card]
+
+
+class SpikeTrick(BaseModel):
+    """A trick within a spike round"""
+
+    bleeding: bool
+    plays: list[QueuedPlayCard]
+    winning_play: Optional[QueuedPlayCard] = None
+
+
+class SpikeCompletedWithBidderRound(BaseModel):
+    """A completed round where bidding was won and tricks were played"""
+
+    status: Literal["COMPLETED"]
+    dealer_player_id: str
+    trump: SelectableSuit
+    bid_history: list[SpikeBid]
+    bid: Optional[SpikeBid] = None
+    initial_hands: dict[str, list[Card]]
+    discards: dict[str, SpikeDiscard]
+    tricks: list[SpikeTrick]
+    scores: dict[str, int]
+
+
+class SpikeCompletedNoBiddersRound(BaseModel):
+    """A completed round where all players passed (no bidder, no tricks)"""
+
+    status: Literal["COMPLETED_NO_BIDDERS"]
+    dealer_player_id: str
+    initial_hands: dict[str, list[Card]]
+
+
+class SpikeActiveRound(BaseModel):
+    """The current active round (bidding, trump selection, discarding, or tricks)"""
+
+    status: Literal["BIDDING", "TRUMP_SELECTION", "DISCARD", "TRICKS"]
+    dealer_player_id: str
+    bid_history: list[SpikeBid]
+    bid: Optional[SpikeBid] = None
+    hands: dict[str, Union[list[Card], int]]
+    trump: Optional[SelectableSuit] = None
+    discards: dict[str, Union[SpikeDiscard, int]]
+    tricks: list[SpikeTrick]
+    active_player_id: str
+    queued_actions: list[UnorderedActionResponse]
+
+
+class SpikeWonInformation(BaseModel):
+    """The current active round (bidding, trump selection, discarding, or tricks)"""
+
+    status: Literal["WON"]
+    winner_player_id: str
+
+
+type SpikeCompletedRound = Annotated[
+    Union[SpikeCompletedWithBidderRound, SpikeCompletedNoBiddersRound],
+    Field(discriminator="status"),
+]
+
+type SpikeActive = Annotated[
+    Union[SpikeActiveRound, SpikeWonInformation],
+    Field(discriminator="status"),
+]
+
+
+class SpikeGame(BaseModel):
+    """Unified round-based game response for the spike endpoint"""
+
+    id: str
+    name: str
+    players: list[PlayerInGame]
+    scores: dict[str, int]
+    active: SpikeActive
+    completed_rounds: list[SpikeCompletedRound]

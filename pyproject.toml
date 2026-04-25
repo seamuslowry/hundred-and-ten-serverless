@@ -20,9 +20,9 @@ dependencies = [
     "cachecontrol==0.14.4",
     "fastapi==0.136.0",
     "google-auth==2.49.2",
-    "hundredandten-automation-engineadapter==0.0.3",
-    "hundredandten-automation-naive==0.0.3",
-    "hundredandten-engine==0.0.4",
+    "hundredandten-automation-engineadapter==0.0.4",
+    "hundredandten-automation-naive==0.0.4",
+    "hundredandten-engine==0.0.6",
     "pymongo==4.16.0",
     "pyjwt==2.12.1",
     "requests==2.33.1",
@@ -60,6 +60,11 @@ useLibraryCodeForTypes = true
 max-parents = 15
 # Allow Settings/Config classes to have no methods (framework pattern)
 min-public-methods = 0
+max-instance-attributes = 10
+
+[tool.pylint.similarities]
+# Do not flag duplicate code in test files
+ignore-paths = ["tests/.*"]
 
 [tool.ruff]
 target-version = "py314"

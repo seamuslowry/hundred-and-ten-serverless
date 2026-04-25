@@ -17,7 +17,7 @@ from src.models.client.requests import (
     LobbyPlayerRequest,
     SearchLobbiesRequest,
 )
-from src.models.client.responses import Event, Player, WaitingGame
+from src.models.client.responses import Event, LobbyResponse, Player
 from src.models.internal import (
     Accessibility,
     Human,
@@ -36,7 +36,7 @@ router = APIRouter(
 )
 
 
-@router.post("", response_model=WaitingGame)
+@router.post("", response_model=LobbyResponse)
 async def create_lobby(player_id: str, body: CreateLobbyRequest):
     """Create a new 110 lobby."""
     logging.info("Initiating create lobby request.")
@@ -56,7 +56,7 @@ async def create_lobby(player_id: str, body: CreateLobbyRequest):
     return serialize.lobby(lobby)
 
 
-@router.get("/{lobby_id}", response_model=WaitingGame)
+@router.get("/{lobby_id}", response_model=LobbyResponse)
 async def lobby_info(lobby_id: PydanticObjectId):
     """Retrieve 110 lobby."""
     lobby = await LobbyService.get(lobby_id)
@@ -64,7 +64,7 @@ async def lobby_info(lobby_id: PydanticObjectId):
     return serialize.lobby(lobby)
 
 
-@router.post("/{lobby_id}/players", response_model=WaitingGame)
+@router.post("/{lobby_id}/players", response_model=LobbyResponse)
 async def invite_to_lobby(
     player_id: str, lobby_id: PydanticObjectId, body: LobbyPlayerRequest
 ):
@@ -121,7 +121,7 @@ async def start_game(player_id: str, lobby_id: PydanticObjectId):
     return serialize.events(game.events, player_id)
 
 
-@router.post("/search", response_model=list[WaitingGame])
+@router.post("/search", response_model=list[LobbyResponse])
 async def search_lobbies(player_id: str, body: SearchLobbiesRequest):
     """Search for lobbies"""
     return [
