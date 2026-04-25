@@ -17,7 +17,7 @@ from .actions import (
 )
 from .constants import Accessibility, BidAmount, CardNumber, CardSuit, GameStatus
 from .game import Game, Lobby, PlayerGroup
-from .player import Human, NaiveCpu, Player, PlayerInGame, PlayerInRound
+from .player import Human, NaiveCpu, Player, PlayerInGame
 from .round import DiscardRecord, Round
 from .trick import Trick
 
@@ -58,7 +58,6 @@ __all__ = [
     "Player",
     "PlayerGroup",
     "PlayerInGame",
-    "PlayerInRound",
     "Human",
     "NaiveCpu",
 ]
