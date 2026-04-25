@@ -17,8 +17,8 @@ from src.models.client.requests import (
 )
 from src.models.client.responses import (
     Event,
+    Game,
     Player,
-    SpikeGame,
     UnorderedActionResponse,
 )
 from src.models.internal.errors import AuthorizationError, BadRequestError
@@ -30,20 +30,20 @@ router = APIRouter(
 )
 
 
-@router.get("/{game_id}", response_model=SpikeGame)
+@router.get("/{game_id}", response_model=Game)
 async def game_info(player_id: str, game_id: PydanticObjectId):
     """Retrieve 110 game."""
     game = await GameService.get(game_id)
 
-    return serialize.spike_game(game, player_id)
+    return serialize.game(game, player_id)
 
 
-@router.get("/{game_id}/spike", response_model=SpikeGame)
+@router.get("/{game_id}/spike", response_model=Game)
 async def spike_game_info(player_id: str, game_id: PydanticObjectId):
     """Retrieve 110 game with full round history (spike endpoint)."""
     game = await GameService.get(game_id)
 
-    return serialize.spike_game(game, player_id)
+    return serialize.game(game, player_id)
 
 
 @router.post("/{game_id}/players", response_model=list[Event])
@@ -142,10 +142,10 @@ async def suggestion(player_id: str, game_id: PydanticObjectId):
     return [serialize.suggestion(s) for s in game.suggestions_for(player_id)]
 
 
-@router.post("/search", response_model=list[SpikeGame])
+@router.post("/search", response_model=list[Game])
 async def search_games(player_id: str, body: SearchGamesRequest):
     """Search for games"""
     return [
-        serialize.spike_game(g, player_id)
+        serialize.game(g, player_id)
         for g in await GameService.search(player_id, body)
     ]

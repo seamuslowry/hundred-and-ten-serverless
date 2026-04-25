@@ -215,64 +215,39 @@ class Trick(BaseModel):
     winning_play: Optional[QueuedPlayCard] = None
 
 
-class Game(BaseModel):
-    """A class to model the client format of a Hundred and Ten game"""
+class LobbyResponse(BaseModel):
+    """A class to model the client format of a waiting Hundred and Ten game"""
 
     id: str
     name: str
-
-
-class LobbyResponse(Game):
-    """A class to model the client format of a waiting Hundred and Ten game"""
-
     accessibility: str
     organizer: PlayerInGame
     players: list[PlayerInGame]
     invitees: list[PlayerInGame]
 
 
-# =============================================================================
-# Spike game response models (round-based, unified in-progress/completed view)
-# =============================================================================
-
-
-class SpikeBid(BaseModel):
-    """A single bid in a round's bid history"""
-
-    player_id: str
-    amount: int
-
-
-class SpikeDiscard(BaseModel):
+class DiscardRecord(BaseModel):
     """A discard event in a round"""
 
     discarded: list[Card]
     received: list[Card]
 
 
-class SpikeTrick(BaseModel):
-    """A trick within a spike round"""
-
-    bleeding: bool
-    plays: list[QueuedPlayCard]
-    winning_play: Optional[QueuedPlayCard] = None
-
-
-class SpikeCompletedWithBidderRound(BaseModel):
+class CompletedWithBidderRound(BaseModel):
     """A completed round where bidding was won and tricks were played"""
 
     status: Literal["COMPLETED"]
     dealer_player_id: str
     trump: SelectableSuit
-    bid_history: list[SpikeBid]
-    bid: Optional[SpikeBid] = None
+    bid_history: list[QueuedBid]
+    bid: Optional[QueuedBid] = None
     initial_hands: dict[str, list[Card]]
-    discards: dict[str, SpikeDiscard]
-    tricks: list[SpikeTrick]
+    discards: dict[str, DiscardRecord]
+    tricks: list[Trick]
     scores: dict[str, int]
 
 
-class SpikeCompletedNoBiddersRound(BaseModel):
+class CompletedNoBiddersRound(BaseModel):
     """A completed round where all players passed (no bidder, no tricks)"""
 
     status: Literal["COMPLETED_NO_BIDDERS"]
@@ -280,45 +255,45 @@ class SpikeCompletedNoBiddersRound(BaseModel):
     initial_hands: dict[str, list[Card]]
 
 
-class SpikeActiveRound(BaseModel):
+class ActiveRound(BaseModel):
     """The current active round (bidding, trump selection, discarding, or tricks)"""
 
     status: Literal["BIDDING", "TRUMP_SELECTION", "DISCARD", "TRICKS"]
     dealer_player_id: str
-    bid_history: list[SpikeBid]
-    bid: Optional[SpikeBid] = None
+    bid_history: list[QueuedBid]
+    bid: Optional[QueuedBid] = None
     hands: dict[str, Union[list[Card], int]]
     trump: Optional[SelectableSuit] = None
-    discards: dict[str, Union[SpikeDiscard, int]]
-    tricks: list[SpikeTrick]
+    discards: dict[str, Union[DiscardRecord, int]]
+    tricks: list[Trick]
     active_player_id: str
     queued_actions: list[UnorderedActionResponse]
 
 
-class SpikeWonInformation(BaseModel):
+class WonInformation(BaseModel):
     """The current active round (bidding, trump selection, discarding, or tricks)"""
 
     status: Literal["WON"]
     winner_player_id: str
 
 
-type SpikeCompletedRound = Annotated[
-    Union[SpikeCompletedWithBidderRound, SpikeCompletedNoBiddersRound],
+type CompletedRound = Annotated[
+    Union[CompletedWithBidderRound, CompletedNoBiddersRound],
     Field(discriminator="status"),
 ]
 
-type SpikeActive = Annotated[
-    Union[SpikeActiveRound, SpikeWonInformation],
+type ActiveInfo = Annotated[
+    Union[ActiveRound, WonInformation],
     Field(discriminator="status"),
 ]
 
 
-class SpikeGame(BaseModel):
-    """Unified round-based game response for the spike endpoint"""
+class Game(BaseModel):
+    """Unified round-based game response"""
 
     id: str
     name: str
     players: list[PlayerInGame]
     scores: dict[str, int]
-    active: SpikeActive
-    completed_rounds: list[SpikeCompletedRound]
+    active: ActiveInfo
+    completed_rounds: list[CompletedRound]
