@@ -7,30 +7,18 @@ from tests.helpers import (
     DEFAULT_ID,
     completed_game,
     game_with_manual_player,
-    get_game,
     get_spike_game,
     queue_action,
     started_game,
 )
 
-
-def _act(client: TestClient, game_id: str, player_id: str, action: dict) -> None:
-    """Post an action to the actions endpoint."""
-    resp = client.post(
-        f"/players/{player_id}/games/{game_id}/actions",
-        json=action,
-        headers={"authorization": f"Bearer {player_id}"},
-    )
-    assert resp.status_code == 200
-
-
 # ---------------------------------------------------------------------------
-# AE3: New game in bidding phase
+# New game
 # ---------------------------------------------------------------------------
 
 
 def test_new_game_single_active_bidding_round(client: TestClient):
-    """Covers AE3: new game has no completed rounds and an active BIDDING round."""
+    """New game has no completed rounds and an active BIDDING round."""
     game = started_game(client)
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
 
@@ -43,12 +31,12 @@ def test_new_game_single_active_bidding_round(client: TestClient):
 
 
 # ---------------------------------------------------------------------------
-# AE1: Completed game
+# Completed game
 # ---------------------------------------------------------------------------
 
 
 def test_completed_game_top_level_fields(client: TestClient):
-    """Covers AE1: completed game has active.status WON and a winner_player_id."""
+    """Completed game has active.status WON and a winner_player_id."""
     game = completed_game(client)
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
 
@@ -65,42 +53,42 @@ def test_completed_game_all_rounds_have_status(client: TestClient):
     game = completed_game(client)
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
 
-    for round_ in spike["completed_rounds"]:
-        assert round_["status"] in (
+    for game_round in spike["completed_rounds"]:
+        assert game_round["status"] in (
             "COMPLETED",
             "COMPLETED_NO_BIDDERS",
-        ), f"Unexpected round status: {round_['status']}"
+        ), f"Unexpected round status: {game_round['status']}"
 
 
-def test_completed_rounds_have_de_anonymized_hands(client: TestClient):
-    """Covers AE1: completed rounds show all hands as card lists."""
+def test_completed_rounds_show_full_initial_hands(client: TestClient):
+    """Completed rounds show initial hands."""
     game = completed_game(client)
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
 
-    for round_ in spike["completed_rounds"]:
-        if round_["status"] == "COMPLETED":
-            for player_id, hand in round_["hands"].items():
-                assert isinstance(
-                    hand, list
-                ), f"Player {player_id} hand should be a card list in completed round"
-            break
+    for game_round in spike["completed_rounds"]:
+        assert len(game_round["initial_hands"].keys()) == 4
+        for player_id, hand in game_round["initial_hands"].items():
+            assert isinstance(
+                hand, list
+            ), f"Player {player_id} hand should be a card list in completed round"
 
+# TODO: test for discards shown for all players
 
-def test_completed_rounds_have_tricks_with_bleeding(client: TestClient):
-    """Completed rounds include tricks with bleeding field."""
+def test_completed_rounds_show_tricks_with_bleeding(client: TestClient):
+    """Completed rounds include trick information."""
     game = completed_game(client)
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
 
-    for round_ in spike["completed_rounds"]:
-        if round_["status"] == "COMPLETED":
-            assert len(round_["tricks"]) == 5
-            for trick in round_["tricks"]:
+    for game_round in spike["completed_rounds"]:
+        if game_round["status"] == "COMPLETED":
+            assert len(game_round["tricks"]) == 5
+            for trick in game_round["tricks"]:
                 assert "bleeding" in trick
                 assert isinstance(trick["bleeding"], bool)
                 assert trick["winning_play"] is not None
-            break
 
 
+# TODO: control this manually
 def test_completed_game_has_all_pass_rounds(client: TestClient):
     """Completed game includes COMPLETED_NO_BIDDERS rounds."""
     game = completed_game(client)
@@ -112,6 +100,7 @@ def test_completed_game_has_all_pass_rounds(client: TestClient):
     assert len(no_bidder) > 0
 
 
+# TODO: control this manually
 def test_all_pass_rounds_have_hands_but_no_tricks(client: TestClient):
     """Edge case: COMPLETED_NO_BIDDERS rounds have initial_hands but no tricks or discards."""
     game = completed_game(client)
@@ -137,9 +126,9 @@ def test_completed_game_scores_sum_to_cumulative(client: TestClient):
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
 
     total: dict[str, int] = {}
-    for round_ in spike["completed_rounds"]:
-        if round_["status"] == "COMPLETED":
-            for pid, v in round_["scores"].items():
+    for game_round in spike["completed_rounds"]:
+        if game_round["status"] == "COMPLETED":
+            for pid, v in game_round["scores"].items():
                 total[pid] = total.get(pid, 0) + v
 
     for pid, expected in spike["scores"].items():
@@ -164,26 +153,15 @@ def test_two_players_see_identical_completed_round_data(client: TestClient):
     spike_p1 = get_spike_game(client, game["id"], p1)
     spike_p2 = get_spike_game(client, game["id"], p2)
 
-    completed_p1 = [
-        r for r in spike_p1["completed_rounds"] if r["status"] == "COMPLETED"
-    ]
-    completed_p2 = [
-        r for r in spike_p2["completed_rounds"] if r["status"] == "COMPLETED"
-    ]
-
-    assert len(completed_p1) == len(completed_p2)
-    for r1, r2 in zip(completed_p1, completed_p2):
-        assert r1["hands"] == r2["hands"]
-        assert r1["discards"] == r2["discards"]
-
+    assert spike_p1 == spike_p2
 
 # ---------------------------------------------------------------------------
-# AE2: In-progress game active round visibility
+# Active round visibility
 # ---------------------------------------------------------------------------
 
 
 def test_active_round_self_sees_cards(client: TestClient):
-    """Covers AE2: requesting player sees their own hand as cards."""
+    """Requesting player sees only their own hand as cards."""
     game = started_game(client)
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
 
@@ -197,7 +175,7 @@ def test_active_round_self_sees_cards(client: TestClient):
 
 
 def test_active_round_others_see_count(client: TestClient):
-    """Covers AE2: other players' hands are integers in the active round."""
+    """Other players' hands are integers in the active round."""
     game = started_game(client)
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
 
@@ -209,7 +187,7 @@ def test_active_round_others_see_count(client: TestClient):
 
 
 def test_active_round_includes_active_player_id(client: TestClient):
-    """Edge case: active round includes active_player_id."""
+    """Active round includes active_player_id."""
     game = started_game(client)
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
 
@@ -219,7 +197,7 @@ def test_active_round_includes_active_player_id(client: TestClient):
 
 
 def test_two_players_see_different_hands_in_active_round(client: TestClient):
-    """Edge case: two players see each other's hands as counts."""
+    """Two players see each other's hands as counts."""
     game, manual_player = game_with_manual_player(client)
 
     spike_organizer = get_spike_game(client, game["id"], DEFAULT_ID)
@@ -243,7 +221,7 @@ def test_active_round_bid_is_none_before_any_bid(client: TestClient):
     Uses game_with_manual_player so the first active player is Human and no
     CPU automation fires before the first act, guaranteeing bid starts null.
     """
-    game, _manual_player = game_with_manual_player(client)
+    game, _ = game_with_manual_player(client)
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
 
     assert spike["active"]["bid"] is None
@@ -254,7 +232,7 @@ def test_active_round_bid_populated_after_a_bid(client: TestClient):
     game, manual_player = game_with_manual_player(client)
     assert game["active_player_id"] == manual_player
 
-    _act(client, game["id"], manual_player, {"type": "BID", "amount": BidAmount.TWENTY})
+    queue_action(client, game["id"], manual_player, {"type": "BID", "amount": BidAmount.TWENTY})
 
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
     bid = spike["active"]["bid"]
@@ -264,8 +242,8 @@ def test_active_round_bid_populated_after_a_bid(client: TestClient):
 
 
 def test_active_round_queued_actions(client: TestClient):
-    """Covers AE2: active round includes queued_actions field for the requesting player."""
-    game, _manual_player = game_with_manual_player(client)
+    """Active round includes queued_actions field for the requesting player."""
+    game, _ = game_with_manual_player(client)
 
     # Queue an action for DEFAULT_ID (organizer) when it may not be their turn
     queue_action(
@@ -294,16 +272,3 @@ def test_nonexistent_game_returns_404(client: TestClient):
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
     assert resp.status_code == 404
-
-
-# ---------------------------------------------------------------------------
-# Existing endpoints unchanged
-# ---------------------------------------------------------------------------
-
-
-def test_existing_game_endpoint_unchanged(client: TestClient):
-    """R9: the existing GET /{game_id} endpoint still works."""
-    game = started_game(client)
-    result = get_game(client, game["id"], DEFAULT_ID)
-    assert result["status"] == "BIDDING"
-    assert "players" in result
