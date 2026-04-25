@@ -19,17 +19,16 @@ from tests.helpers import (
 
 
 def test_new_game_single_active_bidding_round(client: TestClient):
-    """Covers AE3: new game has a single active round in BIDDING status."""
+    """Covers AE3: new game has no completed rounds and an active BIDDING round."""
     game = started_game(client)
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
 
-    assert spike["status"] == "BIDDING"
-    assert len(spike["rounds"]) == 1
-    round_ = spike["rounds"][0]
-    assert round_["status"] == "BIDDING"
-    assert round_["trump"] is None
-    assert round_["tricks"] == []
-    assert round_["discards"] == {}
+    assert spike["active"]["status"] == "BIDDING"
+    assert spike["completed_rounds"] == []
+    active = spike["active"]
+    assert active["trump"] is None
+    assert active["tricks"] == []
+    assert active["discards"] == {}
 
 
 # ---------------------------------------------------------------------------
@@ -38,12 +37,12 @@ def test_new_game_single_active_bidding_round(client: TestClient):
 
 
 def test_completed_game_top_level_fields(client: TestClient):
-    """Covers AE1: completed game has WON status and a winner."""
+    """Covers AE1: completed game has active.status WON and a winner_player_id."""
     game = completed_game(client)
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
 
-    assert spike["status"] == "WON"
-    assert spike["winner"] is not None
+    assert spike["active"]["status"] == "WON"
+    assert spike["active"]["winner_player_id"] is not None
     assert spike["id"] == game["id"]
     assert spike["name"] == game["name"]
     assert len(spike["players"]) == 4
@@ -51,11 +50,11 @@ def test_completed_game_top_level_fields(client: TestClient):
 
 
 def test_completed_game_all_rounds_have_status(client: TestClient):
-    """All rounds in a completed game are COMPLETED or COMPLETED_NO_BIDDERS."""
+    """All completed_rounds in a finished game are COMPLETED or COMPLETED_NO_BIDDERS."""
     game = completed_game(client)
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
 
-    for round_ in spike["rounds"]:
+    for round_ in spike["completed_rounds"]:
         assert round_["status"] in (
             "COMPLETED",
             "COMPLETED_NO_BIDDERS",
@@ -67,7 +66,7 @@ def test_completed_rounds_have_de_anonymized_hands(client: TestClient):
     game = completed_game(client)
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
 
-    for round_ in spike["rounds"]:
+    for round_ in spike["completed_rounds"]:
         if round_["status"] == "COMPLETED":
             for player_id, hand in round_["hands"].items():
                 assert isinstance(
@@ -81,7 +80,7 @@ def test_completed_rounds_have_tricks_with_bleeding(client: TestClient):
     game = completed_game(client)
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
 
-    for round_ in spike["rounds"]:
+    for round_ in spike["completed_rounds"]:
         if round_["status"] == "COMPLETED":
             assert len(round_["tricks"]) == 5
             for trick in round_["tricks"]:
@@ -96,7 +95,7 @@ def test_completed_game_has_all_pass_rounds(client: TestClient):
     game = completed_game(client)
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
 
-    no_bidder = [r for r in spike["rounds"] if r["status"] == "COMPLETED_NO_BIDDERS"]
+    no_bidder = [r for r in spike["completed_rounds"] if r["status"] == "COMPLETED_NO_BIDDERS"]
     assert len(no_bidder) > 0
 
 
@@ -105,7 +104,7 @@ def test_all_pass_rounds_have_hands_but_no_tricks(client: TestClient):
     game = completed_game(client)
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
 
-    for round_ in spike["rounds"]:
+    for round_ in spike["completed_rounds"]:
         if round_["status"] == "COMPLETED_NO_BIDDERS":
             assert len(round_["initial_hands"]) == 4
             # COMPLETED_NO_BIDDERS rounds only have: status, dealer_player_id, initial_hands
@@ -125,7 +124,7 @@ def test_completed_game_scores_sum_to_cumulative(client: TestClient):
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
 
     total: dict[str, int] = {}
-    for round_ in spike["rounds"]:
+    for round_ in spike["completed_rounds"]:
         if round_["status"] == "COMPLETED":
             for pid, v in round_["scores"].items():
                 total[pid] = total.get(pid, 0) + v
@@ -152,8 +151,8 @@ def test_two_players_see_identical_completed_round_data(client: TestClient):
     spike_p1 = get_spike_game(client, game["id"], p1)
     spike_p2 = get_spike_game(client, game["id"], p2)
 
-    completed_p1 = [r for r in spike_p1["rounds"] if r["status"] == "COMPLETED"]
-    completed_p2 = [r for r in spike_p2["rounds"] if r["status"] == "COMPLETED"]
+    completed_p1 = [r for r in spike_p1["completed_rounds"] if r["status"] == "COMPLETED"]
+    completed_p2 = [r for r in spike_p2["completed_rounds"] if r["status"] == "COMPLETED"]
 
     assert len(completed_p1) == len(completed_p2)
     for r1, r2 in zip(completed_p1, completed_p2):
@@ -171,7 +170,8 @@ def test_active_round_self_sees_cards(client: TestClient):
     game = started_game(client)
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
 
-    active = next(r for r in spike["rounds"] if r["status"] == "BIDDING")
+    active = spike["active"]
+    assert active["status"] == "BIDDING"
     assert isinstance(active["hands"][DEFAULT_ID], list)
     assert len(active["hands"][DEFAULT_ID]) == 5
     for card in active["hands"][DEFAULT_ID]:
@@ -184,7 +184,7 @@ def test_active_round_others_see_count(client: TestClient):
     game = started_game(client)
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
 
-    active = next(r for r in spike["rounds"] if r["status"] == "BIDDING")
+    active = spike["active"]
     for pid, hand in active["hands"].items():
         if pid != DEFAULT_ID:
             assert isinstance(hand, int)
@@ -196,11 +196,7 @@ def test_active_round_includes_active_player_id(client: TestClient):
     game = started_game(client)
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
 
-    active = next(
-        r
-        for r in spike["rounds"]
-        if r["status"] not in ("COMPLETED", "COMPLETED_NO_BIDDERS")
-    )
+    active = spike["active"]
     assert "active_player_id" in active
     assert active["active_player_id"] == game["active_player_id"]
 
@@ -212,16 +208,8 @@ def test_two_players_see_different_hands_in_active_round(client: TestClient):
     spike_organizer = get_spike_game(client, game["id"], DEFAULT_ID)
     spike_manual = get_spike_game(client, game["id"], manual_player)
 
-    active_org = next(
-        r
-        for r in spike_organizer["rounds"]
-        if r["status"] not in ("COMPLETED", "COMPLETED_NO_BIDDERS")
-    )
-    active_man = next(
-        r
-        for r in spike_manual["rounds"]
-        if r["status"] not in ("COMPLETED", "COMPLETED_NO_BIDDERS")
-    )
+    active_org = spike_organizer["active"]
+    active_man = spike_manual["active"]
 
     # Organizer sees own cards, manual player as count
     assert isinstance(active_org["hands"][DEFAULT_ID], list)
@@ -245,11 +233,7 @@ def test_active_round_queued_actions(client: TestClient):
     )
 
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
-    active = next(
-        r
-        for r in spike["rounds"]
-        if r["status"] not in ("COMPLETED", "COMPLETED_NO_BIDDERS")
-    )
+    active = spike["active"]
     assert "queued_actions" in active
     # queued_actions may be empty if action was consumed; field presence is what matters
     assert isinstance(active["queued_actions"], list)

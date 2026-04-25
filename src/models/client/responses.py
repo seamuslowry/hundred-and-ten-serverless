@@ -294,7 +294,7 @@ class SpikeTrick(BaseModel):
     winning_play: Optional[QueuedPlayCard] = None
 
 
-class SpikeCompletedRound(BaseModel):
+class SpikeCompletedWithBidderRound(BaseModel):
     """A completed round where bidding was won and tricks were played"""
 
     status: Literal["COMPLETED"]
@@ -333,8 +333,20 @@ class SpikeActiveRound(BaseModel):
     queued_actions: list[UnorderedActionResponse]
 
 
-type SpikeRound = Annotated[
-    Union[SpikeCompletedRound, SpikeCompletedNoBiddersRound, SpikeActiveRound],
+class SpikeWonInformation(BaseModel):
+    """The current active round (bidding, trump selection, discarding, or tricks)"""
+
+    status: Literal["WON"]
+    winner_player_id: str
+
+
+type SpikeCompletedRound = Annotated[
+    Union[SpikeCompletedWithBidderRound, SpikeCompletedNoBiddersRound],
+    Field(discriminator="status"),
+]
+
+type SpikeActive = Annotated[
+    Union[SpikeActiveRound, SpikeWonInformation],
     Field(discriminator="status"),
 ]
 
@@ -344,8 +356,7 @@ class SpikeGame(BaseModel):
 
     id: str
     name: str
-    status: str
-    winner: Optional[PlayerInGame] = None
     players: list[PlayerInGame]
     scores: dict[str, int]
-    rounds: list[SpikeRound]
+    active: SpikeActive
+    completed_rounds: list[SpikeCompletedRound]

@@ -90,36 +90,31 @@ def spike_game(
     assert m_game.id  # games sent to clients will be saved and have an id
 
     game_rounds = m_game.rounds
-    completed_rounds, active_rounds = (
-        (game_rounds, []) if m_game.winner else (game_rounds[:-1], game_rounds[-1:])
-    )
-
-    spike_rounds: list[responses.SpikeRound] = [
-        *(__spike_round_completed(game_round) for game_round in completed_rounds),
-        *(
-            __spike_round_active(game_round, m_game, client_player_id)
-            for game_round in active_rounds
-        ),
-    ]
+    completed_rounds = game_rounds if m_game.winner else game_rounds[:-1]
 
     return responses.SpikeGame(
         id=m_game.id,
         name=m_game.name,
-        status=m_game.status.name,
-        winner=__player_in_game(m_game.winner) if m_game.winner else None,
+        active=(
+            responses.SpikeWonInformation(
+                status="WON", winner_player_id=m_game.winner.id
+            )
+            if m_game.winner
+            else __spike_round_active(game_rounds[-1], m_game, client_player_id)
+        ),
         players=[__player_in_game(p) for p in m_game.ordered_players],
         scores=m_game.scores,
-        rounds=spike_rounds,
+        completed_rounds=[__spike_round_completed(r) for r in completed_rounds],
     )
 
 
 def __spike_round_completed(
     m_round: internal.Round,
-) -> responses.SpikeRound:
+) -> responses.SpikeCompletedRound:
     bid = m_round.max_bid
 
     if bid is not None and m_round.trump is not None:
-        return responses.SpikeCompletedRound(
+        return responses.SpikeCompletedWithBidderRound(
             status="COMPLETED",
             dealer_player_id=m_round.dealer_player_id,
             bidder_player_id=bid.player_id,
@@ -152,7 +147,7 @@ def __spike_round_active(
     m_round: internal.Round,
     m_game: internal.Game,
     client_player_id: str,
-) -> responses.SpikeRound:
+) -> responses.SpikeActiveRound:
     """Convert an internal Round to the appropriate spike client round type"""
     # Active round: apply visibility rules
     requesting_player = m_game.ordered_players.find(client_player_id)

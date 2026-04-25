@@ -332,7 +332,9 @@ class Game(BaseGame):
                     plays=[Play.from_engine(p) for p in t.plays],
                     winning_play=(
                         # TODO: test for serialization when trick is just starting
-                        Play.from_engine(t.winning_play) if len(t.plays) else None
+                        Play.from_engine(t.winning_play)
+                        if len(t.plays)
+                        else None
                     ),
                 )
                 for t in game_round.tricks
