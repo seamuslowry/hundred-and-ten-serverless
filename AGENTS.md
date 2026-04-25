@@ -76,7 +76,7 @@ A serverless API for the card game **Hundred and Ten** (a.k.a. One Hundred Ten).
 └── docs/                        # Project knowledge base
     ├── brainstorms/             #   Requirements docs from brainstorming sessions
     ├── plans/                   #   Dated implementation plans
-    ├── solutions/               #   Solved problems (logic-errors, test-failures, best-practices)
+    ├── solutions/               #   Documented solutions (bugs, best-practices, tooling decisions, conventions) with YAML frontmatter (module, tags, problem_type) — organized by category
     ├── design-docs/             #   Architectural design documents
     ├── learnings/               #   Cross-cutting lessons and patterns
     └── references/              #   External references, specs, vendor docs
