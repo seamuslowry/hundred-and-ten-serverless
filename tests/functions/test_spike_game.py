@@ -23,6 +23,7 @@ def _act(client: TestClient, game_id: str, player_id: str, action: dict) -> None
     )
     assert resp.status_code == 200
 
+
 # ---------------------------------------------------------------------------
 # AE3: New game in bidding phase
 # ---------------------------------------------------------------------------

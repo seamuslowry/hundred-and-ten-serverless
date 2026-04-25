@@ -35,7 +35,7 @@ from .player import (
     PlayerInRound,
     RequestAutomation,
 )
-from .round import Round
+from .round import DiscardRecord, Round
 from .trick import Trick
 
 
@@ -314,16 +314,29 @@ class Game(BaseGame):
             seed=game_round.seed,
         )
 
+        initial_hands = {
+            p.identifier: [Card.from_engine(c) for c in p.hand]
+            for p in recreated_round.players
+        }
+        current_hands = {
+            p.identifier: [Card.from_engine(c) for c in p.hand]
+            for p in recreated_round.players
+        }
+
         return Round(
             dealer_player_id=game_round.dealer.identifier,
             trump=CardSuit[game_round.trump.name] if game_round.trump else None,
-            initial_hands={
-                p.identifier: [Card.from_engine(c) for c in p.hand]
-                for p in recreated_round.players
-            },
+            hands=current_hands,
             bid_history=[Bid.from_engine(b) for b in game_round.bids],
             discards={
-                d.identifier: [Card.from_engine(c) for c in d.cards]
+                d.identifier: DiscardRecord(
+                    discarded=[Card.from_engine(c) for c in d.cards],
+                    received=[
+                        c
+                        for c in current_hands[d.identifier]
+                        if c not in initial_hands[d.identifier]
+                    ],
+                )
                 for d in game_round.discards
             },
             tricks=[

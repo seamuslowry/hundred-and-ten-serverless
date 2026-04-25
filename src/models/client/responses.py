@@ -286,6 +286,13 @@ class SpikeBid(BaseModel):
     amount: int
 
 
+class SpikeDiscard(BaseModel):
+    """A discard event in a round"""
+
+    discarded: list[Card]
+    received: list[Card]
+
+
 class SpikeTrick(BaseModel):
     """A trick within a spike round"""
 
@@ -293,9 +300,6 @@ class SpikeTrick(BaseModel):
     plays: list[QueuedPlayCard]
     winning_play: Optional[QueuedPlayCard] = None
 
-
-# TODO: think about how to represent hands and discards such that refactors don't require a new endpoint
-# TODO: can there be some kind of inheritence in these models to reduce the likelihood of field drift
 
 class SpikeCompletedWithBidderRound(BaseModel):
     """A completed round where bidding was won and tricks were played"""
@@ -306,7 +310,7 @@ class SpikeCompletedWithBidderRound(BaseModel):
     bid_history: list[SpikeBid]
     bid: Optional[SpikeBid] = None
     initial_hands: dict[str, list[Card]]
-    discards: dict[str, list[Card]]
+    discards: dict[str, SpikeDiscard]
     tricks: list[SpikeTrick]
     scores: dict[str, int]
 
@@ -327,8 +331,8 @@ class SpikeActiveRound(BaseModel):
     bid_history: list[SpikeBid]
     bid: Optional[SpikeBid] = None
     hands: dict[str, Union[list[Card], int]]
-    discards: dict[str, Union[list[Card], int]]
     trump: Optional[SelectableSuit] = None
+    discards: dict[str, Union[SpikeDiscard, int]]
     tricks: list[SpikeTrick]
     active_player_id: str
     queued_actions: list[UnorderedActionResponse]

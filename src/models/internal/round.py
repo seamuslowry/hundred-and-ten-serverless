@@ -7,17 +7,25 @@ from .trick import Trick
 
 
 @dataclass
+class DiscardRecord:
+    """A record of a discard by a player"""
+
+    discarded: list[Card]
+    received: list[Card]
+
+
+@dataclass
 class Round:
     """
     Internal representation of a single round (completed or active).
     """
 
     dealer_player_id: str
-    initial_hands: dict[str, list[Card]]
+    hands: dict[str, list[Card]]
     scores: dict[str, int]
     bid_history: list[Bid] = field(default_factory=list)
     trump: CardSuit | None = None
-    discards: dict[str, list[Card]] = field(default_factory=dict)
+    discards: dict[str, DiscardRecord] = field(default_factory=dict)
     tricks: list[Trick] = field(default_factory=list)
 
     @property

@@ -18,7 +18,7 @@ from .actions import (
 from .constants import Accessibility, BidAmount, CardNumber, CardSuit, GameStatus
 from .game import Game, Lobby, PlayerGroup
 from .player import Human, NaiveCpu, Player, PlayerInGame, PlayerInRound
-from .round import Round
+from .round import DiscardRecord, Round
 from .trick import Trick
 
 __all__ = [
@@ -46,6 +46,7 @@ __all__ = [
     "Player",
     # Round
     "Round",
+    "DiscardRecord",
     # Trick
     "Trick",
     # Constants
