@@ -2,6 +2,8 @@
 
 from src.mappers.client import serialize
 from src.models.client import responses
+from src.models.internal.actions import Bid
+from src.models.internal.constants import BidAmount
 from src.models.internal.game import Game, PlayerGroup
 from src.models.internal.player import Human, NaiveCpu
 
@@ -142,7 +144,7 @@ def test_completed_round_hands_de_anonymized():
     result = serialize.spike_game(g, "p1")
     for r in result.completed_rounds:
         if r.status == "COMPLETED":
-            for pid, hand in r.hands.items():
+            for pid, hand in r.initial_hands.items():
                 assert isinstance(hand, list), f"Player {pid} hand should be a list"
                 assert len(hand) == 5
             break
@@ -159,7 +161,7 @@ def test_completed_round_de_anonymization_independent_of_requester():
 
     assert len(completed_p1) == len(completed_p2)
     for r1, r2 in zip(completed_p1, completed_p2):
-        assert r1.hands == r2.hands
+        assert r1.initial_hands == r2.initial_hands
         assert r1.discards == r2.discards
 
 
@@ -220,6 +222,40 @@ def test_active_round_others_see_count():
         if pid != "p1":
             assert isinstance(hand, int)
             assert hand == 5
+
+
+def test_active_round_bid_is_none_before_any_bid():
+    """bid is None on a fresh active round before anyone has bid.
+
+    Uses all-Human players so no CPU automation fires between game creation
+    and the first act, guaranteeing the active round starts with no bids.
+    """
+    g = Game(
+        organizer=Human("p1"),
+        players=PlayerGroup([Human("p2"), Human("p3"), Human("p4")]),
+        seed="test-seed",
+    )
+    g.id = "test-id"
+    result = serialize.spike_game(g, "p1")
+    assert isinstance(result.active, responses.SpikeActiveRound)
+    assert result.active.bid is None
+
+
+def test_active_round_bid_populated_after_a_bid():
+    """bid contains player_id and amount once a player has bid."""
+    g = Game(
+        organizer=Human("p1"),
+        players=PlayerGroup([Human("p2"), Human("p3"), Human("p4")]),
+        seed="test-seed",
+    )
+    g.id = "test-id"
+    active_player = g.active_player_id
+    g.act(Bid(active_player, BidAmount.TWENTY))
+    result = serialize.spike_game(g, "p1")
+    assert isinstance(result.active, responses.SpikeActiveRound)
+    assert result.active.bid is not None
+    assert result.active.bid.player_id == active_player
+    assert result.active.bid.amount == BidAmount.TWENTY
 
 
 def test_active_round_active_player_id():

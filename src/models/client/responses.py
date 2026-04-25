@@ -294,16 +294,18 @@ class SpikeTrick(BaseModel):
     winning_play: Optional[QueuedPlayCard] = None
 
 
+# TODO: think about how to represent hands and discards such that refactors don't require a new endpoint
+# TODO: can there be some kind of inheritence in these models to reduce the likelihood of field drift
+
 class SpikeCompletedWithBidderRound(BaseModel):
     """A completed round where bidding was won and tricks were played"""
 
     status: Literal["COMPLETED"]
     dealer_player_id: str
-    bidder_player_id: str
-    bid_amount: int
     trump: SelectableSuit
     bid_history: list[SpikeBid]
-    hands: dict[str, list[Card]]
+    bid: Optional[SpikeBid] = None
+    initial_hands: dict[str, list[Card]]
     discards: dict[str, list[Card]]
     tricks: list[SpikeTrick]
     scores: dict[str, int]
@@ -323,10 +325,9 @@ class SpikeActiveRound(BaseModel):
     status: Literal["BIDDING", "TRUMP_SELECTION", "DISCARD", "TRICKS"]
     dealer_player_id: str
     bid_history: list[SpikeBid]
+    bid: Optional[SpikeBid] = None
     hands: dict[str, Union[list[Card], int]]
     discards: dict[str, Union[list[Card], int]]
-    bidder_player_id: Optional[str] = None
-    bid_amount: Optional[int] = None
     trump: Optional[SelectableSuit] = None
     tricks: list[SpikeTrick]
     active_player_id: str

@@ -13,6 +13,16 @@ from tests.helpers import (
     started_game,
 )
 
+
+def _act(client: TestClient, game_id: str, player_id: str, action: dict) -> None:
+    """Post an action to the actions endpoint."""
+    resp = client.post(
+        f"/players/{player_id}/games/{game_id}/actions",
+        json=action,
+        headers={"authorization": f"Bearer {player_id}"},
+    )
+    assert resp.status_code == 200
+
 # ---------------------------------------------------------------------------
 # AE3: New game in bidding phase
 # ---------------------------------------------------------------------------
@@ -224,6 +234,32 @@ def test_two_players_see_different_hands_in_active_round(client: TestClient):
     # Manual player sees own cards, organizer as count
     assert isinstance(active_man["hands"][manual_player], list)
     assert isinstance(active_man["hands"][DEFAULT_ID], int)
+
+
+def test_active_round_bid_is_none_before_any_bid(client: TestClient):
+    """Active round bid field is null when no one has bid yet.
+
+    Uses game_with_manual_player so the first active player is Human and no
+    CPU automation fires before the first act, guaranteeing bid starts null.
+    """
+    game, _manual_player = game_with_manual_player(client)
+    spike = get_spike_game(client, game["id"], DEFAULT_ID)
+
+    assert spike["active"]["bid"] is None
+
+
+def test_active_round_bid_populated_after_a_bid(client: TestClient):
+    """Active round bid field contains player_id and amount once a bid is placed."""
+    game, manual_player = game_with_manual_player(client)
+    assert game["active_player_id"] == manual_player
+
+    _act(client, game["id"], manual_player, {"type": "BID", "amount": BidAmount.TWENTY})
+
+    spike = get_spike_game(client, game["id"], DEFAULT_ID)
+    bid = spike["active"]["bid"]
+    assert bid is not None
+    assert bid["player_id"] == manual_player
+    assert bid["amount"] == BidAmount.TWENTY
 
 
 def test_active_round_queued_actions(client: TestClient):

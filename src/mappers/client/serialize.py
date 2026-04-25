@@ -117,11 +117,10 @@ def __spike_round_completed(
         return responses.SpikeCompletedWithBidderRound(
             status="COMPLETED",
             dealer_player_id=m_round.dealer_player_id,
-            bidder_player_id=bid.player_id,
-            bid_amount=bid.amount,
+            bid=__spike_bid(bid),
             trump=SelectableSuit[m_round.trump.name],
             bid_history=[__spike_bid(b) for b in m_round.bid_history],
-            hands={
+            initial_hands={
                 pid: [__card(c) for c in hand]
                 for pid, hand in m_round.initial_hands.items()
             },
@@ -165,6 +164,7 @@ def __spike_round_active(
         status=m_game.status.name,
         dealer_player_id=m_round.dealer_player_id,
         bid_history=[__spike_bid(b) for b in m_round.bid_history],
+        bid = __spike_bid(bid) if bid else None,
         hands={
             player.id: (
                 [__card(c) for c in player.hand]
@@ -176,11 +176,9 @@ def __spike_round_active(
             )
         },
         discards={
-            pid: ([__card(c) for c in cards] if pid == client_player_id else len(cards))
-            for pid, cards in m_round.discards.items()
+            player_id: ([__card(c) for c in cards] if player_id == client_player_id else len(cards))
+            for player_id, cards in m_round.discards.items()
         },
-        bidder_player_id=bid.player_id if bid else None,
-        bid_amount=bid.amount if bid else None,
         trump=(SelectableSuit[m_round.trump.name] if m_round.trump else None),
         tricks=[__spike_trick(t) for t in m_round.tricks],
         active_player_id=m_game.active_player_id,
