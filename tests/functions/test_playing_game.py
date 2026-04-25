@@ -18,7 +18,7 @@ from tests.helpers import (
 def test_perform_round_actions(client: TestClient):
     """A round of the game can be played"""
     created_game = started_game(client)
-    assert GameStatus.BIDDING.name == created_game["status"]
+    assert GameStatus.BIDDING.name == created_game["active"]["status"]
 
     # assert that current suggestion is a bid
     suggested_bid = get_suggestion(client, created_game["id"])
@@ -44,7 +44,7 @@ def test_perform_round_actions(client: TestClient):
 
     # assert that now in trump selection
     game = get_game(client, created_game["id"], DEFAULT_ID)
-    assert GameStatus.TRUMP_SELECTION.name == game["status"]
+    assert GameStatus.TRUMP_SELECTION.name == game["active"]["status"]
 
     # assert that current suggestion is a trump selection
     suggested_trump = get_suggestion(client, created_game["id"])
@@ -68,7 +68,7 @@ def test_perform_round_actions(client: TestClient):
     )
 
     game = get_game(client, created_game["id"], DEFAULT_ID)
-    assert GameStatus.DISCARD.name == game["status"]
+    assert GameStatus.DISCARD.name == game["active"]["status"]
 
     # assert that current suggestion is a discard
     suggested_discard = get_suggestion(client, created_game["id"])
@@ -93,7 +93,7 @@ def test_perform_round_actions(client: TestClient):
     assert contains_unsequenced(results, {"type": "TRICK_START"})
 
     game = get_game(client, created_game["id"], DEFAULT_ID)
-    assert GameStatus.TRICKS.name == game["status"]
+    assert GameStatus.TRICKS.name == game["active"]["status"]
 
     # ask for a suggestion so we know what card we can play
     suggested_play = get_suggestion(client, created_game["id"])
@@ -116,8 +116,8 @@ def test_perform_round_actions(client: TestClient):
     )
 
     game = get_game(client, created_game["id"], DEFAULT_ID)
-    assert GameStatus.TRICKS.name == game["status"]
-    assert 2 == len(game["tricks"])
+    assert GameStatus.TRICKS.name == game["active"]["status"]
+    assert 2 == len(game["active"]["tricks"])
 
 
 def test_prepass_and_rescind_prepass(client: TestClient):
@@ -136,8 +136,7 @@ def test_prepass_and_rescind_prepass(client: TestClient):
     ).json()
     assert len(results) == 0  # removing a queued action has no results
     game = get_game(client, game["id"], DEFAULT_ID)
-    player = next(p for p in game["players"] if p["id"] == DEFAULT_ID)
-    assert player["queued_actions"] == []
+    assert game["active"].get("queued_actions", []) == []
 
 
 def test_leave_playing_game_as_organizer(client: TestClient):
@@ -243,5 +242,9 @@ def test_cannot_violate_engine_rule(client: TestClient):
 
     after_events = get_events(client, original_game["id"], DEFAULT_ID)
 
-    assert original_game == game
+    # Compare the canonical game response (excluding the convenience active_player_id key)
+    original_game_canonical = {
+        k: v for k, v in original_game.items() if k != "active_player_id"
+    }
+    assert original_game_canonical == game
     assert original_events == after_events

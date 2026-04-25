@@ -52,7 +52,10 @@ def started_game(
         headers={"authorization": f"Bearer {organizer}"},
     ).json()
     assert {"type": "GAME_START", "sequence": 0} in results
-    return get_game(test_client, created_lobby["id"], organizer)
+    game = get_game(test_client, created_lobby["id"], organizer)
+    # Expose active_player_id at the top level for convenience
+    game["active_player_id"] = game["active"].get("active_player_id")
+    return game
 
 
 def completed_game(test_client: TestClient) -> dict[str, Any]:
@@ -68,7 +71,10 @@ def completed_game(test_client: TestClient) -> dict[str, Any]:
         headers={"authorization": f"Bearer {active_player_id}"},
     )
     assert len(resp.json()) > 0
-    return get_game(test_client, game["id"], active_player_id)
+    result = get_game(test_client, game["id"], active_player_id)
+    # Expose active_player_id at the top level for convenience
+    result["active_player_id"] = result["active"].get("active_player_id")
+    return result
 
 
 def request_suggestions(
@@ -107,7 +113,10 @@ def game_with_manual_player(test_client: TestClient) -> tuple[dict[str, Any], st
         headers={"authorization": f"Bearer {organizer}"},
     )
     assert 200 == resp.status_code
-    return get_game(test_client, lobby["id"], organizer), manual_player
+    game = get_game(test_client, lobby["id"], organizer)
+    # Expose active_player_id at the top level for convenience
+    game["active_player_id"] = game["active"].get("active_player_id")
+    return game, manual_player
 
 
 def queue_action(
@@ -125,12 +134,13 @@ def queue_action(
 
     game = get_game(test_client, game_id, player_id)
 
-    queued_player = next(p for p in game["players"] if p["id"] == player_id)
+    # In the spike format, queued_actions is in active (the requesting player's queue)
+    player_queued_actions = game["active"].get("queued_actions", [])
     assert contains_unsequenced(
         # If the action was consumed immediately it appears in results[:1];
         # if it is still pending it appears in queued_actions[-1:].
         # Exactly one of the two lists will contain it.
-        [*queued_player["queued_actions"][-1:], *results[:1]],
+        [*player_queued_actions[-1:], *results[:1]],
         {
             **action,
             "player_id": player_id,

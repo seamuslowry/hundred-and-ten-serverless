@@ -45,10 +45,9 @@ def test_queue_bid_action(client: TestClient):
 
     game = get_game(client, game["id"], DEFAULT_ID)
 
-    assert game["active_player_id"] == DEFAULT_ID
-    assert game["status"] == "TRUMP_SELECTION"
-    player = next(p for p in game["players"] if p["id"] == DEFAULT_ID)
-    assert player["queued_actions"] == []
+    assert game["active"]["active_player_id"] == DEFAULT_ID
+    assert game["active"]["status"] == "TRUMP_SELECTION"
+    assert game["active"].get("queued_actions", []) == []
 
 
 def test_queue_pass_action(client: TestClient):
@@ -79,8 +78,7 @@ def test_queue_pass_action(client: TestClient):
 
     game = get_game(client, game["id"], DEFAULT_ID)
 
-    player = next(p for p in game["players"] if p["id"] == DEFAULT_ID)
-    assert player["queued_actions"] == []
+    assert game["active"].get("queued_actions", []) == []
 
 
 def test_other_players_cant_see_queue(client: TestClient):
@@ -94,12 +92,12 @@ def test_other_players_cant_see_queue(client: TestClient):
     )
 
     manual_player_view = get_game(client, game["id"], manual_player)
-    player = next(p for p in manual_player_view["players"] if p["id"] == DEFAULT_ID)
-    assert "queued_actions" not in player
+    # manual_player sees their own (empty) queued_actions, not DEFAULT_ID's queue
+    assert manual_player_view["active"].get("queued_actions", []) == []
 
     default_player_view = get_game(client, game["id"], DEFAULT_ID)
-    player = next(p for p in default_player_view["players"] if p["id"] == DEFAULT_ID)
-    assert "queued_actions" in player
+    # DEFAULT_ID sees their own non-empty queued_actions
+    assert len(default_player_view["active"]["queued_actions"]) > 0
 
 
 def test_only_human_players_queue(client: TestClient):
@@ -144,7 +142,7 @@ def test_queue_multiple_actions(client: TestClient):
         f"/players/{DEFAULT_ID}/games/{game['id']}",
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
-    hand = hand_resp.json()["players"][0]["hand"]
+    hand = hand_resp.json()["active"]["hands"][DEFAULT_ID]
     card = next(c for c in hand if c["suit"] != "JOKER")
 
     # queue actions
@@ -186,8 +184,7 @@ def test_queue_multiple_actions(client: TestClient):
 
     # queued actions are consumed
     game = get_game(client, game["id"], DEFAULT_ID)
-    player = next(p for p in game["players"] if p["id"] == DEFAULT_ID)
-    assert len(player["queued_actions"]) == 0
+    assert len(game["active"].get("queued_actions", [])) == 0
 
 
 def test_invalid_action_clears_queue(client: TestClient):
@@ -218,10 +215,9 @@ def test_invalid_action_clears_queue(client: TestClient):
     # FIFTEEN is below 60 (not in available_actions), dropped. SELECT_TRUMP is not
     # valid during BIDDING, also dropped. The FIFO drain clears the entire queue.
     game = get_game(client, game["id"], DEFAULT_ID)
-    assert game["status"] == "BIDDING"
-    assert game["active_player_id"] == DEFAULT_ID
-    player = next(p for p in game["players"] if p["id"] == DEFAULT_ID)
-    assert player["queued_actions"] == []
+    assert game["active"]["status"] == "BIDDING"
+    assert game["active"]["active_player_id"] == DEFAULT_ID
+    assert game["active"].get("queued_actions", []) == []
 
 
 def test_valid_queued_action_survives_other_players_turns(client: TestClient):
@@ -265,10 +261,9 @@ def test_valid_queued_action_survives_other_players_turns(client: TestClient):
     # against available_actions during BIDDING and is not valid, so it is NOT consumed.
     # SELECT_TRUMP survives in the queue waiting for a future state where it is valid.
     game = get_game(client, game["id"], DEFAULT_ID)
-    assert game["status"] == "BIDDING"
-    player = next(p for p in game["players"] if p["id"] == DEFAULT_ID)
+    assert game["active"]["status"] == "BIDDING"
     assert contains_unsequenced(
-        player["queued_actions"],
+        game["active"]["queued_actions"],
         {
             "type": "SELECT_TRUMP",
             "player_id": DEFAULT_ID,

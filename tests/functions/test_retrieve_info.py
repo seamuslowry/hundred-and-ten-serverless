@@ -23,11 +23,12 @@ from tests.helpers import (
 def test_search_winner(client: TestClient):
     """Can search by winner"""
     game = completed_game(client)
+    winner_id = game["active"]["winner_player_id"]
 
     # search games
     resp = client.post(
         f"/players/{DEFAULT_ID}/games/search",
-        json={"winner": game["winner"]["id"]},
+        json={"winner": winner_id},
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
     games = resp.json()
@@ -130,8 +131,8 @@ def test_game_players(client: TestClient):
     """Can retrieve information for players in a game"""
     original_game = completed_game(client)
 
-    # Create player records for the human player (organizer)
-    organizer_id = original_game["organizer"]["id"]
+    # Create player records for the human player (organizer is DEFAULT_ID)
+    organizer_id = DEFAULT_ID
     organizer = player(client, Player(organizer_id))
 
     # get that game's players

@@ -315,9 +315,11 @@ def test_active_round_bid_populated_after_a_bid(client: TestClient):
     bid = spike["active"]["bid"]
     assert bid is not None
 
-    assert {"player_id": manual_player, "amount": BidAmount.TWENTY} in spike["active"][
-        "bid_history"
-    ]
+    assert {
+        "type": "BID",
+        "player_id": manual_player,
+        "amount": BidAmount.TWENTY,
+    } in spike["active"]["bid_history"]
 
 
 def test_active_round_queued_actions(client: TestClient):
