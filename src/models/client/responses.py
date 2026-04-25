@@ -241,7 +241,7 @@ class Game(BaseModel):
     name: str
 
 
-class WaitingGame(Game):
+class LobbyResponse(Game):
     """A class to model the client format of a waiting Hundred and Ten game"""
 
     accessibility: str

@@ -18,11 +18,11 @@ def player(m_player: internal.Player) -> responses.Player:
 
 def lobby(
     m_lobby: internal.Lobby,
-) -> responses.WaitingGame:
+) -> responses.LobbyResponse:
     """Return a lobby as it can be provided to the client"""
     assert m_lobby.id  # lobbies sent to the client will be saved and have an id
 
-    return responses.WaitingGame(
+    return responses.LobbyResponse(
         id=m_lobby.id,
         name=m_lobby.name,
         accessibility=m_lobby.accessibility.name,
