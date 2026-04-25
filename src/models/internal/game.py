@@ -311,8 +311,7 @@ class Game(BaseGame):
         recreated_round = EngineRound(
             game_players=[EnginePlayer(p.identifier) for p in game_round.players],
             dealer_identifier=game_round.dealer.identifier,
-            # TODO: have the engine expose a round's seed
-            seed=game_round.deck.seed,
+            seed=game_round.seed,
         )
 
         return Round(
