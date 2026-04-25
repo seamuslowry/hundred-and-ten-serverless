@@ -361,7 +361,6 @@ class Game(BaseGame):
                 for t in game_round.tricks
             ],
             scores=round_scores,
-            played_cards=played_cards,
         )
 
     @property

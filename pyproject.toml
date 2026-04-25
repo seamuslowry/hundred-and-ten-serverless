@@ -61,6 +61,10 @@ max-parents = 15
 # Allow Settings/Config classes to have no methods (framework pattern)
 min-public-methods = 0
 
+[tool.pylint.similarities]
+# Do not flag duplicate code in test files
+ignore-paths = ["tests/.*"]
+
 [tool.ruff]
 target-version = "py314"
 line-length = 100

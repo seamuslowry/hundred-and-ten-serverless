@@ -27,7 +27,6 @@ class Round:
     trump: CardSuit | None = None
     discards: dict[str, DiscardRecord] = field(default_factory=dict)
     tricks: list[Trick] = field(default_factory=list)
-    played_cards: dict[str, list[Card]] = field(default_factory=dict)
 
     @property
     def max_bid(self) -> Bid | None:
