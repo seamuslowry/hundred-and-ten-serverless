@@ -95,7 +95,9 @@ def test_completed_game_has_all_pass_rounds(client: TestClient):
     game = completed_game(client)
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
 
-    no_bidder = [r for r in spike["completed_rounds"] if r["status"] == "COMPLETED_NO_BIDDERS"]
+    no_bidder = [
+        r for r in spike["completed_rounds"] if r["status"] == "COMPLETED_NO_BIDDERS"
+    ]
     assert len(no_bidder) > 0
 
 
@@ -151,8 +153,12 @@ def test_two_players_see_identical_completed_round_data(client: TestClient):
     spike_p1 = get_spike_game(client, game["id"], p1)
     spike_p2 = get_spike_game(client, game["id"], p2)
 
-    completed_p1 = [r for r in spike_p1["completed_rounds"] if r["status"] == "COMPLETED"]
-    completed_p2 = [r for r in spike_p2["completed_rounds"] if r["status"] == "COMPLETED"]
+    completed_p1 = [
+        r for r in spike_p1["completed_rounds"] if r["status"] == "COMPLETED"
+    ]
+    completed_p2 = [
+        r for r in spike_p2["completed_rounds"] if r["status"] == "COMPLETED"
+    ]
 
     assert len(completed_p1) == len(completed_p2)
     for r1, r2 in zip(completed_p1, completed_p2):

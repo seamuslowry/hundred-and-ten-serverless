@@ -87,7 +87,9 @@ def test_all_pass_round_type():
     """All-pass rounds map to SpikeCompletedNoBiddersRound."""
     g = _make_completed_game()
     result = serialize.spike_game(g, "p1")
-    no_bidder = [r for r in result.completed_rounds if r.status == "COMPLETED_NO_BIDDERS"]
+    no_bidder = [
+        r for r in result.completed_rounds if r.status == "COMPLETED_NO_BIDDERS"
+    ]
     assert len(no_bidder) > 0
     for r in no_bidder:
         assert isinstance(r, responses.SpikeCompletedNoBiddersRound)
