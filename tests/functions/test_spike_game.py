@@ -60,8 +60,8 @@ def test_completed_game_all_rounds_have_status(client: TestClient):
         ), f"Unexpected round status: {game_round['status']}"
 
 
-def test_completed_rounds_show_full_initial_hands(client: TestClient):
-    """Completed rounds show initial hands."""
+def test_completed_rounds_show_full_info(client: TestClient):
+    """Completed rounds shows full info."""
     game = completed_game(client)
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
 
@@ -71,9 +71,16 @@ def test_completed_rounds_show_full_initial_hands(client: TestClient):
             assert isinstance(
                 hand, list
             ), f"Player {player_id} hand should be a card list in completed round"
+        if game_round["status"] == "COMPLETED":
+            for player_id, discards in game_round["discards"].items():
+                assert isinstance(
+                    discards["discarded"], list
+                ), f"Player {player_id} should show discards in a completed round"
+                assert isinstance(
+                    discards["received"], list
+                ), f"Player {player_id} should show received cards in completed round"
 
-
-# TODO: test for discards shown for all players
+                assert len(discards["discarded"]) == len(discards["received"])
 
 
 def test_completed_rounds_show_tricks_with_bleeding(client: TestClient):
@@ -90,34 +97,31 @@ def test_completed_rounds_show_tricks_with_bleeding(client: TestClient):
                 assert trick["winning_play"] is not None
 
 
-# TODO: control this manually
-def test_completed_game_has_all_pass_rounds(client: TestClient):
-    """Completed game includes COMPLETED_NO_BIDDERS rounds."""
-    game = completed_game(client)
-    spike = get_spike_game(client, game["id"], DEFAULT_ID)
-
-    no_bidder = [
-        r for r in spike["completed_rounds"] if r["status"] == "COMPLETED_NO_BIDDERS"
-    ]
-    assert len(no_bidder) > 0
-
-
-# TODO: control this manually
 def test_all_pass_rounds_have_hands_but_no_tricks(client: TestClient):
     """Edge case: COMPLETED_NO_BIDDERS rounds have initial_hands but no tricks or discards."""
-    game = completed_game(client)
-    spike = get_spike_game(client, game["id"], DEFAULT_ID)
 
-    for round_ in spike["completed_rounds"]:
-        if round_["status"] == "COMPLETED_NO_BIDDERS":
-            assert len(round_["initial_hands"]) == 4
-            # COMPLETED_NO_BIDDERS rounds only have: status, dealer_player_id, initial_hands
-            assert set(round_.keys()) == {
-                "status",
-                "dealer_player_id",
-                "initial_hands",
-            }
-            break
+    no_bidders_rounds = []
+
+    # be sure that the game has COMPLETED_NO_BIDDERS to avoid flake
+    while not no_bidders_rounds:
+        game = completed_game(client)
+        spike = get_spike_game(client, game["id"], DEFAULT_ID)
+
+        no_bidders_rounds = [
+            r
+            for r in spike["completed_rounds"]
+            if r["status"] == "COMPLETED_NO_BIDDERS"
+        ]
+
+    for game_round in no_bidders_rounds:
+        assert len(game_round["initial_hands"]) == 4
+        # COMPLETED_NO_BIDDERS rounds only have: status, dealer_player_id, initial_hands
+        assert set(game_round.keys()) == {
+            "status",
+            "dealer_player_id",
+            "initial_hands",
+        }
+        break
 
 
 def test_completed_game_scores_sum_to_cumulative(client: TestClient):

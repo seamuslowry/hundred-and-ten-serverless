@@ -320,7 +320,16 @@ class Game(BaseGame):
         }
         current_hands = {
             p.identifier: [Card.from_engine(c) for c in p.hand]
-            for p in recreated_round.players
+            for p in game_round.players
+        }
+        played_cards = {
+            p.identifier: [
+                Card.from_engine(play.card)
+                for t in game_round.tricks
+                for play in t.plays
+                if play.identifier == p.identifier
+            ]
+            for p in game_round.players
         }
 
         return Round(
@@ -333,7 +342,9 @@ class Game(BaseGame):
                     discarded=[Card.from_engine(c) for c in d.cards],
                     received=[
                         c
-                        for c in current_hands[d.identifier]
+                        for c in (
+                            current_hands[d.identifier] + played_cards[d.identifier]
+                        )
                         if c not in initial_hands[d.identifier]
                     ],
                 )
@@ -344,14 +355,13 @@ class Game(BaseGame):
                     bleeding=t.bleeding,
                     plays=[Play.from_engine(p) for p in t.plays],
                     winning_play=(
-                        Play.from_engine(t.winning_play)
-                        if len(t.plays)
-                        else None
+                        Play.from_engine(t.winning_play) if len(t.plays) else None
                     ),
                 )
                 for t in game_round.tricks
             ],
             scores=round_scores,
+            played_cards=played_cards,
         )
 
     @property
