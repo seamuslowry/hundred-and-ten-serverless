@@ -146,5 +146,6 @@ async def suggestion(player_id: str, game_id: PydanticObjectId):
 async def search_games(player_id: str, body: SearchGamesRequest):
     """Search for games"""
     return [
-        serialize.spike_game(g, player_id) for g in await GameService.search(player_id, body)
+        serialize.spike_game(g, player_id)
+        for g in await GameService.search(player_id, body)
     ]

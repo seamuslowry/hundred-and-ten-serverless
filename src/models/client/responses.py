@@ -202,25 +202,6 @@ class PlayerInGame(BaseModel):
     type: PlayerType
 
 
-class OtherPlayerInRound(BaseModel):
-    """A class to model the client format of another Hundred and Ten player"""
-
-    id: str
-    hand_size: int
-    type: PlayerType
-
-
-class SelfInRound(BaseModel):
-    """A class to model the client format of the logged in Hundred and Ten player"""
-
-    id: str
-    type: PlayerType
-    hand: list[Card]
-    queued_actions: list[UnorderedActionResponse]
-
-
-type PlayerInRound = SelfInRound | OtherPlayerInRound
-
 # =============================================================================
 # Games
 # =============================================================================
@@ -248,30 +229,6 @@ class LobbyResponse(Game):
     organizer: PlayerInGame
     players: list[PlayerInGame]
     invitees: list[PlayerInGame]
-
-
-class StartedGame(Game):
-    """A class to model the client format of a started Hundred and Ten game"""
-
-    status: str
-    scores: dict[str, int]
-    dealer_player_id: str
-    bidder_player_id: Optional[str]
-    active_player_id: Optional[str]
-    bid_amount: Optional[int]
-    trump: Optional[SelectableSuit]
-    tricks: list[Trick]
-    players: list[PlayerInRound]
-
-
-class CompletedGame(Game):
-    """A class to model the client format of a completed Hundred and Ten game"""
-
-    status: str
-    winner: PlayerInGame
-    organizer: PlayerInGame
-    players: list[PlayerInGame]
-    scores: dict[str, int]
 
 
 # =============================================================================
