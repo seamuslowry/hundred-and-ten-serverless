@@ -98,7 +98,7 @@ def test_completed_rounds_show_tricks_with_bleeding(client: TestClient):
 
 
 def test_all_pass_rounds_have_hands_but_no_tricks(client: TestClient):
-    """Edge case: COMPLETED_NO_BIDDERS rounds have initial_hands but no tricks or discards."""
+    """COMPLETED_NO_BIDDERS rounds have initial_hands but no tricks or discards."""
 
     no_bidders_rounds = []
 
@@ -125,7 +125,7 @@ def test_all_pass_rounds_have_hands_but_no_tricks(client: TestClient):
 
 
 def test_completed_game_scores_sum_to_cumulative(client: TestClient):
-    """Edge case: sum of COMPLETED round scores equals top-level cumulative scores.
+    """Sum of COMPLETED round scores equals top-level cumulative scores.
     COMPLETED_NO_BIDDERS rounds score 0 for all players and have no scores field.
     """
     game = completed_game(client)
@@ -149,7 +149,7 @@ def test_completed_game_scores_sum_to_cumulative(client: TestClient):
 
 
 def test_two_players_see_identical_completed_round_data(client: TestClient):
-    """Edge case: two different players see the same data for completed rounds."""
+    """Two different players see the same data for completed rounds."""
     game = completed_game(client)
     # The active_player_id before the game ended is stored in the game
     # Use two player IDs from the game's players list
