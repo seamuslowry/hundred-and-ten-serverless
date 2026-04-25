@@ -2,7 +2,7 @@
 
 from fastapi.testclient import TestClient
 
-from src.models.internal.constants import BidAmount
+from src.models.internal.constants import BidAmount, CardSuit
 from tests.helpers import (
     DEFAULT_ID,
     completed_game,
@@ -72,7 +72,9 @@ def test_completed_rounds_show_full_initial_hands(client: TestClient):
                 hand, list
             ), f"Player {player_id} hand should be a card list in completed round"
 
+
 # TODO: test for discards shown for all players
+
 
 def test_completed_rounds_show_tricks_with_bleeding(client: TestClient):
     """Completed rounds include trick information."""
@@ -155,9 +157,54 @@ def test_two_players_see_identical_completed_round_data(client: TestClient):
 
     assert spike_p1 == spike_p2
 
+
 # ---------------------------------------------------------------------------
-# Active round visibility
+# Active round
 # ---------------------------------------------------------------------------
+
+
+def test_new_trick_no_winning_play(client: TestClient):
+    """A trick with only has a winning play with >0 plays."""
+    game, manual_player = game_with_manual_player(client)
+
+    queue_action(
+        client,
+        game["id"],
+        DEFAULT_ID,
+        {"type": "BID", "amount": BidAmount.SHOOT_THE_MOON},
+    )
+    queue_action(
+        client,
+        game["id"],
+        DEFAULT_ID,
+        {"type": "SELECT_TRUMP", "suit": CardSuit.DIAMONDS},
+    )
+    queue_action(client, game["id"], DEFAULT_ID, {"type": "DISCARD", "cards": []})
+    queue_action(
+        client, game["id"], manual_player, {"type": "BID", "amount": BidAmount.PASS}
+    )
+    queue_action(client, game["id"], manual_player, {"type": "DISCARD", "cards": []})
+
+    no_plays = get_spike_game(client, game["id"], manual_player)
+    no_plays_round = no_plays["active"]
+    assert no_plays_round["status"] == "TRICKS"
+    assert len(no_plays_round["tricks"]) == 1
+    assert len(no_plays_round["tricks"][0]["plays"]) == 0
+    assert no_plays_round["tricks"][0]["winning_play"] is None
+
+    queue_action(
+        client,
+        game["id"],
+        manual_player,
+        {"type": "PLAY", "card": no_plays["active"]["hands"][manual_player][0]},
+    )
+
+    one_play = get_spike_game(client, game["id"], manual_player)
+    one_play_round = one_play["active"]
+    assert one_play_round["status"] == "TRICKS"
+    assert len(one_play_round["tricks"]) == 1
+    assert len(one_play_round["tricks"][0]["plays"]) == 3  # manual and two automatic
+    assert one_play_round["tricks"][0]["winning_play"] is not None
 
 
 def test_active_round_self_sees_cards(client: TestClient):
@@ -232,7 +279,9 @@ def test_active_round_bid_populated_after_a_bid(client: TestClient):
     game, manual_player = game_with_manual_player(client)
     assert game["active_player_id"] == manual_player
 
-    queue_action(client, game["id"], manual_player, {"type": "BID", "amount": BidAmount.TWENTY})
+    queue_action(
+        client, game["id"], manual_player, {"type": "BID", "amount": BidAmount.TWENTY}
+    )
 
     spike = get_spike_game(client, game["id"], DEFAULT_ID)
     bid = spike["active"]["bid"]
