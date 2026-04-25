@@ -7,8 +7,11 @@ from uuid import uuid4
 
 from hundredandten.automation import naive
 from hundredandten.automation.engineadapter import EngineAdapter, UnavailableActionError
-from hundredandten.engine import Game as Engine, Player as EnginePlayer
-from hundredandten.engine.round import Round as EngineRound
+from hundredandten.engine import (
+    Game as Engine,
+    Player as EnginePlayer,
+    Round as EngineRound,
+)
 
 from .actions import (
     Action,

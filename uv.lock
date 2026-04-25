@@ -482,13 +482,13 @@ wheels = [
 
 [[package]]
 name = "hundredandten-engine"
-version = "0.0.5"
+version = "0.0.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "hundredandten-deck" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/45/52/57976037a8ec1079a6b46281c403ffdebff52e9d5bf8d3e9228a19bc97a8/hundredandten_engine-0.0.5-py3-none-any.whl", hash = "sha256:c37c5929d973faf1b38f7e79917a27054411f46e822a6d6ef6f5e78374ee34be", size = 11989, upload-time = "2026-04-25T13:32:41.452Z" },
+    { url = "https://files.pythonhosted.org/packages/f4/58/07a825931e534e6fb3f10422aced090adb0e9286278b7e95de43c5fc5826/hundredandten_engine-0.0.6-py3-none-any.whl", hash = "sha256:fb916f37b5f71b77e3b17c65a6ca4cadb825f4b6ba66edbcd3112eb894b18fc5", size = 12020, upload-time = "2026-04-25T19:35:24.557Z" },
 ]
 
 [[package]]
@@ -543,7 +543,7 @@ requires-dist = [
     { name = "google-auth", specifier = "==2.49.2" },
     { name = "hundredandten-automation-engineadapter", specifier = "==0.0.4" },
     { name = "hundredandten-automation-naive", specifier = "==0.0.4" },
-    { name = "hundredandten-engine", specifier = "==0.0.5" },
+    { name = "hundredandten-engine", specifier = "==0.0.6" },
     { name = "pyjwt", specifier = "==2.12.1" },
     { name = "pymongo", specifier = "==4.16.0" },
     { name = "requests", specifier = "==2.33.1" },
