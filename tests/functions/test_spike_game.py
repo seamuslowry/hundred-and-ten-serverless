@@ -211,6 +211,30 @@ def test_new_trick_no_winning_play(client: TestClient):
     assert one_play_round["tricks"][0]["winning_play"] is not None
 
 
+def test_active_round_matching_bid_shows_latest(client: TestClient):
+    """Active round shows the latest bid of matching values."""
+    game, manual_player = game_with_manual_player(client)
+
+
+    queue_action(
+        client,
+        game["id"],
+        manual_player,
+        {"type": "BID", "amount": BidAmount.SHOOT_THE_MOON},
+    )
+    queue_action(
+        client,
+        game["id"],
+        DEFAULT_ID,
+        {"type": "BID", "amount": BidAmount.SHOOT_THE_MOON},
+    )
+
+    spike = get_spike_game(client, game["id"], DEFAULT_ID)
+
+    active = spike["active"]
+
+    assert active["bid"]["player_id"] == DEFAULT_ID
+
 def test_active_round_self_sees_cards(client: TestClient):
     """Requesting player sees only their own hand as cards."""
     game = started_game(client)
