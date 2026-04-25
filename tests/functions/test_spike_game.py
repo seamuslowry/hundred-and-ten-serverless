@@ -268,7 +268,7 @@ def test_active_round_includes_active_player_id(client: TestClient):
 
     active = spike["active"]
     assert "active_player_id" in active
-    assert active["active_player_id"] == game["active_player_id"]
+    assert active["active_player_id"] == game["active"]["active_player_id"]
 
 
 def test_two_players_see_different_hands_in_active_round(client: TestClient):
@@ -305,7 +305,7 @@ def test_active_round_bid_is_none_before_any_bid(client: TestClient):
 def test_active_round_bid_populated_after_a_bid(client: TestClient):
     """Active round bid field contains player_id and amount once a bid is placed."""
     game, manual_player = game_with_manual_player(client)
-    assert game["active_player_id"] == manual_player
+    assert game["active"]["active_player_id"] == manual_player
 
     queue_action(
         client, game["id"], manual_player, {"type": "BID", "amount": BidAmount.TWENTY}

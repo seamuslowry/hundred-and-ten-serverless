@@ -242,9 +242,5 @@ def test_cannot_violate_engine_rule(client: TestClient):
 
     after_events = get_events(client, original_game["id"], DEFAULT_ID)
 
-    # Compare the canonical game response (excluding the convenience active_player_id key)
-    original_game_canonical = {
-        k: v for k, v in original_game.items() if k != "active_player_id"
-    }
-    assert original_game_canonical == game
+    assert original_game == game
     assert original_events == after_events

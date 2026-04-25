@@ -52,17 +52,14 @@ def started_game(
         headers={"authorization": f"Bearer {organizer}"},
     ).json()
     assert {"type": "GAME_START", "sequence": 0} in results
-    game = get_game(test_client, created_lobby["id"], organizer)
-    # Expose active_player_id at the top level for convenience
-    game["active_player_id"] = game["active"].get("active_player_id")
-    return game
+    return get_game(test_client, created_lobby["id"], organizer)
 
 
 def completed_game(test_client: TestClient) -> dict[str, Any]:
     """Get a completed game"""
     game = started_game(test_client)
 
-    active_player_id = game["active_player_id"]
+    active_player_id = game["active"]["active_player_id"]
     assert active_player_id
 
     resp = test_client.post(
@@ -71,10 +68,7 @@ def completed_game(test_client: TestClient) -> dict[str, Any]:
         headers={"authorization": f"Bearer {active_player_id}"},
     )
     assert len(resp.json()) > 0
-    result = get_game(test_client, game["id"], active_player_id)
-    # Expose active_player_id at the top level for convenience
-    result["active_player_id"] = result["active"].get("active_player_id")
-    return result
+    return get_game(test_client, game["id"], active_player_id)
 
 
 def request_suggestions(
@@ -113,10 +107,7 @@ def game_with_manual_player(test_client: TestClient) -> tuple[dict[str, Any], st
         headers={"authorization": f"Bearer {organizer}"},
     )
     assert 200 == resp.status_code
-    game = get_game(test_client, lobby["id"], organizer)
-    # Expose active_player_id at the top level for convenience
-    game["active_player_id"] = game["active"].get("active_player_id")
-    return game, manual_player
+    return get_game(test_client, lobby["id"], organizer), manual_player
 
 
 def queue_action(

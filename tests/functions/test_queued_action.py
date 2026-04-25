@@ -17,7 +17,7 @@ from tests.helpers import (
 def test_queue_bid_action(client: TestClient):
     """A non-active player can queue a bid"""
     game, manual_player = game_with_manual_player(client)
-    assert game["active_player_id"] == manual_player
+    assert game["active"]["active_player_id"] == manual_player
 
     # pre-bid on dealer; ensure take bid
     queue_action(
@@ -53,7 +53,7 @@ def test_queue_bid_action(client: TestClient):
 def test_queue_pass_action(client: TestClient):
     """A non-active player can queue a bid"""
     game, manual_player = game_with_manual_player(client)
-    assert game["active_player_id"] == manual_player
+    assert game["active"]["active_player_id"] == manual_player
 
     # pre-pass on dealer
     queue_action(
@@ -84,7 +84,7 @@ def test_queue_pass_action(client: TestClient):
 def test_other_players_cant_see_queue(client: TestClient):
     """Players can't see other players' queued actions"""
     game, manual_player = game_with_manual_player(client)
-    assert game["active_player_id"] == manual_player
+    assert game["active"]["active_player_id"] == manual_player
 
     # pre-pass as default
     queue_action(
@@ -136,7 +136,7 @@ def test_only_human_players_clear_queue(client: TestClient):
 def test_queue_multiple_actions(client: TestClient):
     """Multiple play actions can be queued and are played in FIFO order"""
     game, manual_player = game_with_manual_player(client)
-    assert game["active_player_id"] == manual_player
+    assert game["active"]["active_player_id"] == manual_player
 
     hand_resp = client.get(
         f"/players/{DEFAULT_ID}/games/{game['id']}",
@@ -190,7 +190,7 @@ def test_queue_multiple_actions(client: TestClient):
 def test_invalid_action_clears_queue(client: TestClient):
     """An invalid queued action clears the entire queue on the player's turn"""
     game, manual_player = game_with_manual_player(client)
-    assert game["active_player_id"] == manual_player
+    assert game["active"]["active_player_id"] == manual_player
 
     # queue a bid of FIFTEEN and a select trump of DIAMONDS
     queue_action(
@@ -223,7 +223,7 @@ def test_invalid_action_clears_queue(client: TestClient):
 def test_valid_queued_action_survives_other_players_turns(client: TestClient):
     """A valid queued action stays queued through other players' turns"""
     game, manual_player = game_with_manual_player(client)
-    assert game["active_player_id"] == manual_player
+    assert game["active"]["active_player_id"] == manual_player
 
     # queue a bid of SHOOT_THE_MOON and select trump of DIAMONDS
     queue_action(
