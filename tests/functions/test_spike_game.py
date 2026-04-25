@@ -215,7 +215,6 @@ def test_active_round_matching_bid_shows_latest(client: TestClient):
     """Active round shows the latest bid of matching values."""
     game, manual_player = game_with_manual_player(client)
 
-
     queue_action(
         client,
         game["id"],
@@ -234,6 +233,7 @@ def test_active_round_matching_bid_shows_latest(client: TestClient):
     active = spike["active"]
 
     assert active["bid"]["player_id"] == DEFAULT_ID
+
 
 def test_active_round_self_sees_cards(client: TestClient):
     """Requesting player sees only their own hand as cards."""
