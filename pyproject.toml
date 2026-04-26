@@ -31,8 +31,8 @@ dependencies = [
 [dependency-groups]
 lint = [
     "pylint==4.0.5",
-    "pyright==1.1.408",
-    "ruff==0.15.11",
+    "pyright==1.1.409",
+    "ruff==0.15.12",
     "black==26.3.1",
 ]
 test = [
