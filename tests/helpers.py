@@ -125,7 +125,6 @@ def queue_action(
 
     game = get_game(test_client, game_id, player_id)
 
-    # In the spike format, queued_actions is in active (the requesting player's queue)
     player_queued_actions = game["active"].get("queued_actions", [])
     assert contains_unsequenced(
         # If the action was consumed immediately it appears in results[:1];
@@ -166,15 +165,5 @@ def get_events(client: TestClient, game_id: str, player_id: str) -> list[dict]:
     """Retrieve events for a game"""
     return client.get(
         f"/players/{player_id}/games/{game_id}/events",
-        headers={"authorization": f"Bearer {player_id}"},
-    ).json()
-
-
-def get_spike_game(
-    test_client: TestClient, game_id: str, player_id: str
-) -> dict[str, Any]:
-    """Get a spike game response as the given player"""
-    return test_client.get(
-        f"/players/{player_id}/games/{game_id}/spike",
         headers={"authorization": f"Bearer {player_id}"},
     ).json()
