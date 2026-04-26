@@ -51,7 +51,7 @@ def started_game(
         f"/players/{organizer}/lobbies/{created_lobby['id']}/start",
         headers={"authorization": f"Bearer {organizer}"},
     ).json()
-    assert {"type": "GAME_START", "sequence": 0} in results
+    assert {"content": {"type": "GAME_START"}, "sequence": 0} in results
     return get_game(test_client, created_lobby["id"], organizer)
 
 
@@ -126,16 +126,13 @@ def queue_action(
     game = get_game(test_client, game_id, player_id)
 
     player_queued_actions = game["active"].get("queuedActions", [])
-    assert contains_unsequenced(
-        # If the action was consumed immediately it appears in results[:1];
+    assert {
+        **action,
+        "playerId": player_id,
+        # If the action was consumed immediately it appears in the content of results[:1];
         # if it is still pending it appears in queuedActions[-1:].
         # Exactly one of the two lists will contain it.
-        [*player_queued_actions[-1:], *results[:1]],
-        {
-            **action,
-            "playerId": player_id,
-        },
-    )
+    } in [*player_queued_actions[-1:], *map(lambda r: r["content"], results[:1])]
 
     return results
 
@@ -152,13 +149,7 @@ def contains_unsequenced(
     events: list[dict[str, Any]], unordered_event: dict[str, Any]
 ) -> bool:
     """Tests if an event without order context exists in the list"""
-    ignore_keys = {"sequence"}
-    return any(
-        all(
-            item.get(k) == v for k, v in unordered_event.items() if k not in ignore_keys
-        )
-        for item in events
-    )
+    return any(item["content"] == unordered_event for item in events)
 
 
 def get_events(client: TestClient, game_id: str, player_id: str) -> list[dict]:

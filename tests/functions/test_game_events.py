@@ -21,9 +21,9 @@ def test_new_game(client: TestClient):
     events = get_events(client, game["id"], DEFAULT_ID)
 
     assert len(events) >= 2
-    assert events[0]["type"] == "GAME_START"
+    assert events[0]["content"]["type"] == "GAME_START"
     assert events[0]["sequence"] == 0
-    assert events[1]["type"] == "ROUND_START"
+    assert events[1]["content"]["type"] == "ROUND_START"
     assert events[1]["sequence"] == 1
 
 
@@ -50,15 +50,17 @@ def test_partial_trick(client: TestClient):
     assert game["active"]["status"] == "TRICKS"
 
     events_before = get_events(client, game["id"], DEFAULT_ID)
-    assert events_before[-4]["type"] == "TRICK_START"  # automated plays after
-    assert not any(e["type"] == "TRICK_END" for e in events_before)
+    assert (
+        events_before[-4]["content"]["type"] == "TRICK_START"
+    )  # automated plays after
+    assert not any(e["content"]["type"] == "TRICK_END" for e in events_before)
 
     suggestion = get_suggestion(client, game["id"])
     assert suggestion["type"] == "PLAY"
     queue_action(client, game["id"], DEFAULT_ID, suggestion)
 
     events_after = get_events(client, game["id"], DEFAULT_ID)
-    assert any(e["type"] == "TRICK_END" for e in events_after[-6:])
+    assert any(e["content"]["type"] == "TRICK_END" for e in events_after[-6:])
 
 
 def test_partial_round(client: TestClient):
@@ -67,7 +69,7 @@ def test_partial_round(client: TestClient):
     events = get_events(client, game["id"], DEFAULT_ID)
 
     assert len(events) > 0
-    assert not any(e["type"] == "ROUND_END" for e in events)
+    assert not any(e["content"]["type"] == "ROUND_END" for e in events)
 
 
 def test_completed_round(client: TestClient):
@@ -76,7 +78,7 @@ def test_completed_round(client: TestClient):
     events = get_events(client, game["id"], DEFAULT_ID)
 
     assert len(events) > 0
-    assert any(e["type"] == "ROUND_END" for e in events)
+    assert any(e["content"]["type"] == "ROUND_END" for e in events)
 
 
 def test_completed_game(client: TestClient):
@@ -87,9 +89,9 @@ def test_completed_game(client: TestClient):
 
     events = get_events(client, game["id"], DEFAULT_ID)
 
-    game_end_events = [e for e in events if e["type"] == "GAME_END"]
+    game_end_events = [e for e in events if e["content"]["type"] == "GAME_END"]
     assert len(game_end_events) >= 1
-    assert events[-1]["type"] == "GAME_END"
+    assert events[-1]["content"]["type"] == "GAME_END"
 
 
 def test_round_start_has_own_hand(client: TestClient):
@@ -97,7 +99,9 @@ def test_round_start_has_own_hand(client: TestClient):
     game = started_game(client)
     events = get_events(client, game["id"], DEFAULT_ID)
 
-    round_start = next(e for e in events if e["type"] == "ROUND_START")
+    round_start = next(
+        e["content"] for e in events if e["content"]["type"] == "ROUND_START"
+    )
     hands = round_start["hands"]
 
     # Own player sees a list of card objects
@@ -113,7 +117,9 @@ def test_round_start_has_opponent_counts(client: TestClient):
     game = started_game(client)
     events = get_events(client, game["id"], DEFAULT_ID)
 
-    round_start = next(e for e in events if e["type"] == "ROUND_START")
+    round_start = next(
+        e["content"] for e in events if e["content"]["type"] == "ROUND_START"
+    )
     hands = round_start["hands"]
 
     # Other players see integer counts
@@ -130,8 +136,12 @@ def test_round_start_visibility_per_player(client: TestClient):
     events_organizer = get_events(client, game["id"], DEFAULT_ID)
     events_manual = get_events(client, game["id"], manual_player)
 
-    rs_organizer = next(e for e in events_organizer if e["type"] == "ROUND_START")
-    rs_manual = next(e for e in events_manual if e["type"] == "ROUND_START")
+    rs_organizer = next(
+        e["content"] for e in events_organizer if e["content"]["type"] == "ROUND_START"
+    )
+    rs_manual = next(
+        e["content"] for e in events_manual if e["content"]["type"] == "ROUND_START"
+    )
 
     # Organizer sees own cards as list, manual player as int
     assert isinstance(rs_organizer["hands"][DEFAULT_ID], list)
@@ -147,7 +157,9 @@ def test_completed_game_round_start_hands(client: TestClient):
     game = completed_game(client)
     events = get_events(client, game["id"], DEFAULT_ID)
 
-    round_starts = [e for e in events if e["type"] == "ROUND_START"]
+    round_starts = [
+        e["content"] for e in events if e["content"]["type"] == "ROUND_START"
+    ]
     assert len(round_starts) >= 1
 
     for rs in round_starts:

@@ -157,7 +157,7 @@ def test_leave_playing_game_as_organizer(client: TestClient):
     ).json()
 
     # automates the organizer and ends the game
-    assert any(r["type"] == "GAME_END" for r in results)
+    assert any(r["content"]["type"] == "GAME_END" for r in results)
 
     game = get_game(client, original_game["id"], active_player["id"])
     active_player = next(p for p in game["players"] if p["id"] == active_player["id"])
@@ -179,7 +179,7 @@ def test_leave_playing_game_as_player(client: TestClient):
         headers={"authorization": f"Bearer {non_organizer_player['id']}"},
     ).json()
     assert any(
-        r["playerId"] == non_organizer_player["id"] for r in results
+        r["content"]["playerId"] == non_organizer_player["id"] for r in results
     )  # leaving makes them take a turn
     game = get_game(client, game["id"], non_organizer_player["id"])
     non_organizer_player = next(
@@ -200,7 +200,7 @@ def test_kick_player_as_organizer(client: TestClient):
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     ).json()
     assert any(
-        r["playerId"] == non_organizer_player for r in results
+        r["content"]["playerId"] == non_organizer_player for r in results
     )  # leaving makes them take a turn
     game = get_game(client, game["id"], non_organizer_player)
     assert (
