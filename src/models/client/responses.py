@@ -4,22 +4,23 @@ from abc import ABC
 from enum import Enum
 from typing import Annotated, Literal, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from .constants import CardNumberName, SelectableSuit, Suit
+from .shared import ClientModel
 
 # =============================================================================
 # Actions & Events
 # =============================================================================
 
 
-class Sequential(ABC, BaseModel):
+class Sequential(ABC, ClientModel):
     """A class to indicate the subclass is sequential"""
 
     sequence: int
 
 
-class Card(BaseModel):
+class Card(ClientModel):
     """A class to model the client format of a Hundred and Ten card"""
 
     suit: Suit
@@ -88,7 +89,7 @@ class TrickEnd(Sequential):
     winner_player_id: str
 
 
-class Score(BaseModel):
+class Score(ClientModel):
     """A class to model the client format of a score in a Hundred and Ten round end event"""
 
     player_id: str
@@ -125,7 +126,7 @@ type Event = Annotated[
 # =============================================================================
 
 
-class QueuedBid(BaseModel):
+class QueuedBid(ClientModel):
     """
     A class to model the client format of a Hundred and Ten bid action without context of sequence
     """
@@ -135,7 +136,7 @@ class QueuedBid(BaseModel):
     amount: int
 
 
-class QueuedSelectTrump(BaseModel):
+class QueuedSelectTrump(ClientModel):
     """
     A class to model the client format of a Hundred and Ten select trump action
     without context of sequence
@@ -146,7 +147,7 @@ class QueuedSelectTrump(BaseModel):
     suit: SelectableSuit
 
 
-class QueuedDiscard(BaseModel):
+class QueuedDiscard(ClientModel):
     """
     A class to model the client format of a Hundred and Ten discard action
     without context of sequence
@@ -157,7 +158,7 @@ class QueuedDiscard(BaseModel):
     cards: Union[list[Card], int]
 
 
-class QueuedPlayCard(BaseModel):
+class QueuedPlayCard(ClientModel):
     """
     A class to model the client format of a Hundred and Ten play action without context of sequence
     """
@@ -180,7 +181,7 @@ type UnorderedActionResponse = Annotated[
 # =============================================================================
 
 
-class Player(BaseModel):
+class Player(ClientModel):
     """A class to model the client format of a Hundred and Ten player"""
 
     id: str
@@ -195,7 +196,7 @@ class PlayerType(Enum):
     CPU_EASY = "cpu-easy"
 
 
-class PlayerInGame(BaseModel):
+class PlayerInGame(ClientModel):
     """A class to model the client format of a Hundred and Ten person"""
 
     id: str
@@ -207,7 +208,7 @@ class PlayerInGame(BaseModel):
 # =============================================================================
 
 
-class Trick(BaseModel):
+class Trick(ClientModel):
     """A class to model the client format of a Hundred and Ten trick"""
 
     bleeding: bool
@@ -215,7 +216,7 @@ class Trick(BaseModel):
     winning_play: Optional[QueuedPlayCard] = None
 
 
-class LobbyResponse(BaseModel):
+class LobbyResponse(ClientModel):
     """A class to model the client format of a lobby Hundred and Ten game"""
 
     id: str
@@ -226,14 +227,14 @@ class LobbyResponse(BaseModel):
     invitees: list[PlayerInGame]
 
 
-class DiscardRecord(BaseModel):
+class DiscardRecord(ClientModel):
     """A discard event in a round"""
 
     discarded: list[Card]
     received: list[Card]
 
 
-class CompletedWithBidderRound(BaseModel):
+class CompletedWithBidderRound(ClientModel):
     """A completed round where bidding was won and tricks were played"""
 
     status: Literal["COMPLETED"]
@@ -247,7 +248,7 @@ class CompletedWithBidderRound(BaseModel):
     scores: dict[str, int]
 
 
-class CompletedNoBiddersRound(BaseModel):
+class CompletedNoBiddersRound(ClientModel):
     """A completed round where all players passed (no bidder, no tricks)"""
 
     status: Literal["COMPLETED_NO_BIDDERS"]
@@ -255,7 +256,7 @@ class CompletedNoBiddersRound(BaseModel):
     initial_hands: dict[str, list[Card]]
 
 
-class ActiveRound(BaseModel):
+class ActiveRound(ClientModel):
     """The current active round (bidding, trump selection, discarding, or tricks)"""
 
     status: Literal["BIDDING", "TRUMP_SELECTION", "DISCARD", "TRICKS"]
@@ -270,7 +271,7 @@ class ActiveRound(BaseModel):
     queued_actions: list[UnorderedActionResponse]
 
 
-class WonInformation(BaseModel):
+class WonInformation(ClientModel):
     """The current active round (bidding, trump selection, discarding, or tricks)"""
 
     status: Literal["WON"]
@@ -288,7 +289,7 @@ type ActiveInfo = Annotated[
 ]
 
 
-class GameResponse(BaseModel):
+class GameResponse(ClientModel):
     """Unified round-based game response"""
 
     id: str

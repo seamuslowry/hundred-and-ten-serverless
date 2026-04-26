@@ -59,7 +59,7 @@ def completed_game(test_client: TestClient) -> dict[str, Any]:
     """Get a completed game"""
     game = started_game(test_client)
 
-    active_player_id = game["active"]["active_player_id"]
+    active_player_id = game["active"]["activePlayerId"]
     assert active_player_id
 
     resp = test_client.post(
@@ -125,15 +125,15 @@ def queue_action(
 
     game = get_game(test_client, game_id, player_id)
 
-    player_queued_actions = game["active"].get("queued_actions", [])
+    player_queued_actions = game["active"].get("queuedActions", [])
     assert contains_unsequenced(
         # If the action was consumed immediately it appears in results[:1];
-        # if it is still pending it appears in queued_actions[-1:].
+        # if it is still pending it appears in queuedActions[-1:].
         # Exactly one of the two lists will contain it.
         [*player_queued_actions[-1:], *results[:1]],
         {
             **action,
-            "player_id": player_id,
+            "playerId": player_id,
         },
     )
 

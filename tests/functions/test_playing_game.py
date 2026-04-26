@@ -37,7 +37,7 @@ def test_perform_round_actions(client: TestClient):
         results,
         {
             "type": "BID",
-            "player_id": DEFAULT_ID,
+            "playerId": DEFAULT_ID,
             "amount": BidAmount.SHOOT_THE_MOON,
         },
     )
@@ -62,7 +62,7 @@ def test_perform_round_actions(client: TestClient):
         results,
         {
             "type": "SELECT_TRUMP",
-            "player_id": DEFAULT_ID,
+            "playerId": DEFAULT_ID,
             "suit": suggested_trump["suit"],
         },
     )
@@ -86,7 +86,7 @@ def test_perform_round_actions(client: TestClient):
         results,
         {
             "type": "DISCARD",
-            "player_id": DEFAULT_ID,
+            "playerId": DEFAULT_ID,
             "cards": suggested_discard["cards"],
         },
     )
@@ -110,7 +110,7 @@ def test_perform_round_actions(client: TestClient):
         results,
         {
             "type": "PLAY",
-            "player_id": DEFAULT_ID,
+            "playerId": DEFAULT_ID,
             "card": suggested_play["card"],
         },
     )
@@ -136,13 +136,13 @@ def test_prepass_and_rescind_prepass(client: TestClient):
     ).json()
     assert len(results) == 0  # removing a queued action has no results
     game = get_game(client, game["id"], DEFAULT_ID)
-    assert game["active"].get("queued_actions", []) == []
+    assert game["active"].get("queuedActions", []) == []
 
 
 def test_leave_playing_game_as_organizer(client: TestClient):
     """A player can leave an active game by automating themselves"""
     original_game = started_game(client)
-    active_round_player_id = original_game["active"]["active_player_id"]
+    active_round_player_id = original_game["active"]["activePlayerId"]
     active_player = next(
         p for p in original_game["players"] if p["id"] == active_round_player_id
     )
@@ -179,7 +179,7 @@ def test_leave_playing_game_as_player(client: TestClient):
         headers={"authorization": f"Bearer {non_organizer_player['id']}"},
     ).json()
     assert any(
-        r["player_id"] == non_organizer_player["id"] for r in results
+        r["playerId"] == non_organizer_player["id"] for r in results
     )  # leaving makes them take a turn
     game = get_game(client, game["id"], non_organizer_player["id"])
     non_organizer_player = next(
@@ -200,7 +200,7 @@ def test_kick_player_as_organizer(client: TestClient):
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     ).json()
     assert any(
-        r["player_id"] == non_organizer_player for r in results
+        r["playerId"] == non_organizer_player for r in results
     )  # leaving makes them take a turn
     game = get_game(client, game["id"], non_organizer_player)
     assert (

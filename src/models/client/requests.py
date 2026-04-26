@@ -2,40 +2,41 @@
 
 from typing import Annotated, Literal, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from .constants import CardNumberName, SelectableSuit, Suit
+from .shared import ClientModel
 
 
-class BidRequest(BaseModel):
+class BidRequest(ClientModel):
     """Request body for bidding in a game"""
 
     type: Literal["BID"]
     amount: int
 
 
-class CardRequest(BaseModel):
+class CardRequest(ClientModel):
     """A card in a request"""
 
     suit: Suit
     number: CardNumberName
 
 
-class DiscardRequest(BaseModel):
+class DiscardRequest(ClientModel):
     """Request body for discarding cards"""
 
     type: Literal["DISCARD"]
     cards: list[CardRequest]
 
 
-class PlayRequest(BaseModel):
+class PlayRequest(ClientModel):
     """Request body for playing a card"""
 
     type: Literal["PLAY"]
     card: CardRequest
 
 
-class SelectTrumpRequest(BaseModel):
+class SelectTrumpRequest(ClientModel):
     """Request body for selecting trump suit"""
 
     type: Literal["SELECT_TRUMP"]
@@ -48,47 +49,48 @@ type ActRequest = Annotated[
 ]
 
 
-class CreateLobbyRequest(BaseModel):
+class CreateLobbyRequest(ClientModel):
     """Request body for creating a lobby"""
 
     name: str
     accessibility: str = "PUBLIC"
 
 
-class SearchPlayersRequest(BaseModel):
+class SearchPlayersRequest(ClientModel):
     """Request body for searching players"""
 
-    search_text: str = Field(default="", alias="searchText")
+    search_text: str = ""
     offset: int = 0
     limit: int = 20
 
 
-class SearchLobbiesRequest(BaseModel):
+class SearchLobbiesRequest(ClientModel):
     """Request body for searching lobbies"""
 
-    search_text: str = Field(default="", alias="searchText")
+    search_text: str = ""
     offset: int = 0
     limit: int = 20
 
 
-class SearchGamesRequest(BaseModel):
+class SearchGamesRequest(ClientModel):
     """Request body for searching games"""
 
-    search_text: str = Field(default="", alias="searchText")
+    search_text: str = ""
     offset: int = 0
     limit: int = 20
     statuses: Optional[list[str]] = None
+    # Non-standard aliases kept intentionally: API contract uses "activePlayer"/"winner"
     active_player_id: Optional[str] = Field(default=None, alias="activePlayer")
     winner_player_id: Optional[str] = Field(default=None, alias="winner")
 
 
-class GamePlayerLeaveRequest(BaseModel):
+class GamePlayerLeaveRequest(ClientModel):
     """Request to leave a game as a player"""
 
     type: Literal["LEAVE"]
 
 
-class GamePlayerKickRequest(BaseModel):
+class GamePlayerKickRequest(ClientModel):
     """Request to kick a player from a game"""
 
     type: Literal["KICK"]
@@ -100,26 +102,26 @@ type GamePlayerRequest = Annotated[
 ]
 
 
-class LobbyPlayerLeaveRequest(BaseModel):
+class LobbyPlayerLeaveRequest(ClientModel):
     """Request to leave a lobby as a player"""
 
     type: Literal["LEAVE"]
 
 
-class LobbyPlayerJoinRequest(BaseModel):
+class LobbyPlayerJoinRequest(ClientModel):
     """Request to join a lobby as a player"""
 
     type: Literal["JOIN"]
 
 
-class LobbyPlayerInviteRequest(BaseModel):
+class LobbyPlayerInviteRequest(ClientModel):
     """Request to invite another player to a lobby"""
 
     type: Literal["INVITE"]
     player_id: str
 
 
-class LobbyPlayerKickRequest(BaseModel):
+class LobbyPlayerKickRequest(ClientModel):
     """Request to kick a player from a lobby"""
 
     type: Literal["KICK"]
