@@ -47,7 +47,7 @@ def test_partial_trick(client: TestClient):
 
     game = get_game(client, game["id"], DEFAULT_ID)
 
-    assert game["status"] == "TRICKS"
+    assert game["active"]["status"] == "TRICKS"
 
     events_before = get_events(client, game["id"], DEFAULT_ID)
     assert events_before[-4]["type"] == "TRICK_START"  # automated plays after
@@ -83,7 +83,7 @@ def test_completed_game(client: TestClient):
     """Once the game is over, it will have a GameEnd event"""
     game = completed_game(client)
 
-    assert game["status"] == "WON"
+    assert game["active"]["status"] == "WON"
 
     events = get_events(client, game["id"], DEFAULT_ID)
 

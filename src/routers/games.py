@@ -2,7 +2,7 @@
 The router for game operations.
 """
 
-from typing import Optional, Union
+from typing import Optional
 
 from beanie import PydanticObjectId
 from fastapi import APIRouter
@@ -16,18 +16,13 @@ from src.models.client.requests import (
     SearchGamesRequest,
 )
 from src.models.client.responses import (
-    CompletedGame,
     Event,
+    GameResponse,
     Player,
-    SpikeGame,
-    StartedGame,
     UnorderedActionResponse,
 )
 from src.models.internal.errors import AuthorizationError, BadRequestError
 from src.services import GameService, PlayerService
-
-# Type alias for game responses (can be started or completed)
-GameResponse = Union[StartedGame, CompletedGame]
 
 router = APIRouter(
     prefix="/players/{player_id}/games",
@@ -43,12 +38,12 @@ async def game_info(player_id: str, game_id: PydanticObjectId):
     return serialize.game(game, player_id)
 
 
-@router.get("/{game_id}/spike", response_model=SpikeGame)
+@router.get("/{game_id}/spike", response_model=GameResponse)
 async def spike_game_info(player_id: str, game_id: PydanticObjectId):
     """Retrieve 110 game with full round history (spike endpoint)."""
     game = await GameService.get(game_id)
 
-    return serialize.spike_game(game, player_id)
+    return serialize.game(game, player_id)
 
 
 @router.post("/{game_id}/players", response_model=list[Event])

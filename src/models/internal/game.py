@@ -35,7 +35,6 @@ from .player import (
     NaiveCpu,
     NoAction,
     PlayerInGame,
-    PlayerInRound,
     RequestAutomation,
 )
 from .round import DiscardRecord, Round
@@ -160,52 +159,6 @@ class Game(BaseGame):
     def active_player_id(self) -> str:
         """Get the current active player ID"""
         return self._engine.active_player.identifier
-
-    @property
-    def dealer_player_id(self) -> str:
-        """Get the current dealer player ID"""
-        return self._engine.active_round.dealer.identifier
-
-    @property
-    def bidder_player_id(self) -> Optional[str]:
-        """Get the current bidding player ID"""
-        return (
-            self._engine.active_round.active_bidder.identifier
-            if self._engine.active_round.active_bidder
-            else None
-        )
-
-    @property
-    def active_bid(self) -> Optional[int]:
-        """Get the current bidding player ID"""
-        return (
-            self._engine.active_round.active_bid.value
-            if self._engine.active_round.active_bid
-            else None
-        )
-
-    @property
-    def trump(self) -> Optional[CardSuit]:
-        """Get the selected trump"""
-        return (
-            CardSuit[self._engine.active_round.trump.name]
-            if self._engine.active_round.trump
-            else None
-        )
-
-    @property
-    def current_round_tricks(self) -> list[Trick]:
-        """The tricks in the current round"""
-        return [
-            Trick(
-                bleeding=t.bleeding,
-                plays=[Play.from_engine(p) for p in t.plays],
-                winning_play=(
-                    Play.from_engine(t.winning_play) if len(t.plays) else None
-                ),
-            )
-            for t in self._engine.active_round.tricks
-        ]
 
     @property
     def events(self) -> list[Event]:
@@ -430,20 +383,6 @@ class Game(BaseGame):
                     raise InternalServerError(
                         f"Unable to process action request. Automation failing for {action_request}"
                     )
-
-    def get_player_in_round(self, player_id: str) -> PlayerInRound:
-        """Return the representation of this player as they are in the round"""
-        return PlayerInRound(
-            id=player_id,
-            hand=[
-                Card.from_engine(c)
-                for c in next(
-                    p
-                    for p in self._engine.active_round.players
-                    if p.identifier == player_id
-                ).hand
-            ],
-        )
 
     def queue_action_for(self, player_id: str, action: Action) -> None:
         """Queue an action for a player"""
