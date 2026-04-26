@@ -142,7 +142,7 @@ def test_prepass_and_rescind_prepass(client: TestClient):
 def test_leave_playing_game_as_organizer(client: TestClient):
     """A player can leave an active game by automating themselves"""
     original_game = started_game(client)
-    active_round_player_id = original_game["active_player_id"]
+    active_round_player_id = original_game["active"]["active_player_id"]
     active_player = next(
         p for p in original_game["players"] if p["id"] == active_round_player_id
     )
