@@ -17,7 +17,7 @@ from tests.helpers import (
 def test_queue_bid_action(client: TestClient):
     """A non-active player can queue a bid"""
     game, manual_player = game_with_manual_player(client)
-    assert game["active"]["active_player_id"] == manual_player
+    assert game["active"]["activePlayerId"] == manual_player
 
     # pre-bid on dealer; ensure take bid
     queue_action(
@@ -37,7 +37,7 @@ def test_queue_bid_action(client: TestClient):
     assert contains_unsequenced(
         results,
         {
-            "player_id": DEFAULT_ID,
+            "playerId": DEFAULT_ID,
             "type": "BID",
             "amount": BidAmount.SHOOT_THE_MOON,
         },
@@ -45,15 +45,15 @@ def test_queue_bid_action(client: TestClient):
 
     game = get_game(client, game["id"], DEFAULT_ID)
 
-    assert game["active"]["active_player_id"] == DEFAULT_ID
+    assert game["active"]["activePlayerId"] == DEFAULT_ID
     assert game["active"]["status"] == "TRUMP_SELECTION"
-    assert game["active"].get("queued_actions", []) == []
+    assert game["active"].get("queuedActions", []) == []
 
 
 def test_queue_pass_action(client: TestClient):
     """A non-active player can queue a bid"""
     game, manual_player = game_with_manual_player(client)
-    assert game["active"]["active_player_id"] == manual_player
+    assert game["active"]["activePlayerId"] == manual_player
 
     # pre-pass on dealer
     queue_action(
@@ -71,20 +71,20 @@ def test_queue_pass_action(client: TestClient):
         results,
         {
             "type": "BID",
-            "player_id": DEFAULT_ID,
+            "playerId": DEFAULT_ID,
             "amount": BidAmount.PASS,
         },
     )
 
     game = get_game(client, game["id"], DEFAULT_ID)
 
-    assert game["active"].get("queued_actions", []) == []
+    assert game["active"].get("queuedActions", []) == []
 
 
 def test_other_players_cant_see_queue(client: TestClient):
     """Players can't see other players' queued actions"""
     game, manual_player = game_with_manual_player(client)
-    assert game["active"]["active_player_id"] == manual_player
+    assert game["active"]["activePlayerId"] == manual_player
 
     # pre-pass as default
     queue_action(
@@ -92,12 +92,12 @@ def test_other_players_cant_see_queue(client: TestClient):
     )
 
     manual_player_view = get_game(client, game["id"], manual_player)
-    # manual_player sees their own (empty) queued_actions, not DEFAULT_ID's queue
-    assert manual_player_view["active"].get("queued_actions", []) == []
+    # manual_player sees their own (empty) queuedActions, not DEFAULT_ID's queue
+    assert manual_player_view["active"].get("queuedActions", []) == []
 
     default_player_view = get_game(client, game["id"], DEFAULT_ID)
-    # DEFAULT_ID sees their own non-empty queued_actions
-    assert len(default_player_view["active"]["queued_actions"]) > 0
+    # DEFAULT_ID sees their own non-empty queuedActions
+    assert len(default_player_view["active"]["queuedActions"]) > 0
 
 
 def test_only_human_players_queue(client: TestClient):
@@ -136,7 +136,7 @@ def test_only_human_players_clear_queue(client: TestClient):
 def test_queue_multiple_actions(client: TestClient):
     """Multiple play actions can be queued and are played in FIFO order"""
     game, manual_player = game_with_manual_player(client)
-    assert game["active"]["active_player_id"] == manual_player
+    assert game["active"]["activePlayerId"] == manual_player
 
     hand_resp = client.get(
         f"/players/{DEFAULT_ID}/games/{game['id']}",
@@ -178,19 +178,19 @@ def test_queue_multiple_actions(client: TestClient):
         {
             "type": "PLAY",
             "card": card,
-            "player_id": DEFAULT_ID,
+            "playerId": DEFAULT_ID,
         },
     )
 
     # queued actions are consumed
     game = get_game(client, game["id"], DEFAULT_ID)
-    assert len(game["active"].get("queued_actions", [])) == 0
+    assert len(game["active"].get("queuedActions", [])) == 0
 
 
 def test_invalid_action_clears_queue(client: TestClient):
     """An invalid queued action clears the entire queue on the player's turn"""
     game, manual_player = game_with_manual_player(client)
-    assert game["active"]["active_player_id"] == manual_player
+    assert game["active"]["activePlayerId"] == manual_player
 
     # queue a bid of FIFTEEN and a select trump of DIAMONDS
     queue_action(
@@ -210,20 +210,20 @@ def test_invalid_action_clears_queue(client: TestClient):
         headers={"authorization": f"Bearer {manual_player}"},
     ).json()
 
-    assert not any(a["player_id"] == DEFAULT_ID for a in results)
+    assert not any(a["playerId"] == DEFAULT_ID for a in results)
 
     # FIFTEEN is below 60 (not in available_actions), dropped. SELECT_TRUMP is not
     # valid during BIDDING, also dropped. The FIFO drain clears the entire queue.
     game = get_game(client, game["id"], DEFAULT_ID)
     assert game["active"]["status"] == "BIDDING"
-    assert game["active"]["active_player_id"] == DEFAULT_ID
-    assert game["active"].get("queued_actions", []) == []
+    assert game["active"]["activePlayerId"] == DEFAULT_ID
+    assert game["active"].get("queuedActions", []) == []
 
 
 def test_valid_queued_action_survives_other_players_turns(client: TestClient):
     """A valid queued action stays queued through other players' turns"""
     game, manual_player = game_with_manual_player(client)
-    assert game["active"]["active_player_id"] == manual_player
+    assert game["active"]["activePlayerId"] == manual_player
 
     # queue a bid of SHOOT_THE_MOON and select trump of DIAMONDS
     queue_action(
@@ -253,7 +253,7 @@ def test_valid_queued_action_survives_other_players_turns(client: TestClient):
         {
             "amount": BidAmount.SHOOT_THE_MOON,
             "type": "BID",
-            "player_id": DEFAULT_ID,
+            "playerId": DEFAULT_ID,
         },
     )
 
@@ -263,10 +263,10 @@ def test_valid_queued_action_survives_other_players_turns(client: TestClient):
     game = get_game(client, game["id"], DEFAULT_ID)
     assert game["active"]["status"] == "BIDDING"
     assert contains_unsequenced(
-        game["active"]["queued_actions"],
+        game["active"]["queuedActions"],
         {
             "type": "SELECT_TRUMP",
-            "player_id": DEFAULT_ID,
+            "playerId": DEFAULT_ID,
             "suit": SelectableSuit.DIAMONDS,
         },
     )

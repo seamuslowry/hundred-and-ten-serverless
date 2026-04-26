@@ -24,7 +24,7 @@ from tests.helpers import (
 def test_search_winner(client: TestClient):
     """Can search by winner"""
     game = completed_game(client)
-    winner_id = game["active"]["winner_player_id"]
+    winner_id = game["active"]["winnerPlayerId"]
 
     # search games
     resp = client.post(
@@ -299,7 +299,7 @@ def test_new_game_single_active_bidding_round(client: TestClient):
     spike = get_game(client, game["id"], DEFAULT_ID)
 
     assert spike["active"]["status"] == "BIDDING"
-    assert spike["completed_rounds"] == []
+    assert spike["completedRounds"] == []
     active = spike["active"]
     assert active["trump"] is None
     assert active["tricks"] == []
@@ -317,7 +317,7 @@ def test_completed_game_top_level_fields(client: TestClient):
     spike = get_game(client, game["id"], DEFAULT_ID)
 
     assert spike["active"]["status"] == "WON"
-    assert spike["active"]["winner_player_id"] is not None
+    assert spike["active"]["winnerPlayerId"] is not None
     assert spike["id"] == game["id"]
     assert spike["name"] == game["name"]
     assert len(spike["players"]) == 4
@@ -329,7 +329,7 @@ def test_completed_game_all_rounds_have_status(client: TestClient):
     game = completed_game(client)
     spike = get_game(client, game["id"], DEFAULT_ID)
 
-    for game_round in spike["completed_rounds"]:
+    for game_round in spike["completedRounds"]:
         assert game_round["status"] in (
             "COMPLETED",
             "COMPLETED_NO_BIDDERS",
@@ -341,9 +341,9 @@ def test_completed_rounds_show_full_info(client: TestClient):
     game = completed_game(client)
     spike = get_game(client, game["id"], DEFAULT_ID)
 
-    for game_round in spike["completed_rounds"]:
-        assert len(game_round["initial_hands"].keys()) == 4
-        for player_id, hand in game_round["initial_hands"].items():
+    for game_round in spike["completedRounds"]:
+        assert len(game_round["initialHands"].keys()) == 4
+        for player_id, hand in game_round["initialHands"].items():
             assert isinstance(
                 hand, list
             ), f"Player {player_id} hand should be a card list in completed round"
@@ -365,13 +365,13 @@ def test_completed_rounds_show_tricks_with_bleeding(client: TestClient):
     game = completed_game(client)
     spike = get_game(client, game["id"], DEFAULT_ID)
 
-    for game_round in spike["completed_rounds"]:
+    for game_round in spike["completedRounds"]:
         if game_round["status"] == "COMPLETED":
             assert len(game_round["tricks"]) == 5
             for trick in game_round["tricks"]:
                 assert "bleeding" in trick
                 assert isinstance(trick["bleeding"], bool)
-                assert trick["winning_play"] is not None
+                assert trick["winningPlay"] is not None
 
 
 def test_all_pass_rounds_have_hands_but_no_tricks(client: TestClient):
@@ -385,18 +385,16 @@ def test_all_pass_rounds_have_hands_but_no_tricks(client: TestClient):
         spike = get_game(client, game["id"], DEFAULT_ID)
 
         no_bidders_rounds = [
-            r
-            for r in spike["completed_rounds"]
-            if r["status"] == "COMPLETED_NO_BIDDERS"
+            r for r in spike["completedRounds"] if r["status"] == "COMPLETED_NO_BIDDERS"
         ]
 
     for game_round in no_bidders_rounds:
-        assert len(game_round["initial_hands"]) == 4
+        assert len(game_round["initialHands"]) == 4
         # COMPLETED_NO_BIDDERS rounds only have: status, dealer_player_id, initial_hands
         assert set(game_round.keys()) == {
             "status",
-            "dealer_player_id",
-            "initial_hands",
+            "dealerPlayerId",
+            "initialHands",
         }
         break
 
@@ -409,7 +407,7 @@ def test_completed_game_scores_sum_to_cumulative(client: TestClient):
     spike = get_game(client, game["id"], DEFAULT_ID)
 
     total: dict[str, int] = {}
-    for game_round in spike["completed_rounds"]:
+    for game_round in spike["completedRounds"]:
         if game_round["status"] == "COMPLETED":
             for pid, v in game_round["scores"].items():
                 total[pid] = total.get(pid, 0) + v
@@ -471,7 +469,7 @@ def test_new_trick_no_winning_play(client: TestClient):
     assert no_plays_round["status"] == "TRICKS"
     assert len(no_plays_round["tricks"]) == 1
     assert len(no_plays_round["tricks"][0]["plays"]) == 0
-    assert no_plays_round["tricks"][0]["winning_play"] is None
+    assert no_plays_round["tricks"][0]["winningPlay"] is None
 
     queue_action(
         client,
@@ -485,7 +483,7 @@ def test_new_trick_no_winning_play(client: TestClient):
     assert one_play_round["status"] == "TRICKS"
     assert len(one_play_round["tricks"]) == 1
     assert len(one_play_round["tricks"][0]["plays"]) == 3  # manual and two automatic
-    assert one_play_round["tricks"][0]["winning_play"] is not None
+    assert one_play_round["tricks"][0]["winningPlay"] is not None
 
 
 def test_active_round_matching_bid_shows_latest(client: TestClient):
@@ -509,7 +507,7 @@ def test_active_round_matching_bid_shows_latest(client: TestClient):
 
     active = spike["active"]
 
-    assert active["bid"]["player_id"] == DEFAULT_ID
+    assert active["bid"]["playerId"] == DEFAULT_ID
 
 
 def test_active_round_self_sees_cards(client: TestClient):
@@ -544,8 +542,8 @@ def test_active_round_includes_active_player_id(client: TestClient):
     spike = get_game(client, game["id"], DEFAULT_ID)
 
     active = spike["active"]
-    assert "active_player_id" in active
-    assert active["active_player_id"] == game["active"]["active_player_id"]
+    assert "activePlayerId" in active
+    assert active["activePlayerId"] == game["active"]["activePlayerId"]
 
 
 def test_two_players_see_different_hands_in_active_round(client: TestClient):
@@ -582,7 +580,7 @@ def test_active_round_bid_is_none_before_any_bid(client: TestClient):
 def test_active_round_bid_populated_after_a_bid(client: TestClient):
     """Active round bid field contains player_id and amount once a bid is placed."""
     game, manual_player = game_with_manual_player(client)
-    assert game["active"]["active_player_id"] == manual_player
+    assert game["active"]["activePlayerId"] == manual_player
 
     queue_action(
         client, game["id"], manual_player, {"type": "BID", "amount": BidAmount.TWENTY}
@@ -594,9 +592,9 @@ def test_active_round_bid_populated_after_a_bid(client: TestClient):
 
     assert {
         "type": "BID",
-        "player_id": manual_player,
+        "playerId": manual_player,
         "amount": BidAmount.TWENTY,
-    } in spike["active"]["bid_history"]
+    } in spike["active"]["bidHistory"]
 
 
 def test_active_round_queued_actions(client: TestClient):
@@ -613,9 +611,9 @@ def test_active_round_queued_actions(client: TestClient):
 
     spike = get_game(client, game["id"], DEFAULT_ID)
     active = spike["active"]
-    assert "queued_actions" in active
-    # queued_actions may be empty if action was consumed; field presence is what matters
-    assert isinstance(active["queued_actions"], list)
+    assert "queuedActions" in active
+    # queuedActions may be empty if action was consumed; field presence is what matters
+    assert isinstance(active["queuedActions"], list)
 
 
 # ---------------------------------------------------------------------------
