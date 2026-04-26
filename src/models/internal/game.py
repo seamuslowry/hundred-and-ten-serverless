@@ -10,24 +10,21 @@ from hundredandten.automation.engineadapter import EngineAdapter, UnavailableAct
 from hundredandten.engine import (
     Game as Engine,
     Player as EnginePlayer,
-    Round as EngineRound,
 )
 
 from .actions import (
     Action,
     ActionFactory,
-    Bid,
     Card,
     Event,
     GameEnd,
     GameStart,
-    Play,
     RoundEnd,
     RoundStart,
     TrickEnd,
     TrickStart,
 )
-from .constants import Accessibility, CardSuit, GameStatus
+from .constants import Accessibility, GameStatus
 from .errors import BadRequestError, InternalServerError
 from .player import (
     ConcreteAction,
@@ -37,8 +34,7 @@ from .player import (
     PlayerInGame,
     RequestAutomation,
 )
-from .round import DiscardRecord, Round
-from .trick import Trick
+from .round import Round
 
 
 class PlayerGroup(list[PlayerInGame]):
@@ -253,77 +249,11 @@ class Game(BaseGame):
             ),
         ]
 
-    def __get_round_at(self, round_index: int) -> Round:
-        game_round = self._engine.rounds[round_index]
-
-        round_scores = {}
-
-        for score in game_round.scores:
-            round_scores[score.identifier] = (
-                round_scores.get(score.identifier, 0) + score.value
-            )
-
-        # cheat and get initial hands by recreating the start of the round
-        recreated_round = EngineRound(
-            game_players=[EnginePlayer(p.identifier) for p in game_round.players],
-            dealer_identifier=game_round.dealer.identifier,
-            seed=game_round.seed,
-        )
-
-        initial_hands = {
-            p.identifier: [Card.from_engine(c) for c in p.hand]
-            for p in recreated_round.players
-        }
-        current_hands = {
-            p.identifier: [Card.from_engine(c) for c in p.hand]
-            for p in game_round.players
-        }
-        played_cards = {
-            p.identifier: [
-                Card.from_engine(play.card)
-                for t in game_round.tricks
-                for play in t.plays
-                if play.identifier == p.identifier
-            ]
-            for p in game_round.players
-        }
-
-        return Round(
-            dealer_player_id=game_round.dealer.identifier,
-            trump=CardSuit[game_round.trump.name] if game_round.trump else None,
-            hands=current_hands,
-            bid_history=[Bid.from_engine(b) for b in game_round.bids],
-            discards={
-                d.identifier: DiscardRecord(
-                    discarded=[Card.from_engine(c) for c in d.cards],
-                    received=[
-                        c
-                        for c in (
-                            current_hands[d.identifier] + played_cards[d.identifier]
-                        )
-                        if c not in initial_hands[d.identifier]
-                    ],
-                )
-                for d in game_round.discards
-            },
-            tricks=[
-                Trick(
-                    bleeding=t.bleeding,
-                    plays=[Play.from_engine(p) for p in t.plays],
-                    winning_play=(
-                        Play.from_engine(t.winning_play) if len(t.plays) else None
-                    ),
-                )
-                for t in game_round.tricks
-            ],
-            scores=round_scores,
-        )
-
     @property
     def rounds(self) -> list[Round]:
         """Get all rounds as structured objects via direct engine inspection"""
 
-        return [self.__get_round_at(i) for i in range(len(self._engine.rounds))]
+        return [Round(r) for r in self._engine.rounds]
 
     @property
     def scores(self) -> dict[str, int]:

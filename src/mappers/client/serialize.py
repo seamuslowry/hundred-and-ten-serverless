@@ -74,15 +74,10 @@ def __completed_round(
 ) -> responses.CompletedRound:
     bid = m_round.max_bid
 
-    initial_hands = {}
-
-    for player_id, hand in m_round.hands.items():
-        record = m_round.discards.get(player_id, internal.DiscardRecord([], []))
-
-        combined = hand + record.discarded
-        filtered = [c for c in combined if c not in record.received]
-
-        initial_hands[player_id] = [__card(c) for c in filtered]
+    initial_hands = {
+        player_id: [__card(c) for c in hand]
+        for player_id, hand in m_round.initial_hands.items()
+    }
 
     if bid is not None and m_round.trump is not None:
         return responses.CompletedWithBidderRound(
@@ -136,7 +131,7 @@ def __active_round(
                 if player_id == client_player_id
                 else len(hand)
             )
-            for player_id, hand in m_round.hands.items()
+            for player_id, hand in m_round.current_hands.items()
         },
         discards={
             player_id: (
