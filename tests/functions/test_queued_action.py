@@ -210,7 +210,7 @@ def test_invalid_action_clears_queue(client: TestClient):
         headers={"authorization": f"Bearer {manual_player}"},
     ).json()
 
-    assert not any(a["playerId"] == DEFAULT_ID for a in results)
+    assert not any(a["content"]["playerId"] == DEFAULT_ID for a in results)
 
     # FIFTEEN is below 60 (not in available_actions), dropped. SELECT_TRUMP is not
     # valid during BIDDING, also dropped. The FIFO drain clears the entire queue.
@@ -262,11 +262,8 @@ def test_valid_queued_action_survives_other_players_turns(client: TestClient):
     # SELECT_TRUMP survives in the queue waiting for a future state where it is valid.
     game = get_game(client, game["id"], DEFAULT_ID)
     assert game["active"]["status"] == "BIDDING"
-    assert contains_unsequenced(
-        game["active"]["queuedActions"],
-        {
-            "type": "SELECT_TRUMP",
-            "playerId": DEFAULT_ID,
-            "suit": SelectableSuit.DIAMONDS,
-        },
-    )
+    assert {
+        "type": "SELECT_TRUMP",
+        "playerId": DEFAULT_ID,
+        "suit": SelectableSuit.DIAMONDS,
+    } in game["active"]["queuedActions"]

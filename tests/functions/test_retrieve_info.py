@@ -268,9 +268,9 @@ def test_get_all_events(client: TestClient):
 
     events = get_events(client, game["id"], DEFAULT_ID)
 
-    assert events[0]["type"] == "GAME_START"
+    assert events[0]["content"]["type"] == "GAME_START"
     assert events[0]["sequence"] == 0
-    assert events[-1]["type"] == "GAME_END"
+    assert events[-1]["content"]["type"] == "GAME_END"
     assert events[-1]["sequence"] == len(events) - 1
 
 

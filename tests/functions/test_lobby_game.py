@@ -265,7 +265,7 @@ def test_start_game(client: TestClient):
 
     game = get_game(client, lobby["id"], organizer)
 
-    assert {"type": "GAME_START", "sequence": 0} in results
+    assert {"content": {"type": "GAME_START"}, "sequence": 0} in results
     assert lobby["id"] == game["id"]
     assert 4 == len(game["players"])
     assert GameStatus.BIDDING.name == game["active"]["status"]
