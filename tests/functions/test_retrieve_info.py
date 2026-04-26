@@ -347,6 +347,7 @@ def test_completed_rounds_show_full_info(client: TestClient):
             assert isinstance(
                 hand, list
             ), f"Player {player_id} hand should be a card list in completed round"
+            assert len(hand) == 5
         if game_round["status"] == "COMPLETED":
             for player_id, discards in game_round["discards"].items():
                 assert isinstance(
