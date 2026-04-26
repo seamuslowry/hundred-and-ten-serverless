@@ -48,14 +48,14 @@ def events(
 def game(
     m_game: internal.Game,
     client_player_id: str,
-) -> responses.Game:
+) -> responses.GameResponse:
     """Return a round-based game response for the given player"""
     assert m_game.id  # games sent to clients will be saved and have an id
 
     game_rounds = m_game.rounds
     completed_rounds = game_rounds if m_game.winner else game_rounds[:-1]
 
-    return responses.Game(
+    return responses.GameResponse(
         id=m_game.id,
         name=m_game.name,
         active=(

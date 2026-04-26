@@ -17,7 +17,7 @@ from src.models.client.requests import (
 )
 from src.models.client.responses import (
     Event,
-    Game,
+    GameResponse,
     Player,
     UnorderedActionResponse,
 )
@@ -30,7 +30,7 @@ router = APIRouter(
 )
 
 
-@router.get("/{game_id}", response_model=Game)
+@router.get("/{game_id}", response_model=GameResponse)
 async def game_info(player_id: str, game_id: PydanticObjectId):
     """Retrieve 110 game."""
     game = await GameService.get(game_id)
@@ -38,7 +38,7 @@ async def game_info(player_id: str, game_id: PydanticObjectId):
     return serialize.game(game, player_id)
 
 
-@router.get("/{game_id}/spike", response_model=Game)
+@router.get("/{game_id}/spike", response_model=GameResponse)
 async def spike_game_info(player_id: str, game_id: PydanticObjectId):
     """Retrieve 110 game with full round history (spike endpoint)."""
     game = await GameService.get(game_id)
@@ -142,7 +142,7 @@ async def suggestion(player_id: str, game_id: PydanticObjectId):
     return [serialize.suggestion(s) for s in game.suggestions_for(player_id)]
 
 
-@router.post("/search", response_model=list[Game])
+@router.post("/search", response_model=list[GameResponse])
 async def search_games(player_id: str, body: SearchGamesRequest):
     """Search for games"""
     return [

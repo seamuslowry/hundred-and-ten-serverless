@@ -216,7 +216,7 @@ class Trick(BaseModel):
 
 
 class LobbyResponse(BaseModel):
-    """A class to model the client format of a waiting Hundred and Ten game"""
+    """A class to model the client format of a lobby Hundred and Ten game"""
 
     id: str
     name: str
@@ -288,7 +288,7 @@ type ActiveInfo = Annotated[
 ]
 
 
-class Game(BaseModel):
+class GameResponse(BaseModel):
     """Unified round-based game response"""
 
     id: str
