@@ -26,10 +26,12 @@ class Round:
 
     @property
     def dealer_player_id(self) -> str:
+        """The player ID of the dealer"""
         return self._engine_round.dealer.identifier
 
     @property
     def initial_hands(self) -> dict[str, list[Card]]:
+        """The initial hands of each player in this round"""
         # cheat and get initial hands by recreating the start of the round
         recreated_round = EngineRound(
             game_players=[
@@ -45,6 +47,7 @@ class Round:
 
     @property
     def current_hands(self) -> dict[str, list[Card]]:
+        """The current hands of each player in this round; will be empty when complete"""
         return {
             p.identifier: [Card.from_engine(c) for c in p.hand]
             for p in self._engine_round.players
@@ -52,6 +55,7 @@ class Round:
 
     @property
     def discards(self) -> dict[str, DiscardRecord]:
+        """The discard records of each player in the round; will have no keys prior to discard"""
         current_hands = self.current_hands
         initial_hands = self.initial_hands
         played_cards = {
@@ -77,10 +81,12 @@ class Round:
 
     @property
     def bid_history(self) -> list[Bid]:
+        """The bid history of the round"""
         return [Bid.from_engine(b) for b in self._engine_round.bids]
 
     @property
     def scores(self) -> dict[str, int]:
+        """The scores of the round"""
         round_scores = {}
 
         for score in self._engine_round.scores:
@@ -92,6 +98,7 @@ class Round:
 
     @property
     def trump(self) -> CardSuit | None:
+        """The trump of the round, if one is selected"""
         return (
             CardSuit[self._engine_round.trump.name]
             if self._engine_round.trump
@@ -100,6 +107,7 @@ class Round:
 
     @property
     def tricks(self) -> list[Trick]:
+        """The tricks played this round"""
         return [
             Trick(
                 bleeding=t.bleeding,
