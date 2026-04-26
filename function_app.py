@@ -43,7 +43,6 @@ async def lifespan(_: FastAPI):
 fastapi_app = FastAPI(
     dependencies=[Depends(get_authorized_identity_for_path_player)],
     lifespan=lifespan,
-    response_model_by_alias=True,
 )
 
 
