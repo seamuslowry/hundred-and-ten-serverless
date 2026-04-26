@@ -38,14 +38,6 @@ async def game_info(player_id: str, game_id: PydanticObjectId):
     return serialize.game(game, player_id)
 
 
-@router.get("/{game_id}/spike", response_model=GameResponse)
-async def spike_game_info(player_id: str, game_id: PydanticObjectId):
-    """Retrieve 110 game with full round history (spike endpoint)."""
-    game = await GameService.get(game_id)
-
-    return serialize.game(game, player_id)
-
-
 @router.post("/{game_id}/players", response_model=list[Event])
 async def leave_game(
     player_id: str, game_id: PydanticObjectId, body: GamePlayerRequest
