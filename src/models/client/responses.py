@@ -1,6 +1,5 @@
 """Format of a game of Hundred and Ten on the client"""
 
-from abc import ABC
 from enum import Enum
 from typing import Annotated, Literal, Optional, Union
 
@@ -14,12 +13,6 @@ from .shared import ClientModel
 # =============================================================================
 
 
-class Sequential(ABC, ClientModel):
-    """A class to indicate the subclass is sequential"""
-
-    sequence: int
-
-
 class Card(ClientModel):
     """A class to model the client format of a Hundred and Ten card"""
 
@@ -27,7 +20,7 @@ class Card(ClientModel):
     number: CardNumberName
 
 
-class BidAction(Sequential):
+class BidAction(ClientModel):
     """A class to model the client format of a Hundred and Ten bid action"""
 
     type: Literal["BID"]
@@ -35,7 +28,7 @@ class BidAction(Sequential):
     amount: int
 
 
-class SelectTrumpAction(Sequential):
+class SelectTrumpAction(ClientModel):
     """A class to model the client format of a Hundred and Ten select trump action"""
 
     type: Literal["SELECT_TRUMP"]
@@ -43,7 +36,7 @@ class SelectTrumpAction(Sequential):
     suit: SelectableSuit
 
 
-class DiscardAction(Sequential):
+class DiscardAction(ClientModel):
     """A class to model the client format of a Hundred and Ten discard action"""
 
     type: Literal["DISCARD"]
@@ -51,7 +44,7 @@ class DiscardAction(Sequential):
     cards: Union[list[Card], int]
 
 
-class PlayCardAction(Sequential):
+class PlayCardAction(ClientModel):
     """A class to model the client format of a Hundred and Ten play action"""
 
     type: Literal["PLAY"]
@@ -62,13 +55,13 @@ class PlayCardAction(Sequential):
 type GameAction = BidAction | SelectTrumpAction | DiscardAction | PlayCardAction
 
 
-class GameStart(Sequential):
+class GameStart(ClientModel):
     """A class to model the client format of a Hundred and Ten game start event"""
 
     type: Literal["GAME_START"]
 
 
-class RoundStart(Sequential):
+class RoundStart(ClientModel):
     """A class to model the client format of a Hundred and Ten round start event"""
 
     type: Literal["ROUND_START"]
@@ -76,13 +69,13 @@ class RoundStart(Sequential):
     hands: dict[str, Union[list[Card], int]]
 
 
-class TrickStart(Sequential):
+class TrickStart(ClientModel):
     """A class to model the client format of a Hundred and Ten trick start event"""
 
     type: Literal["TRICK_START"]
 
 
-class TrickEnd(Sequential):
+class TrickEnd(ClientModel):
     """A class to model the client format of a Hundred and Ten trick end event"""
 
     type: Literal["TRICK_END"]
@@ -96,84 +89,37 @@ class Score(ClientModel):
     value: int
 
 
-class RoundEnd(Sequential):
+class RoundEnd(ClientModel):
     """A class to model the client format of a Hundred and Ten round end event"""
 
     type: Literal["ROUND_END"]
     scores: list[Score]
 
 
-class GameEnd(Sequential):
+class GameEnd(ClientModel):
     """A class to model the client format of a Hundred and Ten game end event"""
 
     type: Literal["GAME_END"]
     winner_player_id: str
 
 
-type GameEvent = GameStart | RoundStart | TrickStart | TrickEnd | RoundEnd | GameEnd
+type GameTransition = GameStart | RoundStart | TrickStart | TrickEnd | RoundEnd | GameEnd
 
-# Union type for all event types (used in results field for OpenAPI)
-type Event = Annotated[
+type EventContent = Annotated[
     Union[
         GameAction,
-        GameEvent,
+        GameTransition,
     ],
     Field(discriminator="type"),
 ]
 
-# =============================================================================
-#  Queued Actions
-# =============================================================================
 
+# Union type for all event types (used in results field for OpenAPI)
+class Event(ClientModel):
+    """An event in a game of Hundred and Ten"""
 
-class QueuedBid(ClientModel):
-    """
-    A class to model the client format of a Hundred and Ten bid action without context of sequence
-    """
-
-    type: Literal["BID"]
-    player_id: str
-    amount: int
-
-
-class QueuedSelectTrump(ClientModel):
-    """
-    A class to model the client format of a Hundred and Ten select trump action
-    without context of sequence
-    """
-
-    type: Literal["SELECT_TRUMP"]
-    player_id: str
-    suit: SelectableSuit
-
-
-class QueuedDiscard(ClientModel):
-    """
-    A class to model the client format of a Hundred and Ten discard action
-    without context of sequence
-    """
-
-    type: Literal["DISCARD"]
-    player_id: str
-    cards: Union[list[Card], int]
-
-
-class QueuedPlayCard(ClientModel):
-    """
-    A class to model the client format of a Hundred and Ten play action without context of sequence
-    """
-
-    type: Literal["PLAY"]
-    player_id: str
-    card: Card
-
-
-# Union type for all unordered action types
-# (used for suggestions and queued actions)
-type UnorderedActionResponse = Annotated[
-    Union[QueuedBid, QueuedSelectTrump, QueuedDiscard, QueuedPlayCard],
-    Field(discriminator="type"),
-]
+    sequence: int
+    content: EventContent
 
 
 # =============================================================================
@@ -212,8 +158,8 @@ class Trick(ClientModel):
     """A class to model the client format of a Hundred and Ten trick"""
 
     bleeding: bool
-    plays: list[QueuedPlayCard]
-    winning_play: Optional[QueuedPlayCard] = None
+    plays: list[PlayCardAction]
+    winning_play: Optional[PlayCardAction] = None
 
 
 class LobbyResponse(ClientModel):
@@ -240,8 +186,8 @@ class CompletedWithBidderRound(ClientModel):
     status: Literal["COMPLETED"]
     dealer_player_id: str
     trump: SelectableSuit
-    bid_history: list[QueuedBid]
-    bid: Optional[QueuedBid] = None
+    bid_history: list[BidAction]
+    bid: Optional[BidAction] = None
     initial_hands: dict[str, list[Card]]
     discards: dict[str, DiscardRecord]
     tricks: list[Trick]
@@ -261,14 +207,14 @@ class ActiveRound(ClientModel):
 
     status: Literal["BIDDING", "TRUMP_SELECTION", "DISCARD", "TRICKS"]
     dealer_player_id: str
-    bid_history: list[QueuedBid]
-    bid: Optional[QueuedBid] = None
+    bid_history: list[BidAction]
+    bid: Optional[BidAction] = None
     hands: dict[str, Union[list[Card], int]]
     trump: Optional[SelectableSuit] = None
     discards: dict[str, Union[DiscardRecord, int]]
     tricks: list[Trick]
     active_player_id: str
-    queued_actions: list[UnorderedActionResponse]
+    queued_actions: list[GameAction]
 
 
 class WonInformation(ClientModel):

@@ -15,12 +15,7 @@ from src.models.client.requests import (
     GamePlayerRequest,
     SearchGamesRequest,
 )
-from src.models.client.responses import (
-    Event,
-    GameResponse,
-    Player,
-    UnorderedActionResponse,
-)
+from src.models.client.responses import Event, GameAction, GameResponse, Player
 from src.models.internal.errors import AuthorizationError, BadRequestError
 from src.services import GameService, PlayerService
 
@@ -126,12 +121,12 @@ async def events(
     ]
 
 
-@router.get("/{game_id}/suggestions", response_model=list[UnorderedActionResponse])
+@router.get("/{game_id}/suggestions", response_model=list[GameAction])
 async def suggestion(player_id: str, game_id: PydanticObjectId):
     """Ask for suggestions in a 110 game"""
     game = await GameService.get(game_id)
 
-    return [serialize.suggestion(s) for s in game.suggestions_for(player_id)]
+    return [serialize.action(s) for s in game.suggestions_for(player_id)]
 
 
 @router.post("/search", response_model=list[GameResponse])

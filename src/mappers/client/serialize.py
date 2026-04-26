@@ -41,7 +41,10 @@ def events(
 ) -> list[responses.Event]:
     """Return a list of events as they can be provided to the client"""
     return [
-        __event(event, index, client_player_id) for index, event in enumerate(m_events)
+        responses.Event(
+            sequence=index, content=__event_content(event, client_player_id)
+        )
+        for index, event in enumerate(m_events)
     ]
 
 
@@ -83,9 +86,9 @@ def __completed_round(
         return responses.CompletedWithBidderRound(
             status="COMPLETED",
             dealer_player_id=m_round.dealer_player_id,
-            bid=__unordered_bid(bid),
+            bid=__bid(bid),
             trump=SelectableSuit[m_round.trump.name],
-            bid_history=[__unordered_bid(b) for b in m_round.bid_history],
+            bid_history=[__bid(b) for b in m_round.bid_history],
             initial_hands=initial_hands,
             discards={
                 player_id: __discard_record(record)
@@ -111,7 +114,7 @@ def __active_round(
     # Active round: apply visibility rules
     requesting_player = m_game.ordered_players.find(client_player_id)
     queued = (
-        [suggestion(a) for a in requesting_player.queued_actions]
+        [action(a) for a in requesting_player.queued_actions]
         if isinstance(requesting_player, internal.Human)
         else []
     )
@@ -123,8 +126,8 @@ def __active_round(
     return responses.ActiveRound(
         status=m_game.status.name,
         dealer_player_id=m_round.dealer_player_id,
-        bid_history=[__unordered_bid(b) for b in m_round.bid_history],
-        bid=__unordered_bid(bid) if bid else None,
+        bid_history=[__bid(b) for b in m_round.bid_history],
+        bid=__bid(bid) if bid else None,
         hands={
             player_id: (
                 [__card(c) for c in hand]
@@ -155,37 +158,43 @@ def __discard_record(discard: internal.DiscardRecord) -> responses.DiscardRecord
     )
 
 
-def suggestion(m_action: internal.Action) -> responses.UnorderedActionResponse:
-    """Return a suggested action as it can be provided to the client"""
+def action(m_action: internal.Action) -> responses.GameAction:
+    """Return an action as it can be provided to the client"""
     if isinstance(m_action, internal.Bid):
-        return __unordered_bid(m_action)
+        return __bid(m_action)
     if isinstance(m_action, internal.SelectTrump):
-        return responses.QueuedSelectTrump(
-            type="SELECT_TRUMP",
-            suit=SelectableSuit[m_action.suit.name],
-            player_id=m_action.player_id,
-        )
+        return __select_trump(m_action)
     if isinstance(m_action, internal.Discard):
-        return responses.QueuedDiscard(
-            type="DISCARD",
-            cards=[__card(c) for c in m_action.cards],
-            player_id=m_action.player_id,
-        )
+        return __discard(m_action)
     if isinstance(m_action, internal.Play):
-        return responses.QueuedPlayCard(
-            type="PLAY", card=__card(m_action.card), player_id=m_action.player_id
-        )
+        return __play(m_action)
     # type: ignore[unreachable]
     raise ValueError("No suggestion available at this time")  # pragma: no cover
 
 
-def __unordered_bid(b: internal.Bid) -> responses.QueuedBid:
-    return responses.QueuedBid(type="BID", amount=b.amount, player_id=b.player_id)
+def __bid(b: internal.Bid) -> responses.BidAction:
+    return responses.BidAction(type="BID", amount=b.amount, player_id=b.player_id)
 
 
-def __play(play: internal.Play) -> responses.QueuedPlayCard:
-    return responses.QueuedPlayCard(
+def __play(play: internal.Play) -> responses.PlayCardAction:
+    return responses.PlayCardAction(
         type="PLAY", player_id=play.player_id, card=__card(play.card)
+    )
+
+
+def __discard(discard: internal.Discard) -> responses.DiscardAction:
+    return responses.DiscardAction(
+        type="DISCARD",
+        cards=[__card(c) for c in discard.cards],
+        player_id=discard.player_id,
+    )
+
+
+def __select_trump(select: internal.SelectTrump) -> responses.SelectTrumpAction:
+    return responses.SelectTrumpAction(
+        type="SELECT_TRUMP",
+        suit=SelectableSuit[select.suit.name],
+        player_id=select.player_id,
     )
 
 
@@ -219,18 +228,17 @@ def __card(card: internal.Card) -> responses.Card:
     )
 
 
-def __event(
-    event: internal.Event, sequence: int, client_player_id: str
-) -> responses.Event:
-    """Convert the provided event into the structure it should provide the client"""
-    result: Optional[responses.Event] = None
+def __event_content(
+    event: internal.Event, client_player_id: str
+) -> responses.EventContent:
+    """Convert the provided event into the content it should provide the client"""
+    content: Optional[responses.EventContent] = None
 
     if isinstance(event, internal.GameStart):
-        result = responses.GameStart(type="GAME_START", sequence=sequence)
+        content = responses.GameStart(type="GAME_START")
     elif isinstance(event, internal.RoundStart):
-        result = responses.RoundStart(
+        content = responses.RoundStart(
             type="ROUND_START",
-            sequence=sequence,
             dealer=event.dealer,
             hands={
                 player_id: (
@@ -242,59 +250,31 @@ def __event(
             },
         )
     elif isinstance(event, internal.Bid):
-        result = responses.BidAction(
-            type="BID",
-            sequence=sequence,
-            player_id=event.player_id,
-            amount=event.amount,
-        )
-
+        content = __bid(event)
     elif isinstance(event, internal.SelectTrump):
-        result = responses.SelectTrumpAction(
-            type="SELECT_TRUMP",
-            sequence=sequence,
-            player_id=event.player_id,
-            suit=SelectableSuit[event.suit.name],
-        )
+        content = __select_trump(event)
     elif isinstance(event, internal.Discard):
-        result = responses.DiscardAction(
-            type="DISCARD",
-            sequence=sequence,
-            player_id=event.player_id,
-            cards=(
-                [__card(c) for c in event.cards]
-                if client_player_id == event.player_id
-                else len(event.cards)
-            ),
-        )
+        content = __discard(event)
     elif isinstance(event, internal.TrickStart):
-        result = responses.TrickStart(type="TRICK_START", sequence=sequence)
+        content = responses.TrickStart(type="TRICK_START")
     elif isinstance(event, internal.Play):
-        result = responses.PlayCardAction(
-            type="PLAY",
-            sequence=sequence,
-            player_id=event.player_id,
-            card=__card(event.card),
-        )
+        content = __play(event)
     elif isinstance(event, internal.TrickEnd):
-        result = responses.TrickEnd(
+        content = responses.TrickEnd(
             type="TRICK_END",
-            sequence=sequence,
             winner_player_id=event.winner,
         )
     elif isinstance(event, internal.RoundEnd):
-        result = responses.RoundEnd(
+        content = responses.RoundEnd(
             type="ROUND_END",
-            sequence=sequence,
             scores=[
                 responses.Score(player_id=identifier, value=score)
                 for identifier, score in event.scores.items()
             ],
         )
     elif isinstance(event, internal.GameEnd):
-        result = responses.GameEnd(
+        content = responses.GameEnd(
             type="GAME_END",
-            sequence=sequence,
             winner_player_id=event.winner,
         )
     else:
@@ -303,4 +283,4 @@ def __event(
             f"Unknown event type: {type(event).__name__}"
         )  # pragma: no cover
 
-    return result
+    return content
