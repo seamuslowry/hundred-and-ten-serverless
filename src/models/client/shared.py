@@ -1,3 +1,5 @@
+"""Shared configuration for the client representation of a game of Hundred and Ten"""
+
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
 
