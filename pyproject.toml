@@ -24,7 +24,7 @@ dependencies = [
     "hundredandten-automation-naive==0.0.6",
     "hundredandten-engine==0.0.7",
     "pymongo==4.17.0",
-    "pyjwt==2.12.1",
+    "pyjwt==2.13.0",
     "requests==2.34.2",
 ]
 
