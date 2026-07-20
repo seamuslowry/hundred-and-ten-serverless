@@ -19,7 +19,7 @@ dependencies = [
     "beanie==2.1.0",
     "cachecontrol==0.14.4",
     "fastapi==0.139.2",
-    "google-auth==2.55.2",
+    "google-auth==2.56.0",
     "hundredandten-automation-engineadapter==0.0.6",
     "hundredandten-automation-naive==0.0.6",
     "hundredandten-engine==0.0.7",
