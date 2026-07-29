@@ -66,13 +66,13 @@ min-public-methods = 0
 ignore-paths = ["tests/.*"]
 
 [tool.ruff]
-target-version = "py314"
+target-version = "py313"
 line-length = 100
 lint.extend-select = ["I"]
 lint.isort.combine-as-imports = true
 
 [tool.black]
-target-version = ["py314"]
+target-version = ["py313"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
