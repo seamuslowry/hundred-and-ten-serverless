@@ -2,7 +2,6 @@
 The router for lobby operations.
 """
 
-import logging
 
 from beanie import PydanticObjectId
 from fastapi import APIRouter
@@ -29,9 +28,6 @@ from src.services import LobbyService, PlayerService
 
 MIN_PLAYERS = 4
 
-logger = logging.getLogger(__name__)
-
-
 router = APIRouter(
     prefix="/players/{player_id}/lobbies",
     tags=["Lobbies"],
@@ -41,10 +37,6 @@ router = APIRouter(
 @router.post("", response_model=LobbyResponse)
 async def create_lobby(player_id: str, body: CreateLobbyRequest):
     """Create a new 110 lobby."""
-    logger.info("Initiating create lobby request.")
-
-    logger.debug("Creating lobby for %s", player_id)
-
     lobby = Lobby(
         organizer=Human(id=player_id),
         name=body.name,
@@ -52,8 +44,6 @@ async def create_lobby(player_id: str, body: CreateLobbyRequest):
     )
 
     lobby = await LobbyService.save(lobby)
-
-    logger.debug("Lobby %s created successfully", lobby.seed)
 
     return serialize.lobby(lobby)
 
