@@ -120,7 +120,7 @@ class Game(BaseGame):
         self.__initialize_engine(initial_actions or [])
 
     @staticmethod
-    def from_lobby(lobby: Lobby) -> Game:
+    def from_lobby(lobby: Lobby) -> "Game":
         """Create a Game from a Lobby (starts the game)"""
         return Game(
             id=lobby.id,
