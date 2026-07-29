@@ -1,5 +1,7 @@
 """Identity retrieval as dependency to HTTP endpoints"""
 
+from typing import Annotated
+
 from fastapi import Depends, Path
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
@@ -18,7 +20,7 @@ http_bearer = HTTPBearer(
 
 
 def get_authenticated_identity(
-    credentials: HTTPAuthorizationCredentials = Depends(http_bearer),
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(http_bearer)],
 ) -> Identity:
     """Validate the Bearer token and return the authenticated identity"""
     try:
@@ -28,7 +30,8 @@ def get_authenticated_identity(
 
 
 def get_authorized_identity_for_path_player(
-    player_id: str = Path(), identity: Identity = Depends(get_authenticated_identity)
+    player_id: Annotated[str, Path()],
+    identity: Annotated[Identity, Depends(get_authenticated_identity)],
 ) -> Identity:
     """Retrieve the authenticated identity and authorize it for the path"""
     if identity.id != player_id:

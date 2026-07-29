@@ -1,6 +1,6 @@
 """Pydantic models for API request bodies"""
 
-from typing import Annotated, Literal, Optional, Union
+from typing import Annotated, Literal
 
 from pydantic import Field
 
@@ -44,7 +44,7 @@ class SelectTrumpRequest(ClientModel):
 
 
 type ActRequest = Annotated[
-    Union[BidRequest, DiscardRequest, PlayRequest, SelectTrumpRequest],
+    BidRequest | DiscardRequest | PlayRequest | SelectTrumpRequest,
     Field(discriminator="type"),
 ]
 
@@ -78,10 +78,10 @@ class SearchGamesRequest(ClientModel):
     search_text: str = ""
     offset: int = 0
     limit: int = 20
-    statuses: Optional[list[str]] = None
+    statuses: list[str] | None = None
     # Non-standard aliases kept intentionally: API contract uses "activePlayer"/"winner"
-    active_player_id: Optional[str] = Field(default=None, alias="activePlayer")
-    winner_player_id: Optional[str] = Field(default=None, alias="winner")
+    active_player_id: str | None = Field(default=None, alias="activePlayer")
+    winner_player_id: str | None = Field(default=None, alias="winner")
 
 
 class GamePlayerLeaveRequest(ClientModel):
@@ -98,7 +98,7 @@ class GamePlayerKickRequest(ClientModel):
 
 
 type GamePlayerRequest = Annotated[
-    Union[GamePlayerLeaveRequest, GamePlayerKickRequest], Field(discriminator="type")
+    GamePlayerLeaveRequest | GamePlayerKickRequest, Field(discriminator="type")
 ]
 
 
@@ -129,11 +129,9 @@ class LobbyPlayerKickRequest(ClientModel):
 
 
 type LobbyPlayerRequest = Annotated[
-    Union[
-        LobbyPlayerLeaveRequest,
-        LobbyPlayerJoinRequest,
-        LobbyPlayerInviteRequest,
-        LobbyPlayerKickRequest,
-    ],
+    LobbyPlayerLeaveRequest
+    | LobbyPlayerJoinRequest
+    | LobbyPlayerInviteRequest
+    | LobbyPlayerKickRequest,
     Field(discriminator="type"),
 ]

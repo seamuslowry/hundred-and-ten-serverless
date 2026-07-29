@@ -33,7 +33,7 @@ def test_search_winner(client: TestClient):
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
     games = resp.json()
-    assert game["id"] in list(map(lambda g: g["id"], games))
+    assert game["id"] in [g["id"] for g in games]
 
 
 def test_search_game_smoke_test(client: TestClient):
@@ -144,17 +144,17 @@ def test_game_players(client: TestClient):
     retrieved_players = resp.json()
 
     # Should have at least the organizer (CPU players may not have player records)
-    retrieved_player_ids = list(map(lambda u: u["id"], retrieved_players))
+    retrieved_player_ids = [u["id"] for u in retrieved_players]
     assert organizer["id"] in retrieved_player_ids
 
 
 def test_lobby_players(client: TestClient):
     """Can retrieve information for players in a lobby"""
     original_lobby = lobby_game(client)
-    other_player_ids = list(map(lambda i: f"{time()}-{i}", range(1, 4)))
+    other_player_ids = [f"{time()}-{i}" for i in range(1, 4)]
 
     organizer = player(client, Player(original_lobby["organizer"]["id"]))
-    other_players = list(map(lambda id: player(client, Player(id)), other_player_ids))
+    other_players = [player(client, Player(id)) for id in other_player_ids]
 
     for p in other_players:
         client.post(
@@ -171,9 +171,9 @@ def test_lobby_players(client: TestClient):
     retrieved_players = resp.json()
 
     assert 4 == len(retrieved_players)
-    assert ([organizer["id"]] + other_player_ids) == list(
-        map(lambda p: p["id"], retrieved_players)
-    )
+    assert ([organizer["id"]] + other_player_ids) == [
+        p["id"] for p in retrieved_players
+    ]
 
 
 def test_search_players(client: TestClient):
@@ -194,7 +194,7 @@ def test_search_players(client: TestClient):
         headers={"authorization": f"Bearer {DEFAULT_ID}"},
     )
     retrieved_players = resp.json()
-    retrieved_player_ids = list(map(lambda u: u["id"], retrieved_players))
+    retrieved_player_ids = [u["id"] for u in retrieved_players]
     assert player_one.player_id in retrieved_player_ids
     assert player_two.player_id in retrieved_player_ids
     assert player_three.player_id not in retrieved_player_ids

@@ -6,7 +6,7 @@ from .identity import Identity
 
 __all__ = [
     "Identity",
-    "verify_firebase_token",
     "get_authenticated_identity",
     "get_authorized_identity_for_path_player",
+    "verify_firebase_token",
 ]

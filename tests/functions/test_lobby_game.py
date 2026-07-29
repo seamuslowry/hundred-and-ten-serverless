@@ -21,7 +21,7 @@ def test_lobby_info_not_an_object_id(client: TestClient):
 def test_lobby_info_not_saved_object_id(client: TestClient):
     """Invalid lobby ID returns 404"""
     resp = client.get(
-        f"/players/id/lobbies/{str(PydanticObjectId())}",
+        f"/players/id/lobbies/{PydanticObjectId()!s}",
         headers={"authorization": "Bearer id"},
     )
     assert 404 == resp.status_code

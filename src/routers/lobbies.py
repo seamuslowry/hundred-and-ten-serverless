@@ -29,6 +29,8 @@ from src.services import LobbyService, PlayerService
 
 MIN_PLAYERS = 4
 
+logger = logging.getLogger(__name__)
+
 
 router = APIRouter(
     prefix="/players/{player_id}/lobbies",
@@ -39,9 +41,9 @@ router = APIRouter(
 @router.post("", response_model=LobbyResponse)
 async def create_lobby(player_id: str, body: CreateLobbyRequest):
     """Create a new 110 lobby."""
-    logging.info("Initiating create lobby request.")
+    logger.info("Initiating create lobby request.")
 
-    logging.debug("Creating lobby for %s", player_id)
+    logger.debug("Creating lobby for %s", player_id)
 
     lobby = Lobby(
         organizer=Human(id=player_id),
@@ -51,7 +53,7 @@ async def create_lobby(player_id: str, body: CreateLobbyRequest):
 
     lobby = await LobbyService.save(lobby)
 
-    logging.debug("Lobby %s created successfully", lobby.seed)
+    logger.debug("Lobby %s created successfully", lobby.seed)
 
     return serialize.lobby(lobby)
 

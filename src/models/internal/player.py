@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from collections import deque
 from dataclasses import dataclass, field
-from typing import Optional, Self
+from typing import Self
 
 from .actions import Action, Card
 
@@ -37,10 +37,10 @@ class Player:
     """A class to interact with generic players"""
 
     player_id: str  # The external-facing identifier (will be firebase UID)
-    name: Optional[str] = None
+    name: str | None = None
 
-    id: Optional[str] = None  # The actual DB ID
-    picture_url: Optional[str] = None
+    id: str | None = None  # The actual DB ID
+    picture_url: str | None = None
 
 
 @dataclass
