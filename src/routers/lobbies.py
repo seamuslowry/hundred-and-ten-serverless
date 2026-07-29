@@ -2,7 +2,6 @@
 The router for lobby operations.
 """
 
-
 from beanie import PydanticObjectId
 from fastapi import APIRouter
 
