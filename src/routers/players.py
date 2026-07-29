@@ -2,6 +2,8 @@
 The router for player operations.
 """
 
+from typing import Annotated
+
 from fastapi import APIRouter, Depends
 
 from src.auth import Identity, get_authorized_identity_for_path_player
@@ -27,7 +29,7 @@ async def get_player(
 
 @router.put("", response_model=Player)
 async def refresh(
-    identity: Identity = Depends(get_authorized_identity_for_path_player),
+    identity: Annotated[Identity, Depends(get_authorized_identity_for_path_player)],
 ):
     """Save the authenticated principal as a player in the DB"""
     return serialize.player(

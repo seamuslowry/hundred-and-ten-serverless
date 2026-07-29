@@ -2,8 +2,6 @@
 The router for game operations.
 """
 
-from typing import Optional
-
 from beanie import PydanticObjectId
 from fastapi import APIRouter
 
@@ -111,7 +109,7 @@ async def events(
     player_id: str,
     game_id: PydanticObjectId,
     skip: int = 0,
-    limit: Optional[int] = None,
+    limit: int | None = None,
 ):
     """Retrieve the events in a 110 game."""
     game = await GameService.get(game_id)

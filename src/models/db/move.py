@@ -2,7 +2,7 @@
 
 from abc import ABC
 from enum import Enum
-from typing import Annotated, Literal, Union
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 
@@ -89,5 +89,5 @@ class PlayMove(AbstractMove):
 
 
 type Move = Annotated[
-    Union[BidMove, SelectTrumpMove, DiscardMove, PlayMove], Field(discriminator="type")
+    BidMove | SelectTrumpMove | DiscardMove | PlayMove, Field(discriminator="type")
 ]

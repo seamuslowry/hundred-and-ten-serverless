@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import InitVar, dataclass, field
-from typing import Optional, override
+from typing import override
 from uuid import uuid4
 
 from hundredandten.automation import naive
@@ -47,11 +47,11 @@ class PlayerGroup(list[PlayerInGame]):
             raise ValueError(f"Unable to find {player_id}")
         return p
 
-    def find(self, player_id: str) -> Optional[PlayerInGame]:
+    def find(self, player_id: str) -> PlayerInGame | None:
         """Find the player with the passed player ID; return None if they don't exist"""
         return self._by_player_id(player_id)
 
-    def _by_player_id(self, player_id: str) -> Optional[PlayerInGame]:
+    def _by_player_id(self, player_id: str) -> PlayerInGame | None:
         """Find a player by player ID"""
         return next((p for p in self if p.id == player_id), None)
 
@@ -62,7 +62,7 @@ class BaseGame(ABC):
 
     organizer: PlayerInGame = field()
     players: PlayerGroup = field(default_factory=PlayerGroup)
-    id: Optional[str] = field(default=None)
+    id: str | None = field(default=None)
     name: str = field(default="")
     seed: str = field(default_factory=lambda: str(uuid4()))
     accessibility: Accessibility = field(default=Accessibility.PUBLIC)
@@ -111,16 +111,16 @@ class Lobby(BaseGame):
 class Game(BaseGame):
     """A class to model an in-progress or completed Hundred and Ten game"""
 
-    initial_actions: InitVar[Optional[list[Action]]] = None
+    initial_actions: InitVar[list[Action] | None] = None
 
     # The underlying game engine (always exists for a Game)
     _engine: Engine = field(init=False, repr=False)
 
-    def __post_init__(self, initial_actions: Optional[list[Action]]):
+    def __post_init__(self, initial_actions: list[Action] | None):
         self.__initialize_engine(initial_actions or [])
 
     @staticmethod
-    def from_lobby(lobby: Lobby) -> "Game":
+    def from_lobby(lobby: Lobby) -> Game:
         """Create a Game from a Lobby (starts the game)"""
         return Game(
             id=lobby.id,
@@ -135,7 +135,7 @@ class Game(BaseGame):
     @property
     def actions(self) -> list[Action]:
         """Get all moves made in the game"""
-        return list(ActionFactory.from_engine(a) for a in self._engine.actions)
+        return [ActionFactory.from_engine(a) for a in self._engine.actions]
 
     @property
     def status(self) -> GameStatus:
@@ -145,7 +145,7 @@ class Game(BaseGame):
         return GameStatus[self._engine.active_round.status.name]
 
     @property
-    def winner(self) -> Optional[PlayerInGame]:
+    def winner(self) -> PlayerInGame | None:
         """Get the winner of the game"""
         if self._engine.winner:
             return self.ordered_players.find_or_throw(self._engine.winner.identifier)

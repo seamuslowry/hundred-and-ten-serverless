@@ -1,7 +1,6 @@
 """Internal models for tricks"""
 
 from dataclasses import dataclass
-from typing import Optional
 
 from .actions import Play
 
@@ -11,5 +10,5 @@ class Trick:
     """Internal representation of a trick"""
 
     bleeding: bool
-    winning_play: Optional[Play]
+    winning_play: Play | None
     plays: list[Play]

@@ -2,7 +2,6 @@
 
 from abc import ABC
 from enum import Enum
-from typing import Optional
 
 from beanie import Document
 
@@ -36,8 +35,8 @@ class Game(ABC, Document):
     seed: str
     organizer: PlayerInGame
     players: list[PlayerInGame]
-    winner_player_id: Optional[str]
-    active_player_id: Optional[str]
+    winner_player_id: str | None
+    active_player_id: str | None
     status: Status
     moves: list[Move]
     accessibility: Accessibility

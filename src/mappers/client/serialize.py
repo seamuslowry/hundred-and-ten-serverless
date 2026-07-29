@@ -1,7 +1,5 @@
 """A module to convert models to client objects"""
 
-from typing import Optional
-
 from src.models import internal
 from src.models.client import responses
 from src.models.client.constants import CardNumberName, SelectableSuit, Suit
@@ -232,7 +230,7 @@ def __event_content(
     event: internal.Event, client_player_id: str
 ) -> responses.EventContent:
     """Convert the provided event into the content it should provide the client"""
-    content: Optional[responses.EventContent] = None
+    content: responses.EventContent | None = None
 
     if isinstance(event, internal.GameStart):
         content = responses.GameStart(type="GAME_START")
@@ -279,7 +277,7 @@ def __event_content(
         )
     else:
         # type: ignore[unreachable]
-        raise ValueError(
+        raise TypeError(
             f"Unknown event type: {type(event).__name__}"
         )  # pragma: no cover
 

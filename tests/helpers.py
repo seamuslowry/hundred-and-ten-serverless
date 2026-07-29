@@ -132,7 +132,7 @@ def queue_action(
         # If the action was consumed immediately it appears in the content of results[:1];
         # if it is still pending it appears in queuedActions[-1:].
         # Exactly one of the two lists will contain it.
-    } in [*player_queued_actions[-1:], *map(lambda r: r["content"], results[:1])]
+    } in [*player_queued_actions[-1:], *(r["content"] for r in results[:1])]
 
     return results
 

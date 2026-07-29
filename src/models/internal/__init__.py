@@ -22,42 +22,32 @@ from .round import DiscardRecord, Round
 from .trick import Trick
 
 __all__ = [
-    # Actions
+    "Accessibility",
     "Action",
     "Bid",
-    "Discard",
-    "Play",
-    "SelectTrump",
-    # Constants
     "BidAmount",
-    "CardSuit",
-    "CardNumber",
-    # Deck
     "Card",
-    # Events
+    "CardNumber",
+    "CardSuit",
+    "Discard",
+    "DiscardRecord",
     "Event",
+    "Game",
     "GameEnd",
     "GameStart",
-    "RoundEnd",
-    "RoundStart",
-    "TrickEnd",
-    "TrickStart",
-    # Player
-    "Player",
-    # Round
-    "Round",
-    "DiscardRecord",
-    # Trick
-    "Trick",
-    # Constants
-    "Accessibility",
     "GameStatus",
-    # Models
-    "Game",
+    "Human",
     "Lobby",
+    "NaiveCpu",
+    "Play",
     "Player",
     "PlayerGroup",
     "PlayerInGame",
-    "Human",
-    "NaiveCpu",
+    "Round",
+    "RoundEnd",
+    "RoundStart",
+    "SelectTrump",
+    "Trick",
+    "TrickEnd",
+    "TrickStart",
 ]

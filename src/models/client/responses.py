@@ -1,7 +1,7 @@
 """Format of a game of Hundred and Ten on the client"""
 
 from enum import Enum
-from typing import Annotated, Literal, Optional, Union
+from typing import Annotated, Literal
 
 from pydantic import Field
 
@@ -41,7 +41,7 @@ class DiscardAction(ClientModel):
 
     type: Literal["DISCARD"]
     player_id: str
-    cards: Union[list[Card], int]
+    cards: list[Card] | int
 
 
 class PlayCardAction(ClientModel):
@@ -66,7 +66,7 @@ class RoundStart(ClientModel):
 
     type: Literal["ROUND_START"]
     dealer: str
-    hands: dict[str, Union[list[Card], int]]
+    hands: dict[str, list[Card] | int]
 
 
 class TrickStart(ClientModel):
@@ -106,10 +106,7 @@ class GameEnd(ClientModel):
 type GameTransition = GameStart | RoundStart | TrickStart | TrickEnd | RoundEnd | GameEnd
 
 type EventContent = Annotated[
-    Union[
-        GameAction,
-        GameTransition,
-    ],
+    GameAction | GameTransition,
     Field(discriminator="type"),
 ]
 
@@ -132,7 +129,7 @@ class Player(ClientModel):
 
     id: str
     name: str
-    picture_url: Optional[str] = None
+    picture_url: str | None = None
 
 
 class PlayerType(Enum):
@@ -159,7 +156,7 @@ class Trick(ClientModel):
 
     bleeding: bool
     plays: list[PlayCardAction]
-    winning_play: Optional[PlayCardAction] = None
+    winning_play: PlayCardAction | None = None
 
 
 class LobbyResponse(ClientModel):
@@ -187,7 +184,7 @@ class CompletedWithBidderRound(ClientModel):
     dealer_player_id: str
     trump: SelectableSuit
     bid_history: list[BidAction]
-    bid: Optional[BidAction] = None
+    bid: BidAction | None = None
     initial_hands: dict[str, list[Card]]
     discards: dict[str, DiscardRecord]
     tricks: list[Trick]
@@ -208,10 +205,10 @@ class ActiveRound(ClientModel):
     status: Literal["BIDDING", "TRUMP_SELECTION", "DISCARD", "TRICKS"]
     dealer_player_id: str
     bid_history: list[BidAction]
-    bid: Optional[BidAction] = None
-    hands: dict[str, Union[list[Card], int]]
-    trump: Optional[SelectableSuit] = None
-    discards: dict[str, Union[DiscardRecord, int]]
+    bid: BidAction | None = None
+    hands: dict[str, list[Card] | int]
+    trump: SelectableSuit | None = None
+    discards: dict[str, DiscardRecord | int]
     tricks: list[Trick]
     active_player_id: str
     queued_actions: list[GameAction]
@@ -225,12 +222,12 @@ class WonInformation(ClientModel):
 
 
 type CompletedRound = Annotated[
-    Union[CompletedWithBidderRound, CompletedNoBiddersRound],
+    CompletedWithBidderRound | CompletedNoBiddersRound,
     Field(discriminator="status"),
 ]
 
 type ActiveInfo = Annotated[
-    Union[ActiveRound, WonInformation],
+    ActiveRound | WonInformation,
     Field(discriminator="status"),
 ]
 
