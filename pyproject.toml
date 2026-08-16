@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=83.0.0"]
+requires = ["setuptools>=84.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -30,9 +30,9 @@ dependencies = [
 
 [dependency-groups]
 lint = [
-    "pylint==4.0.6",
+    "pylint==4.0.7",
     "pyright==1.1.411",
-    "ruff==0.16.1",
+    "ruff==0.16.2",
     "black==26.5.1",
 ]
 test = [
