@@ -16,7 +16,7 @@ classifiers = [
 ]
 dependencies = [
     "azure-functions==2.2.0",
-    "beanie==2.1.0",
+    "beanie==2.2.0",
     "cachecontrol==0.14.4",
     "fastapi==0.141.1",
     "google-auth==2.56.3",
