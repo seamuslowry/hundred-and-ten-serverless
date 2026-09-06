@@ -47,14 +47,14 @@ wheels = [
 
 [[package]]
 name = "azure-functions"
-version = "2.2.0"
+version = "2.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "werkzeug" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d9/fe/76756c226321bdda7d42d42da4256dcc0c3200c38d2b710b85e376540a93/azure_functions-2.2.0.tar.gz", hash = "sha256:c1b498cf48beefe2271ebc454f1a4fb6f587bd97c116e412773854b4c66ad1dc", size = 166686, upload-time = "2026-07-06T19:39:42.934Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/46/13/fba9acea1d5ebcd849487b11ba4fe1a4e15d77fb10859c09371c31977116/azure_functions-2.3.0.tar.gz", hash = "sha256:32136bae3285680edd2b2d1786c37d381a9ba4c23332dcd590e354190dbe6c9a", size = 174394, upload-time = "2026-08-28T16:14:38.061Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/19/8b/04b61f98fc24e87838339483d4374832caaf96ee09b86a551fe4e4efa6cf/azure_functions-2.2.0-py3-none-any.whl", hash = "sha256:7e73f2a3ce011cfff09eb8465ab5aeb3c61e86ffeadee209ff6ab65a5ef12f83", size = 123878, upload-time = "2026-07-06T19:39:44.374Z" },
+    { url = "https://files.pythonhosted.org/packages/47/9f/782dd3799adbab974b02284c5b1e0736f6952ebe3b918f595e71aa99bc70/azure_functions-2.3.0-py3-none-any.whl", hash = "sha256:9eb166cd83875dd88996c5f23a46f8edbbc78c0f9c41926bfdf960be54b6c889", size = 129381, upload-time = "2026-08-28T16:14:39.513Z" },
 ]
 
 [[package]]
@@ -552,7 +552,7 @@ test = [
 
 [package.metadata]
 requires-dist = [
-    { name = "azure-functions", specifier = "==2.2.0" },
+    { name = "azure-functions", specifier = "==2.3.0" },
     { name = "beanie", specifier = "==2.2.0" },
     { name = "cachecontrol", specifier = "==0.14.4" },
     { name = "fastapi", specifier = "==0.141.1" },
