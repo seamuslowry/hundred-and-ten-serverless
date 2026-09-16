@@ -1,6 +1,7 @@
 services:
   db:
-    image: mongo:latest
+    # Pinned to match the Cosmos DB `mongo_server_version` in .infrastructure/function.tf
+    image: mongo:7.0
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: rootpassword
