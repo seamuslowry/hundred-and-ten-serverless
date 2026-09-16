@@ -49,6 +49,9 @@ resource "azurerm_cosmosdb_account" "db" {
   offer_type          = "Standard"
   kind                = "MongoDB"
 
+  # Keep `mongo` image tag in docker-compose*.yml in sync with this value for test confidence
+  mongo_server_version = "7.0"
+
   automatic_failover_enabled = false
 
   capabilities {
