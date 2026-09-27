@@ -30,7 +30,7 @@ dependencies = [
 
 [dependency-groups]
 lint = [
-    "pylint==4.0.8",
+    "pylint==4.0.9",
     "pyright==1.1.414",
     "ruff==0.16.8",
     "black==26.5.1",
