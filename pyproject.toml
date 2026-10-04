@@ -18,7 +18,7 @@ dependencies = [
     "azure-functions==2.3.0",
     "beanie==2.2.0",
     "cachecontrol==0.14.4",
-    "fastapi==0.141.1",
+    "fastapi==0.142.2",
     "google-auth==2.58.0",
     "hundredandten-automation-engineadapter==0.0.9",
     "hundredandten-automation-naive==0.0.9",
