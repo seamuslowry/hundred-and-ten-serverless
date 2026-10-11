@@ -133,9 +133,7 @@ The deploy workflow installed dependencies with `uv pip install .`, which re-res
 
 ```yaml
 - name: Install dependencies
-  run: |
-    uv export --frozen --no-dev --no-hashes --no-emit-project -o "$RUNNER_TEMP/requirements.txt"
-    uv pip install -r "$RUNNER_TEMP/requirements.txt" --target=".python_packages/lib/site-packages"
+  run: uv export --frozen --no-dev --no-hashes --no-emit-project | uv pip install -r - --target=".python_packages/lib/site-packages"
 ```
 
 `--no-emit-project` skips installing the project package itself; `function_app.py` imports from the `src/` directory, not the installed distribution, so this is safe (verified by installing into a clean target and importing `function_app`). It also drops the stray `build/` directory from the deploy zip.
