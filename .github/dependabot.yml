@@ -14,7 +14,18 @@ updates:
           - "hundredandten*"
       dev-dependencies:
         dependency-type: "development"
+      # Security fixes land as a single PR instead of one per package.
+      # The groups above only apply to scheduled version updates.
+      security-updates:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      security-updates:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
