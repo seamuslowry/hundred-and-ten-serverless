@@ -105,6 +105,12 @@ resource "azurerm_function_app_flex_consumption" "app" {
   }
 
   app_settings = {
+    # Identity-based host storage. The host authenticates to AzureWebJobsStorage with the
+    # system-assigned identity (see azurerm_role_assignment.app_storage_blob) instead of a
+    # key-based connection string. A leftover key-based AzureWebJobsStorage /
+    # DEPLOYMENT_STORAGE_CONNECTION_STRING with an empty AccountKey broke Flex deployments
+    # (FDM-SiteUpdateTask failed, so new packages never went live); do not reintroduce them.
+    "AzureWebJobsStorage__accountName" = azurerm_storage_account.storage.name
     "DatabaseName"                     = "prod"
     "MongoDb"                          = azurerm_cosmosdb_account.db.primary_mongodb_connection_string,
     "CORS_ORIGINS"                     = local.cors_origins

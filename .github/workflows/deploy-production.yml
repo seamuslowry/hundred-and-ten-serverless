@@ -20,8 +20,12 @@ jobs:
           enable-cache: true
           python-version: "3.13"
 
+      # Install the exact versions from uv.lock so production runs what CI tested.
+      # `uv pip install .` alone re-resolves transitive dependencies to their newest releases.
       - name: Install dependencies
-        run: uv pip install . --target=".python_packages/lib/site-packages"
+        run: |
+          uv export --frozen --no-dev --no-hashes --no-emit-project -o "$RUNNER_TEMP/requirements.txt"
+          uv pip install -r "$RUNNER_TEMP/requirements.txt" --target=".python_packages/lib/site-packages"
 
       - name: Login to Azure
         uses: azure/login@v3
