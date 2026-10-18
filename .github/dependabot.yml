@@ -9,11 +9,20 @@ updates:
       time: "03:00"
       timezone: "America/New_York"
     groups:
+      # First matching group wins. Engine packages are pinned and may need
+      # code changes, so they stay in their own PR.
       hundred-and-ten:
         patterns:
           - "hundredandten*"
       dev-dependencies:
         dependency-type: "development"
+      # All other production minor/patch updates in one PR. Majors still
+      # arrive as individual PRs.
+      production-minor-and-patch:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
       # Security fixes land as a single PR instead of one per package.
       # The groups above only apply to scheduled version updates.
       security-updates:
