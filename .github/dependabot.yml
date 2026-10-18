@@ -9,8 +9,10 @@ updates:
       time: "03:00"
       timezone: "America/New_York"
     groups:
-      # First matching group wins. Engine packages are pinned and may need
-      # code changes, so they stay in their own PR.
+      # Engine packages are pinned and may need code changes, so they stay in
+      # their own PR. Dependabot assigns a package to the highest-scoring group
+      # by pattern specificity (not file order); a group with no patterns scores
+      # higher than any wildcard, so production-minor-and-patch declares "*".
       hundred-and-ten:
         patterns:
           - "hundredandten*"
@@ -23,6 +25,8 @@ updates:
         update-types:
           - "minor"
           - "patch"
+        patterns:
+          - "*"
       # Security fixes land as a single PR instead of one per package.
       # The groups above only apply to scheduled version updates.
       security-updates:
