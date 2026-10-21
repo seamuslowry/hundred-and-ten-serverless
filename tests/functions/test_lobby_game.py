@@ -6,6 +6,7 @@ from beanie import PydanticObjectId
 from fastapi.testclient import TestClient
 
 from src.models.internal import GameStatus
+from src.routers.lobbies import CPU_NAMES
 from tests.helpers import DEFAULT_ID, get_game, lobby_game
 
 
@@ -269,6 +270,24 @@ def test_start_game(client: TestClient):
     assert lobby["id"] == game["id"]
     assert 4 == len(game["players"])
     assert GameStatus.BIDDING.name == game["active"]["status"]
+
+
+def test_start_game_cpu_players_have_unique_names(client: TestClient):
+    """CPU players fill the game with distinct names from the name list"""
+    lobby = lobby_game(client)
+    organizer = lobby["organizer"]["id"]
+
+    client.post(
+        f"/players/{organizer}/lobbies/{lobby['id']}/start",
+        headers={"authorization": f"Bearer {organizer}"},
+    )
+
+    game = get_game(client, lobby["id"], organizer)
+    cpu_names = [p["id"] for p in game["players"] if p["id"] != organizer]
+
+    assert 3 == len(cpu_names)
+    assert 3 == len(set(cpu_names))
+    assert set(cpu_names) <= set(CPU_NAMES)
 
 
 def test_unknown_player_cannot_invite(client: TestClient):
