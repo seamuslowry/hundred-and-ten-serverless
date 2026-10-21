@@ -2,6 +2,8 @@
 The router for lobby operations.
 """
 
+import random
+
 from beanie import PydanticObjectId
 from fastapi import APIRouter
 
@@ -26,6 +28,18 @@ from src.models.internal.errors import AuthorizationError, BadRequestError
 from src.services import LobbyService, PlayerService
 
 MIN_PLAYERS = 4
+CPU_NAMES = (
+    "Alex",
+    "Casey",
+    "Drew",
+    "Jamie",
+    "Jordan",
+    "Morgan",
+    "Quinn",
+    "Riley",
+    "Sam",
+    "Taylor",
+)
 
 router = APIRouter(
     prefix="/players/{player_id}/lobbies",
@@ -101,8 +115,10 @@ async def start_game(player_id: str, lobby_id: PydanticObjectId):
         raise BadRequestError("Only the organizer can start the game")
 
     # Add CPU players if needed
-    for num in range(len(lobby.ordered_players), MIN_PLAYERS):
-        cpu_player_id = str(num + 1)
+    taken_ids = {p.id for p in lobby.ordered_players}
+    available_names = [name for name in CPU_NAMES if name not in taken_ids]
+    cpu_count = max(MIN_PLAYERS - len(taken_ids), 0)
+    for cpu_player_id in random.sample(available_names, cpu_count):
         lobby.invite(player_id, NaiveCpu(cpu_player_id))
         lobby.join(NaiveCpu(cpu_player_id))
 
