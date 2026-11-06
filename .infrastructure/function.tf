@@ -1,7 +1,3 @@
-locals {
-  cors_origins = "http://localhost:5173,https://salmon-island-0bfaede0f.7.azurestaticapps.net"
-}
-
 resource "azurerm_resource_group" "group" {
   name     = "hundredandten"
   location = "eastus"
@@ -110,8 +106,7 @@ resource "azurerm_function_app_flex_consumption" "app" {
     # key-based connection string.
     "AzureWebJobsStorage__accountName" = azurerm_storage_account.storage.name
     "DatabaseName"                     = "prod"
-    "MongoDb"                          = azurerm_cosmosdb_account.db.primary_mongodb_connection_string,
-    "CORS_ORIGINS"                     = local.cors_origins
+    "MongoDb"                          = azurerm_cosmosdb_account.db.primary_mongodb_connection_string
   }
 
   tags = {
@@ -123,9 +118,13 @@ resource "azurerm_function_app_flex_consumption" "app" {
   site_config {
     application_insights_connection_string = azurerm_application_insights.insights.connection_string
 
+    # Open CORS. Auth is a Firebase bearer token the client attaches explicitly (no
+    # cookies), so a foreign origin gains nothing a curl couldn't already do. The
+    # Functions host answers preflights itself, so this is the only CORS layer; it can't
+    # express per-PR Static Web App preview origins, hence "*". Revisit if the API ever
+    # moves to cookie/session auth.
     cors {
-      allowed_origins = split(",", local.cors_origins)
-      support_credentials = true
+      allowed_origins = ["*"]
     }
   }
 }
