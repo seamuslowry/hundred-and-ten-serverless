@@ -478,7 +478,7 @@ wheels = [
 
 [[package]]
 name = "hundredandten-automation-engineadapter"
-version = "0.0.12"
+version = "0.0.13"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "hundredandten-deck" },
@@ -486,19 +486,19 @@ dependencies = [
     { name = "hundredandten-state" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/14/f0/96bb3185eb27c4ade8140ca58a8d09312ee8e456289d9055d7483300064b/hundredandten_automation_engineadapter-0.0.12-py3-none-any.whl", hash = "sha256:7564243daf3e10ec15e43164ab544b8149be17d5a8e84bd77f4c365583f07912", size = 4893, upload-time = "2026-11-01T14:53:46.341Z" },
+    { url = "https://files.pythonhosted.org/packages/6d/d4/0be2cad7e06c6f5239b7640b88417e7f61778d17e3006c0e3c8ed6516441/hundredandten_automation_engineadapter-0.0.13-py3-none-any.whl", hash = "sha256:294fda255e68e6afa9ab6957a835276f859df9b8748c0cf42ea9c109fa033058", size = 4894, upload-time = "2026-11-08T16:31:49.154Z" },
 ]
 
 [[package]]
 name = "hundredandten-automation-naive"
-version = "0.0.12"
+version = "0.0.13"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "hundredandten-deck" },
     { name = "hundredandten-state" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d1/38/d127ddfc4bd8d2e0fa65ca9baa1541e9bc439724a8e4c41e22edb0aff912/hundredandten_automation_naive-0.0.12-py3-none-any.whl", hash = "sha256:9e281af176bb5fa093825c5ee212f85e89fdbe6dc51d6e39661d9f2f1da6542b", size = 4280, upload-time = "2026-11-01T14:53:47.257Z" },
+    { url = "https://files.pythonhosted.org/packages/9b/df/dc0eac28d9582c6d4463dae02458de3b110ca96d894f1f9a2214e572f8ab/hundredandten_automation_naive-0.0.13-py3-none-any.whl", hash = "sha256:15fdda1b42a685017bf06ec4f1719d37400f95f5d970266c1380aa46cd78c6ec", size = 4286, upload-time = "2026-11-08T16:31:50.063Z" },
 ]
 
 [[package]]
@@ -511,13 +511,13 @@ wheels = [
 
 [[package]]
 name = "hundredandten-engine"
-version = "0.0.13"
+version = "0.0.14"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "hundredandten-deck" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/85/a2/378bdae7a7adabc5818b734115c6ab0f683b3102e4544954b1567c6a40a2/hundredandten_engine-0.0.13-py3-none-any.whl", hash = "sha256:cae934c2aa31f6dfa1e1a8b446b31e81f27fed0b2d694fdbf8da010c67b83f56", size = 12024, upload-time = "2026-11-01T14:53:49.08Z" },
+    { url = "https://files.pythonhosted.org/packages/2d/2f/6f8bc2e70abf261e01a4dedc56a01b9605010626ad53eb047503c71f9777/hundredandten_engine-0.0.14-py3-none-any.whl", hash = "sha256:6942d639a50aef9c8283ad3e93358eeb586cd0ed37c840d9e913773774a86b5e", size = 12025, upload-time = "2026-11-08T16:31:51.873Z" },
 ]
 
 [[package]]
@@ -570,9 +570,9 @@ requires-dist = [
     { name = "cachecontrol", specifier = "==0.14.4" },
     { name = "fastapi", specifier = "==0.162.0" },
     { name = "google-auth", specifier = "==2.62.1" },
-    { name = "hundredandten-automation-engineadapter", specifier = "==0.0.12" },
-    { name = "hundredandten-automation-naive", specifier = "==0.0.12" },
-    { name = "hundredandten-engine", specifier = "==0.0.13" },
+    { name = "hundredandten-automation-engineadapter", specifier = "==0.0.13" },
+    { name = "hundredandten-automation-naive", specifier = "==0.0.13" },
+    { name = "hundredandten-engine", specifier = "==0.0.14" },
     { name = "pyjwt", specifier = "==2.15.1" },
     { name = "pymongo", specifier = "==4.19.0" },
     { name = "requests", specifier = "==2.34.2" },
