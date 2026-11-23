@@ -17,13 +17,13 @@ classifiers = [
 dependencies = [
     "azure-functions==2.4.0",
     "beanie==2.2.0",
-    "cachecontrol==0.14.4",
-    "fastapi==0.162.5",
+    "cachecontrol==0.15.0",
+    "fastapi==0.165.0",
     "google-auth==2.62.2",
     "hundredandten-automation-engineadapter==0.0.13",
     "hundredandten-automation-naive==0.0.13",
     "hundredandten-engine==0.0.14",
-    "pymongo==4.19.0",
+    "pymongo==4.20.1",
     "pyjwt==2.15.1",
     "requests==2.34.2",
 ]
